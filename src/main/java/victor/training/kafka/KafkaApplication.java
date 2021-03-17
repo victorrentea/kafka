@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.serialization.Serdes.StringSerde;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.*;
@@ -45,7 +46,7 @@ interface AnalyticsBinding {
    String PAGE_VIEWS_IN = "pvin";
    String PAGE_COUNT_MV = "pvmv";
    String PAGE_COUNT_OUT = "pcout";
-//   String PAGE_COUNT_IN = "pcin";
+   String PAGE_COUNT_IN = "pcin";
 
 
    @Output(PAGE_VIEWS_OUT)
@@ -57,8 +58,8 @@ interface AnalyticsBinding {
    @Output(PAGE_COUNT_OUT)
    KStream<String, Long> pageCountOut();
 
-//   @Input(PAGE_COUNT_IN)
-//   KTable<String, Long> pageCountIn();
+   @Input(PAGE_COUNT_IN)
+   KTable<String, Long> pageCountIn();
 }
 
 @Slf4j
@@ -66,9 +67,9 @@ interface AnalyticsBinding {
 class PageViewEventSink {
    @StreamListener(AnalyticsBinding.PAGE_VIEWS_IN)
    @SendTo(AnalyticsBinding.PAGE_COUNT_OUT)
-   public KStream<String, String>  process(
-       KStream<String, PageViewEvent> events) {
+   public KStream<String, String>  process(KStream<String, PageViewEvent> events) {
 
+      log.info("Handling");
 //      events.foreach(new ForeachAction<String, PageViewEvent>() {
 //         @Override
 //         public void apply(String key, PageViewEvent value) {
@@ -100,17 +101,17 @@ class PageViewEventSink {
 @Slf4j
 @Component
 class PageCountSink {
-   @Bean
-   public Consumer<KTable<String, String>> printer() {
-      return counts ->  counts.toStream()
-          .foreach((key, value) -> log.info(key + " = " + value));
-   }
-
-//   @StreamListener(AnalyticsBinding.PAGE_COUNT_IN)
-//   public void pro(KTable<String, String> counts) {
-//      counts.toStream()
+//   @Bean
+//   public Consumer<KTable<String, String>> printer() {
+//      return counts ->  counts.toStream()
 //          .foreach((key, value) -> log.info(key + " = " + value));
 //   }
+
+   @StreamListener(AnalyticsBinding.PAGE_COUNT_IN)
+   public void pro(KTable<String, String> counts) {
+      counts.toStream()
+          .foreach((key, value) -> log.info(key + " = " + value));
+   }
 }
 
 @Slf4j
@@ -125,6 +126,17 @@ public class KafkaApplication implements CommandLineRunner {
    public KafkaApplication(AnalyticsBinding binding, InteractiveQueryService queryService) {
       this.pvout = binding.pageViewsOut();
       this.queryService = queryService;
+
+   }
+
+
+   @Bean
+   public NewTopic topic1() {
+      return new NewTopic("PageViewEventSink-process-applicationId-pvmv-repartition", 10, (short) 1);
+
+      //foo: topic name
+      //10: number of partitions
+      //2: replication factor
    }
 
 //	EmitterProcessor<String> processor = EmitterProcessor.create();
@@ -169,7 +181,7 @@ public class KafkaApplication implements CommandLineRunner {
 
          try {
             pvout.send(message);
-//            log.info("debug " + message);
+            log.info("debug " + message);
          } catch (Exception e) {
             log.error(e.getMessage(), e);
          }
