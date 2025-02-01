@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: apache/kafka:3.8.0
+    ports:
+      - "9092:9092"
+    working_dir: /opt/kafka/bin
+#    environment
+#      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
