@@ -1,10 +1,73 @@
-version: '3.8'
+#
+#services:
+#  kafka:
+#    image: bitnami/kafka:latest
+#    hostname: kafka
+##    volumes: # to persist data between container restarts
+##      - ./kafka-persistence:/bitnami/kafka
+#    ports:
+#      - '9094:9094'
+#    working_dir: /opt/kafka/bin
+#    environment:
+#      - KAFKA_CFG_NODE_ID=0
+#      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+#      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+#      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+#      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+#      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+#      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+#
+#  schema-registry:
+#    image: bitnami/schema-registry:latest
+#    hostname: schema-registry
+#    depends_on:
+#      - kafka
+#    ports:
+#      - "8085:8085"
+#    environment:
+#      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:9092'
+#      SCHEMA_REGISTRY_HOST_NAME: 'schema-registry'
+#      SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8085'
+#      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: 'INFO'
+
 
 services:
-  kafka:
-    image: apache/kafka:3.8.0
+
+  broker:
+    image: confluentinc/cp-kafka:7.5.3
+    hostname: broker
+    container_name: broker
     ports:
       - "9092:9092"
-    working_dir: /opt/kafka/bin
-#    environment
-#      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      - "9101:9101"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      AUTO_CREATE_TOPICS_ENABLE: true
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.5.3
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - broker
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081

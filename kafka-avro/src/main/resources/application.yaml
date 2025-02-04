@@ -1,0 +1,36 @@
+spring.application.name: avro
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%16.16t] %clr(%-5level %-30.30logger{29}) - %msg%n"
+  level:
+    org.apache.kafka.clients.producer.ProducerConfig: warn
+    org.apache.kafka.clients.consumer.ConsumerConfig: warn
+    org.apache.kafka.clients.admin.AdminClientConfig: warn
+    org.apache.kafka.common.metrics.Metrics: warn
+    org.apache.kafka.streams.StreamsConfig: warn
+server:
+  port: 8080
+management.endpoints.web.exposure.include: "*"
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: http://localhost:8081
+        auto.register.schemas: false
+    consumer:
+      group-id: ${spring.application.name}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        schema.registry.url: http://localhost:8081
+
+    listener:
+      concurrency: 2 # number of threads=consumers per topic of this machine
+#  schema.registry.url
+
+spring.kafka.properties.specific.avro.reader: true

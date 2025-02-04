@@ -1,0 +1,10 @@
+{
+   "type" : "record",
+   "namespace" : "victor.training.kafka.avro",
+   "name" : "Employee",
+   "fields" : [
+      { "name" : "Name" , "type" : "string" }
+      ,{ "name" : "Age" , "type" : "int" }
+//      ,{ "name" : "Phone" , "type" : "string", "default": "N/A" }
+   ]
+}

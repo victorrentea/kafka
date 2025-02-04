@@ -1,0 +1,44 @@
+spring.application.name: streams
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%16.16t] %clr(%-5level %-30.30logger{29}) - %msg%n"
+  level:
+    org.apache.kafka.clients.producer.ProducerConfig: warn
+    org.apache.kafka.clients.consumer.ConsumerConfig: warn
+    org.apache.kafka.clients.admin.AdminClientConfig: warn
+    org.apache.kafka.common.metrics.Metrics: warn
+    org.apache.kafka.streams.StreamsConfig: warn
+#server:
+#  port: 8000
+management.endpoints.web.exposure.include: "*"
+
+spring:
+  kafka:
+    admin:
+      properties:
+        bootstrap.servers: localhost:9092
+    bootstrap-servers: localhost:9092
+#    streams:
+#      application-id: ${spring.application.name}
+#      properties:
+#        max.poll.interval.ms: 500
+#        commit.interval.ms: 500
+#        auto.commit.interval.ms: 500
+#        request.timeout.ms: 500
+#        auto.commit.interval.ms: 0
+#        auto.create.topics.enable: true
+#        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+
+
+    # to be able to send/receive test messages
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: ${spring.application.name}-listener
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'
+#        spring.json.trusted.packages: victor.training.kafka
