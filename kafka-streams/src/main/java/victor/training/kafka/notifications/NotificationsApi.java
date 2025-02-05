@@ -2,6 +2,7 @@ package victor.training.kafka.notifications;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class NotificationsApi {
@@ -23,11 +25,10 @@ public class NotificationsApi {
   private final KafkaTemplate<String, Broadcast> broadcast;
 
   @EventListener(ApplicationStartedEvent.class)
-  @Scheduled(fixedRate = 2000)
   public void init() {
-    System.out.println("Auto sending event(s)");
-    this.userUpdated.send("user-updated","victor", new UserUpdated("victor", "victorrentea@gmail.com", true));
-    this.userUpdated.send("user-updated","john", new UserUpdated("john", "john@el.com", true));
+    log.info("Auto user updates event(s)");
+    userUpdated.send("user-updated","victor", new UserUpdated("victor", "victorrentea@gmail.com", true));
+    userUpdated.send("user-updated","john", new UserUpdated("john", "john@el.com", true));
   }
   @PostMapping("/notification")
   public void sendNotification() {

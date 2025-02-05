@@ -21,9 +21,10 @@ public class KafkaUtils {
     }
   }
 
-   public static class Ticker implements Processor<String, String, String, String> {
-     public static final String DUMMY_VALUE = "tick";
-     private final Duration interval;
+  public static class Ticker implements Processor<String, String, String, String> {
+    public static final String DUMMY_VALUE = "tick";
+    private final Duration interval;
+
     public Ticker(Duration interval) {
       this.interval = interval;
     }
@@ -34,6 +35,7 @@ public class KafkaUtils {
         context.forward(new org.apache.kafka.streams.processor.api.Record<>(DUMMY_VALUE, DUMMY_VALUE, timestamp));
       });
     }
+
     @Override
     public void process(Record<String, String> record) {
     }

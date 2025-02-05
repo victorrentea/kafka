@@ -4,10 +4,8 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Grouped;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import victor.training.kafka.KafkaUtils;
 //import org.apache.kafka.tools.StreamsResetter;
 
@@ -37,7 +35,7 @@ public class WordsTopology {
     streamsBuilder.<String, String>stream("word-input", Consumed.with(String(), String()))
         .flatMapValues((key, value) -> Arrays.asList(value.toLowerCase().split(" ")))
         .groupBy((key, value) -> value, Grouped.with(String(), String()))
-        .count(Materialized.with(String(), Long()))
+        .count()
         .toStream()
         .to("word-count-output", Produced.with(String(), Long()));
     return streamsBuilder.build();

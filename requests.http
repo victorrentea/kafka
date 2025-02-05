@@ -1,0 +1,26 @@
+### Words: Send
+GET http://127.0.0.1:8080/words?m=Hi everyone
+
+### Words: Get all
+GET http://127.0.0.1:8080/words-count
+
+### Words: Get count of "hi"
+GET http://127.0.0.1:8080/words-count/hi
+
+
+### Notification: Update user
+POST http://127.0.0.1:8080/user
+
+### Notification: Send one
+POST http://127.0.0.1:8080/notification
+
+### Notification: Send Broadcast
+GET http://127.0.0.1:8080/broadcast
+
+
+
+### Metrics: View page
+GET http://127.0.0.1:8080/page
+
+###
+

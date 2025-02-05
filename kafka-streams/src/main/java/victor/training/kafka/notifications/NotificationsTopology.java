@@ -1,12 +1,17 @@
 package victor.training.kafka.notifications;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
 import org.springframework.kafka.support.serializer.JsonSerde;
 import victor.training.kafka.KafkaUtils;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 @Slf4j
@@ -18,11 +23,22 @@ public class NotificationsTopology {
     properties.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, "0"); // disable caching for faster outcome
     properties.put("internal.leave.group.on.close", "true"); // faster restart as per https://dzone.com/articles/kafka-streams-tips-on-how-to-decrease-rebalancing
 
+    Properties adminProperties = new Properties();
+    adminProperties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    try (var admin = AdminClient.create(adminProperties)) {
+      NewTopic userTopic = new NewTopic("user-updated", 1, (short) 1)
+          .configs(Map.of(
+              "cleanup.policy", "compact",
+              "retention.ms", "-1"
+          ));
+      NewTopic notificationTopic = new NewTopic("notification", 1, (short) 1);
+      NewTopic broadcastTopic = new NewTopic("broadcast", 1, (short) 1);
+
+      admin.createTopics(List.of(userTopic, notificationTopic, broadcastTopic));
+    }
+
     KafkaStreams kafkaStreams = new KafkaStreams(topology(), properties);
 
-    KafkaUtils.createTopic("notification");
-    KafkaUtils.createTopic("user-updated");
-    KafkaUtils.createTopic("broadcast");
     kafkaStreams.start();
 
     Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close)); // Runs on control-c
@@ -49,7 +65,7 @@ public class NotificationsTopology {
         .to("send-email", Produced.with(Serdes.String(), new JsonSerde<>(SendEmail.class)));
 
     streamsBuilder.stream("broadcast", Consumed.with(Serdes.String(), new JsonSerde<>(Broadcast.class)))
-        .flatMap((k,broadcast) -> broadcast.recipientUsernames().stream()
+        .flatMap((k, broadcast) -> broadcast.recipientUsernames().stream()
             .map(username -> KeyValue.pair(username, broadcast.message())).toList())
         .repartition(Repartitioned.with(Serdes.String(), Serdes.String()))
         .join(userKTable, (message, userUpdated) -> new SendEmail(message, userUpdated.email()))

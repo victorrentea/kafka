@@ -42,3 +42,6 @@ spring:
       properties:
         spring.json.trusted.packages: '*'
 #        spring.json.trusted.packages: victor.training.kafka
+    streams:
+      properties:
+        internal.leave.group.on.close: true

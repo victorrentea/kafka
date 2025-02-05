@@ -62,6 +62,19 @@ public class NotificationsTopologyTest {
   }
 
   @Test
+  void p2bis_sendsToMostRecentUserUpdate() {
+    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "jdoe@example.com", true));
+    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "jdoe@other.com", true));
+    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+
+    assertThat(outputTopic.readValuesToList()).containsExactly(
+        new SendEmail("Hello", "jdoe@example.com"),
+        new SendEmail("Hello", "jdoe@other.com")
+        );
+  }
+
+  @Test
   void p3_doesntSend_whenUnknownUser() {
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
 

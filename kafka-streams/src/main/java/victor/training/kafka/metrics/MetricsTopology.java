@@ -1,8 +1,16 @@
 package victor.training.kafka.metrics;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
+import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
+import org.apache.kafka.streams.processor.api.FixedKeyRecord;
+import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.state.Stores;
 import victor.training.kafka.KafkaUtils;
 
 import java.time.Duration;
@@ -12,6 +20,7 @@ import java.util.Properties;
 import static org.apache.kafka.common.serialization.Serdes.Long;
 import static org.apache.kafka.common.serialization.Serdes.String;
 
+@SuppressWarnings("ALL")
 @Slf4j
 public class MetricsTopology {
 
@@ -48,7 +57,40 @@ public class MetricsTopology {
         .selectKey((key, value) -> key.key())
         .filter((key, value) -> !Objects.equals(key, KafkaUtils.Ticker.DUMMY_VALUE)) // HACK: skip the dummy value
         .peek((key, value) -> log.info("Page {} viewed {} times", key, value))
-        .to("page-views-counter", Produced.with(String(), Long()));
+        .to("page-views-count", Produced.with(String(), Long()));
+
+    streamsBuilder.stream("page-views-count", Consumed.with(String(), Long()))
+        .filter((key, value) -> value > 100)
+        .to("page-view-alarm", Produced.with(String(), Long()));
+
+
+    streamsBuilder.addStateStore(Stores.keyValueStoreBuilder(
+        Stores.persistentKeyValueStore("page-views-previous"), String(), Long()));
+
+    streamsBuilder.stream("page-views-count", Consumed.with(String(), Long()))
+        .processValues(() -> new FixedKeyProcessor<String, Long, Long>() {
+          private FixedKeyProcessorContext<String, Long> context;
+
+          @Override
+          public void init(FixedKeyProcessorContext<String, Long> context) {
+            this.context = context;
+          }
+
+          @Override
+          public void process(FixedKeyRecord<String, Long> record) {
+            var stateStore = (KeyValueStore<String, Long>) context.getStateStore("page-views-previous");
+            Long prevValue = stateStore.get(record.key());
+            long delta = 0;
+            if (prevValue != null) {
+              delta = record.value() - prevValue;
+            }
+            stateStore.put(record.key(), record.value());
+            context.forward(record.withValue(delta));
+          }
+        }, "page-views-previous")
+        .filter((key, value) -> value != 0)
+        .to("page-view-delta", Produced.with(String(), Long()));
+
     return streamsBuilder.build();
   }
 }

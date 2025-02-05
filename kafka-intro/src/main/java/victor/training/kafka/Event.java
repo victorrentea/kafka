@@ -14,8 +14,6 @@ import java.util.UUID;
 public sealed interface Event {
   record Event1(String name) implements Event {
   }
-
   record Event2(String age) implements Event {
   }
-
 }
