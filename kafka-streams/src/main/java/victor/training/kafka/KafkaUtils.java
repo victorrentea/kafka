@@ -10,6 +10,7 @@ import org.apache.kafka.streams.processor.api.Record;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 public class KafkaUtils {
@@ -27,6 +28,10 @@ public class KafkaUtils {
 
     public Ticker(Duration interval) {
       this.interval = interval;
+    }
+
+    public static boolean isDummy(String key) {
+      return Objects.equals(key, DUMMY_VALUE);
     }
 
     @Override

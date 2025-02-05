@@ -6,16 +6,11 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
-import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
-import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
-import org.apache.kafka.streams.processor.api.FixedKeyRecord;
-import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.Stores;
 import org.springframework.kafka.support.serializer.JsonSerde;
 import victor.training.kafka.KafkaUtils;
 
 import java.time.Duration;
-import java.util.Objects;
 import java.util.Properties;
 
 import static org.apache.kafka.common.serialization.Serdes.Long;
@@ -56,7 +51,7 @@ public class MetricsTopology {
         .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
         .toStream()
         .selectKey((key, value) -> key.key())
-        .filter((key, value) -> !Objects.equals(key, KafkaUtils.Ticker.DUMMY_VALUE)) // HACK: skip the dummy value
+        .filterNot((key, value) -> KafkaUtils.Ticker.isDummy(key)) // HACK: skip the dummy value
         .peek((key, value) -> log.info("Page {} viewed {} times", key, value))
         .to("page-views-count", Produced.with(String(), Long()));
 
@@ -81,5 +76,6 @@ public class MetricsTopology {
 
     return streamsBuilder.build();
   }
+
   record Tup(long previous, long delta) {}
 }

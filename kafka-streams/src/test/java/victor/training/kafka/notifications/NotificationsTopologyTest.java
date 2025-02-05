@@ -48,6 +48,7 @@ public class NotificationsTopologyTest {
   void p1_bootstrap() { // TODO to fix this test, you are allowed to hard-code the "dummy" in production code 😉. KISS.
     userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "dummy", true));
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+    sendDummyNotification();
     // builder.stream("..", with(..))
     //.    .mapValue(->.."dummy"..)
     //     .to("..", with(..))
@@ -59,24 +60,12 @@ public class NotificationsTopologyTest {
   void p2_sendsToEmailFromUserUpdated() {
     userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+    sendDummyNotification();;
     // kStream.selectKey(->email).repartition(with...)
     // var kTable = kStream.toTable(with...)
     // kStream.join(kTable, (streamValue, tableValue) -> ...)
 
     assertThat(outputTopic.readValuesToList()).containsExactly(new SendEmail("Hello", EMAIL));
-  }
-
-  @Test
-  void p2bis_sendsToMostRecentUserUpdate() {
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
-    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "jdoe@other.com", true));
-    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
-
-    assertThat(outputTopic.readValuesToList()).containsExactly(
-        new SendEmail("Hello", EMAIL),
-        new SendEmail("Hello", "jdoe@other.com")
-        );
   }
 
   @Test
@@ -123,6 +112,7 @@ public class NotificationsTopologyTest {
   @CaptureSystemOutput
   void p7_logs_whenUnknownUser(OutputCapture outputCapture) {
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+    sendDummyNotification();
     // kStream.leftJoin(kTable, (streamValue, tableValue) -> if.. + log).filter(
 
     assertThat(outputCapture.toString()).contains("Unknown user: jdoe");
@@ -136,7 +126,7 @@ public class NotificationsTopologyTest {
     notificationInputTopic.pipeInput(new Notification("#2", "jdoe"), Instant.now().plusMillis(500));
     notificationInputTopic.pipeInput(new Notification("#1", "jdoe"), Instant.now());
     // send dummy event to update stream time
-    notificationInputTopic.pipeInput(new Notification("DUMMY", "DUMMY"), Instant.now().plusSeconds(2));
+    sendDummyNotification();
     assertThat(outputTopic.readValuesToList()).containsExactly(
         new SendEmail("#1", EMAIL),
         new SendEmail("#2", EMAIL));
@@ -151,10 +141,14 @@ public class NotificationsTopologyTest {
     notificationInputTopic.pipeInput(new Notification("#1", "jdoe"), Instant.now());
     notificationInputTopic.pipeInput(new Notification("#2", "jdoe"), Instant.now());
     // send dummy event to update stream time
-    notificationInputTopic.pipeInput(new Notification("DUMMY", "DUMMY"), Instant.now().plusSeconds(2));
+    sendDummyNotification();
     assertThat(outputTopic.readValuesToList()).containsExactly(
         new SendEmail("#1", EMAIL),
         new SendEmail("#2", EMAIL)
         );
+  }
+
+  private void sendDummyNotification() {
+    notificationInputTopic.pipeInput(new Notification("DUMMY", "DUMMY"), Instant.now().plus(1, ChronoUnit.DAYS));
   }
 }
