@@ -5,8 +5,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 
 @JsonTypeInfo(use = Id.NAME)
 public sealed interface Event {
-  record Event1(String name) implements Event {
+  record EventOK(String work) implements Event {
   }
-  record Event2(String age) implements Event {
+  record EventTakingLong(String work) implements Event {
+  }
+  record EventCausingError(String work) implements Event {
+  }
+  record EventForLater(String work) implements Event {
   }
 }

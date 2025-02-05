@@ -5,9 +5,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.config.ContainerCustomizer;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import victor.training.kafka.interceptor.ConsumerRecordTrackingInterceptor;
 
 @SpringBootApplication
+@EnableScheduling
 public class KafkaApp {
   public static void main(String[] args) {
     SpringApplication.run(KafkaApp.class, args);

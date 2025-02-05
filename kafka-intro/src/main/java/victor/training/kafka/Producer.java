@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import victor.training.kafka.Event.Event1;
+import victor.training.kafka.Event.EventTakingLong;
 
 import java.util.concurrent.ExecutionException;
 
@@ -20,18 +20,14 @@ public class Producer {
   private final KafkaTemplate<String, Event> kafkaTemplate;
 
   @EventListener(ApplicationStartedEvent.class)
-  public void onAppStarted() throws ExecutionException, InterruptedException {
-    log.info("⭐️⭐️⭐ APP STARTED ⭐️⭐️⭐️");
-
-    log.info("Sending test messages");
+  public void onAppStarted() throws Exception {
     MDC.put("traceId", "123"); // normally setup by (a) an HTTP filter or (b) a Kafka Listener interceptor
-    kafkaTemplate.send("myTopic", "1", new Event1("M1")) // send with callback
-        .thenAccept(result -> log.info("Sent M1 with offset: " + result.getRecordMetadata().offset()));
-//    kafkaTemplate.send("myTopic", "1", new Event1("FAIL")); // fire-and-forget
-//    kafkaTemplate.send("myTopic", "1", new Event1("SLOW"));
-    kafkaTemplate.send("myTopic", "1", new Event1("M2")).get(); // sync send
+    log.info("⭐️⭐️⭐ APP STARTED ⭐️⭐️⭐️");
+    kafkaTemplate.send("myTopic", "1", new Event.EventOK("M1"));
+    // TODO send sync/async/fire-and-forget
+    // TODO extract offset of sent message
+    // TODO cause delay/error on consumer
+    // TODO propagate traceId
     log.info("Messages sent");
-
-
   }
 }
