@@ -8,7 +8,11 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -21,7 +25,7 @@ public class NotificationsApi {
   @EventListener(ApplicationStartedEvent.class)
   @Scheduled(fixedRate = 2000)
   public void init() {
-    System.out.println("Sending UserUpdated event");
+    System.out.println("Auto sending event(s)");
     this.userUpdated.send("user-updated","victor", new UserUpdated("victor", "victorrentea@gmail.com", true));
     this.userUpdated.send("user-updated","john", new UserUpdated("john", "john@el.com", true));
   }
@@ -42,7 +46,23 @@ public class NotificationsApi {
     broadcast.send("broadcast", "b", new Broadcast("Hello", usernames));
   }
   @KafkaListener(topics = "send-email")
-  public void onEmailSent(SendEmail emailSent) {
-    System.out.println("✅Email sent: " + emailSent);
+  public void onEmailSent(SendEmail emailSent) throws IOException {
+    String message = "✅Email sent: " + emailSent;
+    System.out.println(message);
+    for (SseEmitter emitter : sseEmitters) {
+      try {
+        emitter.send(message);
+      } catch (IOException e) {
+        // ignored
+      }
+    }
+  }
+
+  private final List<SseEmitter> sseEmitters = Collections.synchronizedList(new ArrayList<>());
+  @GetMapping(value = "/tail",produces = "text/event-stream")
+  public SseEmitter tail() {
+    SseEmitter sseEmitter = new SseEmitter();
+    sseEmitters.add(sseEmitter);
+    return sseEmitter;
   }
 }
