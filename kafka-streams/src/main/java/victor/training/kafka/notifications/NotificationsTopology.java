@@ -1,5 +1,6 @@
 package victor.training.kafka.notifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
@@ -8,11 +9,10 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
 import org.springframework.kafka.support.serializer.JsonSerde;
-import victor.training.kafka.KafkaUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.time.Duration;
+import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
 public class NotificationsTopology {
@@ -54,6 +54,27 @@ public class NotificationsTopology {
     streamsBuilder.stream("notification", Consumed.with(Serdes.String(), new JsonSerde<>(Notification.class)))
         .selectKey((key, value) -> value.recipientUsername())
         .repartition(Repartitioned.with(Serdes.String(), new JsonSerde<>(Notification.class)))
+
+        .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(Notification.class)))
+        .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofSeconds(1)))
+        .aggregate(() -> List.of(),
+            (key, value, windowBuffer) -> Stream.concat(windowBuffer.stream(), Stream.of(value)).toList(),
+            (aggKey, aggOne, aggTwo) -> Stream.concat(aggOne.stream(), aggTwo.stream()).toList(),
+            Materialized.with(Serdes.String(), new JsonSerde<>(new TypeReference<List<Notification>>() {
+            })))
+        .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
+        .toStream()
+        .flatMap((key, buffer) -> {
+          Set<String> uniqueKeys = new HashSet<>();
+          return buffer.stream()
+              .filter(n -> uniqueKeys.add(n.message()))
+              .sorted(Comparator.comparing(Notification::message)) // imagine sorting by a timestamp in payload
+              .map(notification -> KeyValue.pair(key.key(), notification))
+              .toList();
+        })
+        .repartition(Repartitioned.with(Serdes.String(), new JsonSerde<>(Notification.class)))
+
+        // enrich the notification with user email address
         .leftJoin(userKTable, (notification, userUpdated) -> {
           if (userUpdated == null) {
             log.warn("Unknown user: {}", notification.recipientUsername());

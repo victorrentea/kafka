@@ -2,11 +2,15 @@ package victor.training.kafka.notifications;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.test.TestRecord;
 import org.junit.jupiter.api.*;
 import org.springframework.kafka.support.serializer.JsonSerde;
 import victor.training.kafka.util.CaptureSystemOutput;
 import victor.training.kafka.util.CaptureSystemOutput.OutputCapture;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Properties;
 
@@ -16,6 +20,7 @@ import static org.assertj.core.api.Assertions.not;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @SuppressWarnings("resource")
 public class NotificationsTopologyTest {
+  public static final String EMAIL = "jdoe@example.com";
   private TopologyTestDriver testDriver;
   private TestInputTopic<String, Notification> notificationInputTopic;
   private TestInputTopic<String, UserUpdated> userUpdatedInputTopic;
@@ -52,24 +57,24 @@ public class NotificationsTopologyTest {
 
   @Test
   void p2_sendsToEmailFromUserUpdated() {
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "jdoe@example.com", true));
+    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
     // kStream.selectKey(->email).repartition(with...)
     // var kTable = kStream.toTable(with...)
     // kStream.join(kTable, (streamValue, tableValue) -> ...)
 
-    assertThat(outputTopic.readValuesToList()).containsExactly(new SendEmail("Hello", "jdoe@example.com"));
+    assertThat(outputTopic.readValuesToList()).containsExactly(new SendEmail("Hello", EMAIL));
   }
 
   @Test
   void p2bis_sendsToMostRecentUserUpdate() {
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "jdoe@example.com", true));
+    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
     userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "jdoe@other.com", true));
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
 
     assertThat(outputTopic.readValuesToList()).containsExactly(
-        new SendEmail("Hello", "jdoe@example.com"),
+        new SendEmail("Hello", EMAIL),
         new SendEmail("Hello", "jdoe@other.com")
         );
   }
@@ -83,7 +88,7 @@ public class NotificationsTopologyTest {
 
   @Test
   void p4_doesntSend_whenUserOptedOut() {
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "jdoe@example.com", false));
+    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, false));
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
     // var kTable = .stream.filter.toTable
 
@@ -103,7 +108,7 @@ public class NotificationsTopologyTest {
   }
 
   @Test
-  void p6_no_broadcast_toOptOuts() {
+  void p6_doesnt_broadcast_toOptOuts() {
     userUpdatedInputTopic.pipeInput("u1", new UserUpdated("u1", "u1@example.com", true));
     userUpdatedInputTopic.pipeInput("u2", new UserUpdated("u2", "u2@example.com", false));
     var broadcastInputTopic = testDriver.createInputTopic("broadcast", Serdes.String().serializer(), new JsonSerde<>(Broadcast.class).serializer());
@@ -121,5 +126,35 @@ public class NotificationsTopologyTest {
     // kStream.leftJoin(kTable, (streamValue, tableValue) -> if.. + log).filter(
 
     assertThat(outputCapture.toString()).contains("Unknown user: jdoe");
+  }
+
+  @Test
+//  @Disabled("⭐️Challenge #2")
+  void p99_out_of_order_notifications_within_1_second() throws InterruptedException {
+    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
+    // TODO debate: how can this happen in real life?
+    notificationInputTopic.pipeInput(new Notification("#2", "jdoe"), Instant.now().plusMillis(500));
+    notificationInputTopic.pipeInput(new Notification("#1", "jdoe"), Instant.now());
+    // send dummy event to update stream time
+    notificationInputTopic.pipeInput(new Notification("DUMMY", "DUMMY"), Instant.now().plusSeconds(2));
+    assertThat(outputTopic.readValuesToList()).containsExactly(
+        new SendEmail("#1", EMAIL),
+        new SendEmail("#2", EMAIL));
+  }
+
+  @Test
+//  @Disabled("⭐️Challenge #3")
+  void p99_eliminates_duplicated_notifications_within_1_second() throws InterruptedException {
+    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
+    // TODO how can this happen in real life
+    notificationInputTopic.pipeInput(new Notification("#1", "jdoe"), Instant.now().plusMillis(500));
+    notificationInputTopic.pipeInput(new Notification("#1", "jdoe"), Instant.now());
+    notificationInputTopic.pipeInput(new Notification("#2", "jdoe"), Instant.now());
+    // send dummy event to update stream time
+    notificationInputTopic.pipeInput(new Notification("DUMMY", "DUMMY"), Instant.now().plusSeconds(2));
+    assertThat(outputTopic.readValuesToList()).containsExactly(
+        new SendEmail("#1", EMAIL),
+        new SendEmail("#2", EMAIL)
+        );
   }
 }

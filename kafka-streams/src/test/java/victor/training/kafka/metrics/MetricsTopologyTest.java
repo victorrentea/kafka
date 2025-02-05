@@ -70,7 +70,7 @@ public class MetricsTopologyTest {
   }
 
   @Test
-  @Disabled("mysterious")
+  @Disabled("false failed tests. works in production")
   void p5_distant() {
     viewsInTopic.pipeInput("user", "home");
     viewsInTopic.pipeInput("user", "home");

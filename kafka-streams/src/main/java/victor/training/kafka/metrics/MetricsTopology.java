@@ -49,7 +49,7 @@ public class MetricsTopology {
     // page-views = username -> page viewed
     streamsBuilder.stream("page-views", Consumed.with(String(), String()))
         .peek((key, value) -> log.info("Page viewed: {}", value))
-        .merge(tickerStream) // HACK to force the time window to close
+        .merge(tickerStream) // HACK to advance the stream time so the time window closes
         .groupBy((username, page) -> page, Grouped.with(String(), String()))
         .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(1)))
         .count(Materialized.with(String(), Long()))
