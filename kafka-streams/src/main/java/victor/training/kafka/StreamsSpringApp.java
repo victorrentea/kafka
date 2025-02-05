@@ -8,8 +8,6 @@ import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.bind.annotation.RestController;
 
-import static java.util.concurrent.CompletableFuture.delayedExecutor;
-
 @Slf4j
 @EnableKafkaStreams
 @RestController

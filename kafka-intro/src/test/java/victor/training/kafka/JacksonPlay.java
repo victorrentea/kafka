@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.support.JacksonUtils;
 
-import static victor.training.kafka.Event.*;
+import static victor.training.kafka.Event.Event1;
+import static victor.training.kafka.Event.Event2;
 
 public class JacksonPlay {
   public static void main(String[] args) throws JsonProcessingException {

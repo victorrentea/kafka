@@ -4,15 +4,16 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.*;
-import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Grouped;
+import org.apache.kafka.streams.kstream.Produced;
 import victor.training.kafka.KafkaUtils;
-//import org.apache.kafka.tools.StreamsResetter;
 
 import java.util.Arrays;
 import java.util.Properties;
 
-import static org.apache.kafka.common.serialization.Serdes.*;
+import static org.apache.kafka.common.serialization.Serdes.Long;
+import static org.apache.kafka.common.serialization.Serdes.String;
 
 public class WordsTopology {
   public static void main(String[] args) {

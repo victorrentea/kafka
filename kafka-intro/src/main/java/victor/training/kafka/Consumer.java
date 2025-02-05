@@ -1,12 +1,9 @@
 package victor.training.kafka;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import victor.training.kafka.Event.Event1;
-
-import java.util.List;
 
 @Component
 @Slf4j

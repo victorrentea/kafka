@@ -2,25 +2,15 @@ package victor.training.kafka;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.RandomStringUtils;
 import org.jboss.logging.MDC;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import victor.training.kafka.Event.Event1;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
-import static java.util.concurrent.CompletableFuture.delayedExecutor;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 @Component

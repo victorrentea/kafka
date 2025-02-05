@@ -2,20 +2,17 @@ package victor.training.kafka.notifications;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
-import org.apache.kafka.streams.test.TestRecord;
 import org.junit.jupiter.api.*;
 import org.springframework.kafka.support.serializer.JsonSerde;
 import victor.training.kafka.util.CaptureSystemOutput;
 import victor.training.kafka.util.CaptureSystemOutput.OutputCapture;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.not;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @SuppressWarnings("resource")
