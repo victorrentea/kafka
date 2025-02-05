@@ -9,7 +9,7 @@ import java.util.Properties;
 
 import static org.apache.kafka.common.serialization.Serdes.Long;
 import static org.apache.kafka.common.serialization.Serdes.String;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("resource")
 @TestMethodOrder(MethodOrderer.MethodName.class)
@@ -39,32 +39,49 @@ public class MetricsTopologyTest {
   void p1_zero() {
     assertThat(viewsCountOutTopic.readKeyValuesToList()).isEmpty();
   }
+
   @Test
   void p2_one() {
-    viewsInTopic.pipeInput("user","home");
+    viewsInTopic.pipeInput("user", "home");
     testDriver.advanceWallClockTime(Duration.ofSeconds(2));
     assertThat(viewsCountOutTopic.readKeyValuesToMap()).isEqualTo(Map.of("home", 1L));
   }
+
   @Test
   void p3_notYet() {
-    viewsInTopic.pipeInput("user","home");
+    viewsInTopic.pipeInput("user", "home");
     assertThat(viewsCountOutTopic.readKeyValuesToMap()).isEmpty();
   }
+
   @Test
   void p4_twoClose() {
-    viewsInTopic.pipeInput("user","home");
-    viewsInTopic.pipeInput("user","home");
+    viewsInTopic.pipeInput("user", "home");
+    viewsInTopic.pipeInput("user", "home");
     testDriver.advanceWallClockTime(Duration.ofSeconds(2));
     assertThat(viewsCountOutTopic.readKeyValuesToMap()).isEqualTo(Map.of("home", 2L));
   }
 
   @Test
   void p5_twoClose() {
-    viewsInTopic.pipeInput("user","home");
-    viewsInTopic.pipeInput("user","home");
+    viewsInTopic.pipeInput("user", "home");
+    viewsInTopic.pipeInput("user", "home");
     testDriver.advanceWallClockTime(Duration.ofSeconds(2));
     assertThat(viewsCountOutTopic.readKeyValuesToMap()).isEqualTo(Map.of("home", 2L));
   }
+
+  @Test
+  @Disabled("mysterious")
+  void p5_distant() {
+    viewsInTopic.pipeInput("user", "home");
+    viewsInTopic.pipeInput("user", "home");
+    testDriver.advanceWallClockTime(Duration.ofSeconds(2));
+    viewsInTopic.pipeInput("user", "home");
+    testDriver.advanceWallClockTime(Duration.ofSeconds(2));
+    assertThat(viewsCountOutTopic.readKeyValuesToList()).containsExactly(
+        new KeyValue<>("home", 2L),
+        new KeyValue<>("home", 1L));
+  }
+
   @Test
   void pA_alarmOver100() {
     var viewsCountInTopic = testDriver.createInputTopic("page-views-count", String().serializer(), Long().serializer());
@@ -89,7 +106,6 @@ public class MetricsTopologyTest {
         new KeyValue<>("home", 10L)
     );
   }
-
 
 
 }

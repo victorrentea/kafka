@@ -11,6 +11,7 @@ import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
 import org.apache.kafka.streams.processor.api.FixedKeyRecord;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.Stores;
+import org.springframework.kafka.support.serializer.JsonSerde;
 import victor.training.kafka.KafkaUtils;
 
 import java.time.Duration;
@@ -68,29 +69,17 @@ public class MetricsTopology {
         Stores.persistentKeyValueStore("page-views-previous"), String(), Long()));
 
     streamsBuilder.stream("page-views-count", Consumed.with(String(), Long()))
-        .processValues(() -> new FixedKeyProcessor<String, Long, Long>() {
-          private FixedKeyProcessorContext<String, Long> context;
-
-          @Override
-          public void init(FixedKeyProcessorContext<String, Long> context) {
-            this.context = context;
-          }
-
-          @Override
-          public void process(FixedKeyRecord<String, Long> record) {
-            var stateStore = (KeyValueStore<String, Long>) context.getStateStore("page-views-previous");
-            Long prevValue = stateStore.get(record.key());
-            long delta = 0;
-            if (prevValue != null) {
-              delta = record.value() - prevValue;
-            }
-            stateStore.put(record.key(), record.value());
-            context.forward(record.withValue(delta));
-          }
-        }, "page-views-previous")
-        .filter((key, value) -> value != 0)
+        .groupByKey()
+        .aggregate(() -> new Tup(-1,0),
+            (key, value, aggregate) -> new Tup(value, value - aggregate.previous),
+            Materialized.with(String(), new JsonSerde<>(Tup.class)))
+        .toStream()
+        .peek((key, value) -> log.info("Page {} delta: {}", key, value))
+        .filter((key, tup) -> tup.delta != 0 && tup.previous - tup.delta>0) // avoid the first emission
+        .mapValues((key, value) -> value.delta)
         .to("page-view-delta", Produced.with(String(), Long()));
 
     return streamsBuilder.build();
   }
+  record Tup(long previous, long delta) {}
 }

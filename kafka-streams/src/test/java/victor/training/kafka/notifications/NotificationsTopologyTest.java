@@ -40,7 +40,7 @@ public class NotificationsTopologyTest {
   }
 
   @Test
-  void p1_bootstrap() { // TODO to fix this test, you are allowed hard-code the "dummy" in production code 😉. KISS.
+  void p1_bootstrap() { // TODO to fix this test, you are allowed to hard-code the "dummy" in production code 😉. KISS.
     userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "dummy", true));
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
     // builder.stream("..", with(..))
