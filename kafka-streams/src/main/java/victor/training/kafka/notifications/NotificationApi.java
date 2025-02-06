@@ -4,29 +4,29 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import victor.training.kafka.notifications.events.Broadcast;
+import victor.training.kafka.notifications.events.Notification;
+import victor.training.kafka.notifications.events.UserUpdated;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class NotificationsApi {
+public class NotificationApi {
   private final KafkaTemplate<String, Notification> notification;
   private final KafkaTemplate<String, UserUpdated> userUpdated;
   private final KafkaTemplate<String, Broadcast> broadcast;
 
   @EventListener(ApplicationStartedEvent.class)
   public void init() {
-    log.info("Auto user updates event(s)");
-    userUpdated.send("user-updated","victor", new UserUpdated("victor", "victorrentea@gmail.com", true));
-    userUpdated.send("user-updated","john", new UserUpdated("john", "john@el.com", true));
+    log.info("Publish user updates event(s)");
+    userUpdated.send("user-updated","victor",
+        new UserUpdated("victor", "victorrentea@gmail.com", true));
+    userUpdated.send("user-updated","john",
+        new UserUpdated("john", "john@el.com", true));
   }
   @PostMapping("/notification")
   public void sendNotification() {
@@ -43,25 +43,5 @@ public class NotificationsApi {
   public void broadcast(@RequestParam(defaultValue = "victor,john") List<String> usernames) {
     System.out.println("Broadcasting to: " + usernames);
     broadcast.send("broadcast", "b", new Broadcast("Hello", usernames));
-  }
-  @KafkaListener(topics = "send-email")
-  public void onEmailSent(SendEmail emailSent) throws IOException {
-    String message = "✅Email sent: " + emailSent;
-    System.out.println(message);
-    for (SseEmitter emitter : sseEmitters) {
-      try {
-        emitter.send(message);
-      } catch (IOException e) {
-        // ignored
-      }
-    }
-  }
-
-  private final List<SseEmitter> sseEmitters = Collections.synchronizedList(new ArrayList<>());
-  @GetMapping(value = "/tail",produces = "text/event-stream")
-  public SseEmitter tail() {
-    SseEmitter sseEmitter = new SseEmitter();
-    sseEmitters.add(sseEmitter);
-    return sseEmitter;
   }
 }

@@ -38,7 +38,7 @@ public class MetricsTopology {
   public static Topology topology() {
     StreamsBuilder streamsBuilder = new StreamsBuilder();
 
-    KStream<String, String> tickerStream = streamsBuilder.stream("page-views", Consumed.with(String(), String())) // Dummy stream (needed for topology)
+    KStream<String, String> tickerStream = streamsBuilder.stream("page-views", Consumed.with(String(), String())) // Dummy stream (needed for createTopology)
         .process(() -> new KafkaUtils.Ticker(Duration.ofMillis(100)));
 
     // page-views = username -> page viewed

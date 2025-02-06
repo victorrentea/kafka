@@ -8,45 +8,28 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.serializer.JsonSerde;
+import org.springframework.stereotype.Service;
+import victor.training.kafka.notifications.events.Broadcast;
+import victor.training.kafka.notifications.events.Notification;
+import victor.training.kafka.notifications.events.SendEmail;
+import victor.training.kafka.notifications.events.UserUpdated;
 
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Stream;
 
 @Slf4j
+@Service
 public class NotificationsTopology {
-  public static void main(String[] args) { // vanilla Java (no Spring)
-    Properties properties = new Properties();
-    properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "notifications");
-    properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    properties.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, "0"); // disable caching for faster outcome
-    properties.put("internal.leave.group.on.close", "true"); // faster restart as per https://dzone.com/articles/kafka-streams-tips-on-how-to-decrease-rebalancing
-
-    Properties adminProperties = new Properties();
-    adminProperties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    try (var admin = AdminClient.create(adminProperties)) {
-      NewTopic userTopic = new NewTopic("user-updated", 1, (short) 1)
-          .configs(Map.of(
-              "cleanup.policy", "compact",
-              "retention.ms", "-1"
-          ));
-      NewTopic notificationTopic = new NewTopic("notification", 1, (short) 1);
-      NewTopic broadcastTopic = new NewTopic("broadcast", 1, (short) 1);
-
-      admin.createTopics(List.of(userTopic, notificationTopic, broadcastTopic));
-    }
-
-    KafkaStreams kafkaStreams = new KafkaStreams(topology(), properties);
-
-    kafkaStreams.start();
-
-    Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close)); // Runs on control-c
+  @Autowired
+  public void configureTopology(StreamsBuilder streamsBuilder) {
+    createTopics();
+    topology(streamsBuilder);
   }
 
-  public static Topology topology() {
-    StreamsBuilder streamsBuilder = new StreamsBuilder();
-
+  public static void topology(StreamsBuilder streamsBuilder) {
     KTable<String, UserUpdated> userKTable = streamsBuilder.stream("user-updated", Consumed.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)))
         .filter((key, value) -> value.acceptsEmailNotifications())
         .toTable(Materialized.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)));
@@ -91,7 +74,21 @@ public class NotificationsTopology {
         .repartition(Repartitioned.with(Serdes.String(), Serdes.String()))
         .join(userKTable, (message, userUpdated) -> new SendEmail(message, userUpdated.email()))
         .to("send-email", Produced.with(Serdes.String(), new JsonSerde<>(SendEmail.class)));
+  }
 
-    return streamsBuilder.build();
+  public static void createTopics() {
+    Properties adminProperties = new Properties();
+    adminProperties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    try (var admin = AdminClient.create(adminProperties)) {
+      NewTopic userTopic = new NewTopic("user-updated", 1, (short) 1)
+          .configs(Map.of(
+              "cleanup.policy", "compact",
+              "retention.ms", "-1"
+          ));
+      NewTopic notificationTopic = new NewTopic("notification", 1, (short) 1);
+      NewTopic broadcastTopic = new NewTopic("broadcast", 1, (short) 1);
+
+      admin.createTopics(List.of(userTopic, notificationTopic, broadcastTopic));
+    }
   }
 }

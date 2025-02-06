@@ -22,11 +22,13 @@ public class WordsTopologyTest {
     Properties props = new Properties();
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
-    Topology topology = WordsTopology.topology();
+    StreamsBuilder streams = new StreamsBuilder();
+    WordsTopology.createTopology(streams);
+    Topology topology = streams.build();
     System.out.println(topology.describe());
     testDriver = new TopologyTestDriver(topology, props);
-    inputTopic = testDriver.createInputTopic("word-input", Serdes.String().serializer(), Serdes.String().serializer());
-    outputTopic = testDriver.createOutputTopic("word-count-output", Serdes.String().deserializer(), Serdes.Long().deserializer());
+    inputTopic = testDriver.createInputTopic(WordsTopology.WORDS_TOPIC, Serdes.String().serializer(), Serdes.String().serializer());
+    outputTopic = testDriver.createOutputTopic(WordsTopology.WORD_COUNT_TOPIC, Serdes.String().deserializer(), Serdes.Long().deserializer());
   }
 
   @AfterEach

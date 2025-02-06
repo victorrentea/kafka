@@ -4,6 +4,10 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.junit.jupiter.api.*;
 import org.springframework.kafka.support.serializer.JsonSerde;
+import victor.training.kafka.notifications.events.Broadcast;
+import victor.training.kafka.notifications.events.Notification;
+import victor.training.kafka.notifications.events.SendEmail;
+import victor.training.kafka.notifications.events.UserUpdated;
 import victor.training.kafka.util.CaptureSystemOutput;
 import victor.training.kafka.util.CaptureSystemOutput.OutputCapture;
 
@@ -28,7 +32,9 @@ public class NotificationsTopologyTest {
     Properties props = new Properties();
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
-    Topology topology = NotificationsTopology.topology();
+    StreamsBuilder streamsBuilder = new StreamsBuilder();
+    NotificationsTopology.topology(streamsBuilder);
+    Topology topology = streamsBuilder.build();
     System.out.println(topology.describe());
     testDriver = new TopologyTestDriver(topology, props);
     notificationInputTopic = testDriver.createInputTopic("notification", Serdes.String().serializer(), new JsonSerde<>(Notification.class).serializer());
@@ -57,7 +63,8 @@ public class NotificationsTopologyTest {
   void p2_sendsToEmailFromUserUpdated() {
     userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
     notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
-    sendDummyNotification();;
+    sendDummyNotification();
+    ;
     // kStream.selectKey(->email).repartition(with...)
     // var kTable = kStream.toTable(with...)
     // kStream.join(kTable, (streamValue, tableValue) -> ...)
@@ -142,7 +149,7 @@ public class NotificationsTopologyTest {
     assertThat(outputTopic.readValuesToList()).containsExactly(
         new SendEmail("#1", EMAIL),
         new SendEmail("#2", EMAIL)
-        );
+    );
   }
 
   private void sendDummyNotification() {

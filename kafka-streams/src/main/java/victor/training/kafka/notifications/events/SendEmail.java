@@ -1,4 +1,4 @@
-package victor.training.kafka.notifications;
+package victor.training.kafka.notifications.events;
 
 public record SendEmail(
     String message,
