@@ -4,7 +4,6 @@
    "name" : "Employee",
    "fields" : [
       { "name" : "Name" , "type" : "string" }
-      ,{ "name" : "Age" , "type" : "int" }
-//      ,{ "name" : "Phone" , "type" : "string", "default": "N/A" }
+      ,{ "name" : "Phone" , "type" : "string", "default": "N/A" }
    ]
 }

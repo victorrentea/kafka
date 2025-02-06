@@ -60,6 +60,7 @@
                         <employee-value>src/main/avro/Employee.avsc</employee-value>
                     </subjects>
                     <!-- run in terminal: mvn schema-registry:register -->
+                    <!-- curl -X PUT http://localhost:8081/config/employee-value -H "Content-Type: application/json" -d '{"compatibility": "FORWARD"}' -->
                 </configuration>
             </plugin>
         </plugins>
