@@ -2,20 +2,30 @@ package victor.training.kafka.consumer.error;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.TopicPartitionOffset;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -49,10 +59,11 @@ public class RetryOffButDLTTest extends BaseErrorInConsumerTest {
   @TestConfiguration
   static class RetryConfig {
     // TODO No retries but send to a Dead Letter Topic (DLT) called "errors-play-dlt"
-//    @Bean TODO
-//    public DefaultErrorHandler errorHandler(KafkaTemplate<String, String> kafkaTemplate) {
-//      return
-//    }
+    @Bean
+    public DefaultErrorHandler errorHandler(KafkaTemplate<String, String> kafkaTemplate) {
+      var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate);
+      return new DefaultErrorHandler(recoverer, new FixedBackOff(0, 0));
+    }
   }
 
   @Component

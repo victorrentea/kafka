@@ -31,10 +31,10 @@ public class RetrySyncTest extends BaseErrorInConsumerTest {
   @TestConfiguration
   static class RetryConfig {
     // TODO allow 1 single retry, after 1 second.
-//    @Bean
-//    public DefaultErrorHandler errorHandler() {
-//      return TODO
-//    }
+    @Bean
+    public DefaultErrorHandler errorHandler() {
+      return new DefaultErrorHandler(new FixedBackOff(1000, 1));
+    }
     // Note: to configure a single @KafkaListener, use (errorListener="beanName") instead of a global errorHandler
   }
 

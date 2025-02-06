@@ -33,6 +33,7 @@ public class RetryAsyncTest extends BaseErrorInConsumerTest {
     private final Attempter attempter;
 
     @KafkaListener(topics = "errors-play")
+    @RetryableTopic(attempts = "2", backoff = @Backoff(delay = 1000, multiplier = 1.0, maxDelay = 1000))
     public void consume(String event) {
       attempter.attempt(event);
     }

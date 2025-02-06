@@ -28,6 +28,7 @@ public class InboxScheduler {
     Optional<Inbox> taskOptional = inboxRepo.findNextTask(
         LocalDateTime.now().minus(Duration.ofMillis(inboxTimeWindowMillis)));
 
+    // TODO DELETE below
     if (taskOptional.isEmpty()) {
       log.trace("No tasks to run");
       return;

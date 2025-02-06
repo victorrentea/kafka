@@ -9,13 +9,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface InboxRepo extends JpaRepository<Inbox, Long> {
+  // TODO DELETE
   @Query("""
       select inbox
       from Inbox inbox
       where inbox.status = 'PENDING'
-        and inbox.createdAt < :createdSince
+        and inbox.createdAt < :createdUntil
       order by inbox.messageTimestamp
       limit 1
       """)
-  Optional<Inbox> findNextTask(LocalDateTime createdSince);
+  Optional<Inbox> findNextTask(LocalDateTime createdUntil);
 }

@@ -13,14 +13,15 @@ public class ProducerTrackingInterceptor implements ProducerInterceptor<String, 
 
   @Override
   public ProducerRecord<String, Object> onSend(ProducerRecord<String, Object> record) {
-    String headerValue = "TODO";// TODO get traceId from thread
+    // TODO get traceId from thread
+    String headerValue = (String) MDC.get("traceId");//TODO delete
     if (headerValue != null) {
       log.info("Adding traceId header: " + headerValue);
-      // add the traceId header
+      // TODO add the traceId header
+      record.headers().add("traceId", headerValue.getBytes()); // TODO delete
     } else {
       log.warn("No traceId header found");
     }
-    log.info("Sending: " + record);
     return record;
   }
 

@@ -23,10 +23,35 @@ public class Consumer {
   @KafkaListener(topics = "myTopic")
   public void consume(ConsumerRecord<String, Event> record) throws InterruptedException {
     switch (record.value()) {
+      // TODO DELETE:
+      case Event.EventCausingError event:
+        log.error("Throwing exception for " + event);
+        throw new RuntimeException("Exception processing " + event);
+      case Event.EventTakingLong event:
+        log.error("Long processing {}", event);
+        Thread.sleep(12000);
+        break;
+      case Event.EventOK(String work):
+        log.info("Processing work: " + work);
+        break;
+      case Event.EventForLater event:
+        log.info("Inserting in inbox for later processing: " + event);
+        long timestampLong = record.timestamp();
+        LocalDateTime timestamp =  Instant.ofEpochMilli(timestampLong)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime();
+        try {
+          inboxRepo.save(new Inbox(event.work(), timestamp, event.idempotencyKey()));
+        } catch (DataIntegrityViolationException ex) {
+          log.warn("Ignoring Duplicate event: " + event);
+        }
+        break;
 
       default:
         log.error("Unknown record: " + record);
     }
+    log.info("Handled of " + record);
     log.info("Handled " + record);
   }
 }
+

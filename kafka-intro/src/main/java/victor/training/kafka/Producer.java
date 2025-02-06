@@ -27,8 +27,6 @@ public class Producer {
     MDC.put("traceId", "123"); // pretend setup by (a) an HTTP filter or (b) a Kafka Listener interceptor
     // TODO send sync/async/fire-and-forget
     // TODO extract offset of sent message
-    // TODO cause delay/error on consumer
-    // TODO propagate traceId
     log.info("Messages sent");
   }
 }

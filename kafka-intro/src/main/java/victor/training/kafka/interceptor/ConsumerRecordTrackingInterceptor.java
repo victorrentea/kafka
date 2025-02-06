@@ -13,14 +13,17 @@ import java.util.Iterator;
 public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Object, Object> {
   @Override
   public ConsumerRecord<Object, Object> intercept(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
-    Iterator<Header> it = record.headers().headers("traceId").iterator();
-    if (!it.hasNext()) {
+    // TODO get value of header 'traceId'
+    // TODO delete
+    Iterator<Header> headerValues = record.headers().headers("traceId").iterator();
+    if (!headerValues.hasNext()) {
       log.warn("No traceId header found");
     } else {
-      Header header = it.next();
-      String value = new String(header.value());
-      log.trace("Stored traceId: {}", value);
+      Header header = headerValues.next();
+      String traceId = new String(header.value());
+      log.trace("Stored traceId: {}", traceId);
       // TODO set on thread the traceId
+      MDC.put("traceId", traceId); // TODO delete
     }
     log.info("Received: {} from partition {}", record.value(), record.partition());
     return record;
@@ -29,5 +32,6 @@ public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Obje
   @Override
   public void afterRecord(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
     // TODO clear traceId from thread
+    MDC.remove("traceId"); // TODO delete
   }
 }

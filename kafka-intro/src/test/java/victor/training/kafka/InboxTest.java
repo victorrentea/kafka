@@ -28,8 +28,9 @@ class InboxTest {
   @Test
   void eliminatesDuplicates() throws InterruptedException {
     UUID idempotencyKey = UUID.randomUUID();
-    kafkaTemplate.send("myTopic", "k", new EventForLater("work", idempotencyKey));
-    kafkaTemplate.send("myTopic", "k", new EventForLater("work", idempotencyKey));
+    EventForLater event = new EventForLater("work", idempotencyKey);
+    kafkaTemplate.send("myTopic", "k", event);
+    kafkaTemplate.send("myTopic", "k", event); // retry
 
     Thread.sleep(3000);
     verify(worker, Mockito.times(1)).process("work");
@@ -37,10 +38,12 @@ class InboxTest {
 
   @Test
   void reordersMessagesByTimestamp() throws InterruptedException {
-    kafkaTemplate.send("myTopic", 1, new Date().getTime(), "k",
-        new EventForLater("work2", UUID.randomUUID()));
-    kafkaTemplate.send("myTopic", 1, new Date().getTime() - 100, "k",
-        new EventForLater("work1", UUID.randomUUID()));
+    kafkaTemplate.send("myTopic", 1,
+        new Date().getTime(),
+        "k", new EventForLater("work2", UUID.randomUUID()));
+    kafkaTemplate.send("myTopic", 1,
+        new Date().getTime() - 100,
+        "k", new EventForLater("work1", UUID.randomUUID()));
 
     Thread.sleep(3000);
 
