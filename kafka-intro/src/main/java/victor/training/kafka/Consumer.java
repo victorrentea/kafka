@@ -29,7 +29,7 @@ public class Consumer {
         break;
       case Event.EventCausingError e:
         log.error("Received event that causes error");
-        throw new RuntimeException("Eroare in procesare");
+        throw new RuntimeException("Eroare in procesare "+ record.partition() + ":" +record.offset());
       default:
         log.error("Unknown record: " + record);
     }

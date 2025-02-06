@@ -26,6 +26,12 @@ public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Obje
     return record;
   }
 
+//  @Override
+//  public void failure(ConsumerRecord<Object, Object> record, Exception exception, Consumer<Object, Object> consumer) {
+//    // TODO cum decorez exceptia sa adaug offset/partitie si text custom sa ridic in grafana alarma automat din log
+////    throw new RuntimeException("🚨Message at "+ record.offset() + ":"+ record.partition() + " failed", exception);
+//  }
+
   @Override
   public void afterRecord(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
     // TODO clear traceId from thread
