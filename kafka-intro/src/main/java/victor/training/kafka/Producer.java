@@ -29,7 +29,8 @@ public class Producer {
   @GetMapping("produce")
   public void produceEvent() {
     MDC.put("traceId", "123"); // pretend setup by (a) an HTTP filter or (b) a Kafka Listener interceptor
-    Event event = new Event.EventOK("Hello Kafka!");
+//    Event event = new Event.EventOK("Hello Kafka!");
+    Event event = new Event.EventCausingError("Hello Kafka!");
     var future = kafkaTemplate.send("myTopic", "spring", event);
     // #2 fire-and-forget
     //    future.get();// #1 blochez threadul pana mesajul ajunge la Broker daca e mesaj critic

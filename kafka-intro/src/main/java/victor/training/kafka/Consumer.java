@@ -27,7 +27,9 @@ public class Consumer {
       case Event.EventOK(String work):
         log.info("Received event: " + work);
         break;
-
+      case Event.EventCausingError e:
+        log.error("Received event that causes error");
+        throw new RuntimeException("Eroare in procesare");
       default:
         log.error("Unknown record: " + record);
     }
