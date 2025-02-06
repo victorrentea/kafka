@@ -22,5 +22,9 @@ GET http://127.0.0.1:8080/broadcast
 ### Metrics: View page
 GET http://127.0.0.1:8080/page
 
+### Produce manual
+
+GET http://127.0.0.1:8080/produce
+
 ###
 

@@ -21,8 +21,12 @@ public class Consumer {
   private final InboxRepo inboxRepo;
 
   @KafkaListener(topics = "myTopic")
+//  public void consume(Event event) throws InterruptedException {
   public void consume(ConsumerRecord<String, Event> record) throws InterruptedException {
     switch (record.value()) {
+      case Event.EventOK(String work):
+        log.info("Received event: " + work);
+        break;
 
       default:
         log.error("Unknown record: " + record);

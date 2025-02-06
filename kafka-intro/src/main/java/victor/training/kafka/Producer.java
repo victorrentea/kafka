@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.ExecutionException;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -22,13 +24,23 @@ public class Producer {
     produceEvent();
   }
 
+  private final KafkaTemplate<String, Event> kafkaTemplate;
+
   @GetMapping("produce")
   public void produceEvent() {
     MDC.put("traceId", "123"); // pretend setup by (a) an HTTP filter or (b) a Kafka Listener interceptor
-    // TODO send sync/async/fire-and-forget
-    // TODO extract offset of sent message
-    // TODO cause delay/error on consumer
-    // TODO propagate traceId
+    Event event = new Event.EventOK("Hello Kafka!");
+    var future = kafkaTemplate.send("myTopic", "spring", event);
+    // #2 fire-and-forget
+    //    future.get();// #1 blochez threadul pana mesajul ajunge la Broker daca e mesaj critic
+       // ? la shutdown spring se trimit cele ramase pe tzeava
+
+    // #3 async
+    future.thenAccept(result -> {
+      log.info("Message sent to partition " + result.getRecordMetadata().partition() + " cu offset "
+        + result.getRecordMetadata().offset());
+    });
+
     log.info("Messages sent");
   }
 }

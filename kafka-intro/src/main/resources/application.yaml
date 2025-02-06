@@ -16,10 +16,9 @@ inbox.time.window.ms: 10000
 spring:
   kafka:
     bootstrap-servers: localhost:9092
-    producer:
+    producer: #KafkaTemplate
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: victor.training.kafka.EventSerdes.EventSerializer
-#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
         interceptor.classes: victor.training.kafka.interceptor.ProducerTrackingInterceptor # adds traceId to sent message header
 
@@ -36,7 +35,6 @@ spring:
         interceptor.classes: victor.training.kafka.interceptor.MyConsumerInterceptor
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: victor.training.kafka.EventSerdes.EventDeserializer
-#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
       concurrency: 2 # number of threads=consumers per topic of this machine
 
