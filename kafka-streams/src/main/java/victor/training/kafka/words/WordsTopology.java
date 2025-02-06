@@ -32,14 +32,7 @@ public class WordsTopology {
   }
 
   public static Topology topology() {
-    StreamsBuilder streamsBuilder = new StreamsBuilder();
-    streamsBuilder.<String, String>stream("word-input", Consumed.with(String(), String()))
-        .flatMapValues((key, value) -> Arrays.asList(value.toLowerCase().split(" ")))
-        .groupBy((key, value) -> value, Grouped.with(String(), String()))
-        .count()
-        .toStream()
-        .to("word-count-output", Produced.with(String(), Long()));
-    return streamsBuilder.build();
+    return null;
   }
 
 }
