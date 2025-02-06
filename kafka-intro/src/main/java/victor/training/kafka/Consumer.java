@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -35,6 +36,10 @@ public class Consumer {
       case Event.EventCausingError e:
         log.error("Received event that causes error");
         throw new RuntimeException("Eroare in procesare "+ record.partition() + ":" +record.offset());
+      case Event.EventForLater(String work, UUID ik):
+        LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.ofEpochMilli(record.timestamp()), ZoneId.systemDefault());
+        inboxRepo.save(new Inbox(work,timestamp,ik));
+        break;
       default:
         log.error("Unknown record: " + record);
     }

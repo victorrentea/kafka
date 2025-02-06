@@ -6,6 +6,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import victor.training.kafka.Event.EventForLater;
@@ -19,6 +20,7 @@ import static org.mockito.Mockito.verify;
 
 @ActiveProfiles("test")
 @SpringBootTest
+//@EmbeddedKafka // mai fake
 class InboxTest {
   @Autowired
   KafkaTemplate<String, Event> kafkaTemplate;
@@ -29,7 +31,7 @@ class InboxTest {
   void eliminatesDuplicates() throws InterruptedException {
     UUID idempotencyKey = UUID.randomUUID();
     kafkaTemplate.send("myTopic", "k", new EventForLater("work", idempotencyKey));
-    kafkaTemplate.send("myTopic", "k", new EventForLater("work", idempotencyKey));
+    kafkaTemplate.send("myTopic", "k", new EventForLater("work", idempotencyKey)); // retry
 
     Thread.sleep(3000);
     verify(worker, Mockito.times(1)).process("work");

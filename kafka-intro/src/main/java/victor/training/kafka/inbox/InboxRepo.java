@@ -12,6 +12,10 @@ public interface InboxRepo extends JpaRepository<Inbox, Long> {
   @Query("""
       select inbox
       from Inbox inbox
+      where inbox.messageTimestamp < ?1
+      and inbox.status = 'PENDING'
+      order by inbox.messageTimestamp asc
+      limit 1
       """)
-  Optional<Inbox> findNextTask(LocalDateTime createdSince);
+  Optional<Inbox> findNextTask(LocalDateTime createdUntil);
 }

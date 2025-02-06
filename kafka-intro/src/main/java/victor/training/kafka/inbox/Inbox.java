@@ -8,7 +8,9 @@ import java.util.UUID;
 
 @ToString
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"idempotency_key"}))
+// TODO delete
+@Table(uniqueConstraints =
+  @UniqueConstraint(columnNames = {"idempotency_key"}))
 public class Inbox {
   @Id
   @GeneratedValue

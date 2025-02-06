@@ -23,10 +23,24 @@ public class InboxScheduler {
   private final Integer inboxTimeWindowMillis;
 
   // @SchedulerLock TODO to avoid racing pods: https://www.baeldung.com/shedlock-spring
-  @Scheduled(fixedRate = 500)
+  @Scheduled(fixedRateString = "50")
   public void checkInbox() {
-    Optional<Inbox> taskOptional = null;// TODO
+    Optional<Inbox> taskOptional =
+        inboxRepo.findNextTask(LocalDateTime.now()
+            .minus(Duration.ofMillis(inboxTimeWindowMillis)));
 
-
+    if (taskOptional.isEmpty()) {
+      return;
+    }
+    Inbox task = taskOptional.get();
+    inboxRepo.save(task.start());
+    // -- de aici in colo poti pleca pe un thread separat
+    try {
+      inboxWorker.process(task.getWork());
+      inboxRepo.save(task.done());
+    } catch (Exception e) {
+      log.error("BUM", e);
+      inboxRepo.save(task.error(e.getMessage()));
+    }
   }
 }

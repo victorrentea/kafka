@@ -20,7 +20,6 @@ public class ProducerTrackingInterceptor implements ProducerInterceptor<String, 
     } else {
       log.warn("No traceId header found");
     }
-    log.info("Sending: " + record);
     return record;
   }
 
