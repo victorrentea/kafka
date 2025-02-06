@@ -38,7 +38,11 @@ public class Consumer {
         throw new RuntimeException("Eroare in procesare "+ record.partition() + ":" +record.offset());
       case Event.EventForLater(String work, UUID ik):
         LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.ofEpochMilli(record.timestamp()), ZoneId.systemDefault());
-        inboxRepo.save(new Inbox(work,timestamp,ik));
+        try {
+          inboxRepo.save(new Inbox(work, timestamp, ik));
+        } catch (DataIntegrityViolationException e) {
+          log.warn("Duplicate event: " + work);
+        }
         break;
       default:
         log.error("Unknown record: " + record);
