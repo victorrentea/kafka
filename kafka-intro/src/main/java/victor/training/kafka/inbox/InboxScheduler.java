@@ -25,8 +25,24 @@ public class InboxScheduler {
   // @SchedulerLock TODO to avoid racing pods: https://www.baeldung.com/shedlock-spring
   @Scheduled(fixedRate = 500)
   public void checkInbox() {
-    Optional<Inbox> taskOptional = null;// TODO
+    Optional<Inbox> taskOptional = inboxRepo.findNextTask(
+        LocalDateTime.now().minus(Duration.ofMillis(inboxTimeWindowMillis)));
 
+    if (taskOptional.isEmpty()) {
+      log.trace("No tasks to run");
+      return;
+    }
+    var task = taskOptional.get();
 
+    inboxRepo.save(task.start());
+    // from here move to a background thread
+    try {
+      inboxWorker.process(task.getWork());
+
+      inboxRepo.save(task.done());
+    } catch (Exception e) {
+      log.error("Error processing task: {}", task, e);
+      inboxRepo.save(task.error(e.getMessage()));
+    }
   }
 }
