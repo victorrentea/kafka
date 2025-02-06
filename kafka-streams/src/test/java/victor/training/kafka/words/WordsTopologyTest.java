@@ -13,6 +13,7 @@ import java.util.Properties;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class WordsTopologyTest {
+  // nu ma conectez la nici un broker kafka!!
   private TopologyTestDriver testDriver;
   private TestInputTopic<String, String> inputTopic;
   private TestOutputTopic<String, Long> outputTopic;
@@ -25,6 +26,7 @@ public class WordsTopologyTest {
     Topology topology = WordsTopology.topology();
     System.out.println(topology.describe());
     testDriver = new TopologyTestDriver(topology, props);
+    //TODO rename phrase-topic
     inputTopic = testDriver.createInputTopic("word-input", Serdes.String().serializer(), Serdes.String().serializer());
     outputTopic = testDriver.createOutputTopic("word-count-output", Serdes.String().deserializer(), Serdes.Long().deserializer());
   }
@@ -56,6 +58,15 @@ public class WordsTopologyTest {
         .containsEntry("hello", 1L);
   }
 
+  @Test
+  void splitWords() {
+    inputTopic.pipeInput("key", "Hi");
+    inputTopic.pipeInput("key", "Hello world");
+
+    var wordTopic = testDriver.createOutputTopic("out-topic", Serdes.String().deserializer(), Serdes.String().deserializer());
+
+    assertThat(wordTopic.readValuesToList()).contains("hi", "hello", "world");
+  }
   @Test
   void twoWords() {
     inputTopic.pipeInput("key", "Hello world");

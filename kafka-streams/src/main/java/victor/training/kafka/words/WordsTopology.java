@@ -1,19 +1,13 @@
 package victor.training.kafka.words;
 
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.Topology;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.Produced;
 import victor.training.kafka.KafkaUtils;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
-
-import static org.apache.kafka.common.serialization.Serdes.Long;
-import static org.apache.kafka.common.serialization.Serdes.String;
 
 public class WordsTopology {
   public static void main(String[] args) {
@@ -31,8 +25,20 @@ public class WordsTopology {
     Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close)); // Runs on control-c
   }
 
+  // split by space ["a b", "c"] -> ["a", "b", "c"]
   public static Topology topology() {
-    return null;
+    StreamsBuilder builder = new StreamsBuilder();
+    builder.stream("word-input", Consumed.with(Serdes.String(), Serdes.String())) // citesc
+        .mapValues(v -> v.toLowerCase())
+//        .map((k,v) -> KeyValue.pair(k,v.toLowerCase())) // evita
+        .filter((k, v) -> !"hello".equals(v))
+        .flatMapValues(v -> List.of(v.split("\\s+")))
+        .peek((k, v) -> System.out.println("record: " + k + "-" + v))
+        .to("out-topic", Produced.with(Serdes.String(), Serdes.String())); // scriu
+
+    return builder.build();
   }
 
 }
+
+// TODO sa ai teste si pe un caz mai simplu de warmup
