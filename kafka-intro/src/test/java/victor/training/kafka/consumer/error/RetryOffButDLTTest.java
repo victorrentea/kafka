@@ -49,11 +49,10 @@ public class RetryOffButDLTTest extends BaseErrorInConsumerTest {
   @TestConfiguration
   static class RetryConfig {
     // TODO No retries but send to a Dead Letter Topic (DLT) called "errors-play-dlt"
-    @Bean
-    public DefaultErrorHandler errorHandler(KafkaTemplate<String, String> kafkaTemplate) {
-      var recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate);
-      return new DefaultErrorHandler(recoverer, new FixedBackOff(0, 0));
-    }
+//    @Bean TODO
+//    public DefaultErrorHandler errorHandler(KafkaTemplate<String, String> kafkaTemplate) {
+//      return
+//    }
   }
 
   @Component

@@ -20,7 +20,7 @@ public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Obje
       Header header = it.next();
       String value = new String(header.value());
       log.trace("Stored traceId: {}", value);
-      MDC.put("traceId", value);
+      // TODO set on thread the traceId
     }
     log.info("Received: {} from partition {}", record.value(), record.partition());
     return record;
@@ -28,6 +28,6 @@ public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Obje
 
   @Override
   public void afterRecord(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
-    MDC.remove("traceId");
+    // TODO clear traceId from thread
   }
 }
