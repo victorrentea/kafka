@@ -54,3 +54,5 @@ decorator:
     p6spy:
       multiline: false
       log-format: "%(executionTime) ms|%(category)|connection %(connectionId)|%(sqlSingleLine)"
+      # ignore the polling query
+      log-filter.pattern: "^(?!.*from inbox i1_0 where i1_0.status='PENDING').*$"
