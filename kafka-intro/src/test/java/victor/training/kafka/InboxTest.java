@@ -37,14 +37,16 @@ class InboxTest {
 
   @Test
   void reordersMessagesByTimestamp() throws InterruptedException {
-    kafkaTemplate.send("myTopic", 1, new Date().getTime(), "k", new EventForLater("work2", UUID.randomUUID()));
-    kafkaTemplate.send("myTopic", 1, new Date().getTime() - 100, "k", new EventForLater("work1", UUID.randomUUID()));
+    kafkaTemplate.send("myTopic", 1, new Date().getTime(), "k",
+        new EventForLater("work2", UUID.randomUUID()));
+    kafkaTemplate.send("myTopic", 1, new Date().getTime() - 100, "k",
+        new EventForLater("work1", UUID.randomUUID()));
 
     Thread.sleep(3000);
 
     InOrder inOrder = inOrder(worker);
-    inOrder.verify(worker).process("work2");
     inOrder.verify(worker).process("work1");
+    inOrder.verify(worker).process("work2");
   }
 
 }
