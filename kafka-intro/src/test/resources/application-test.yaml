@@ -1,0 +1,2 @@
+spring.application.name: app-test
+inbox.time.window.ms: 100

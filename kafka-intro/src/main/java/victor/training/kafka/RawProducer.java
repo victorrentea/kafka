@@ -15,7 +15,7 @@ public class RawProducer {
 
     try (KafkaProducer<String, Event> producer = new KafkaProducer<>(props)) {
 //      producer.send(new ProducerRecord<>("myTopic", new Event.EventTakingLong("Hello")));
-      producer.send(new ProducerRecord<>("myTopic", new Event.EventForLater("background")));
+      producer.send(new ProducerRecord<>("myTopic", new Event.EventOK("background")));
     }
   }
 }

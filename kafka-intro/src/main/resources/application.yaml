@@ -12,7 +12,7 @@ logging:
 server:
   port: 8080
 management.endpoints.web.exposure.include: "*"
-
+inbox.time.window.ms: 10000
 spring:
   kafka:
     bootstrap-servers: localhost:9092
@@ -48,3 +48,9 @@ spring:
         request.timeout.ms: 2000
         auto.create.topics.enable: true
 #        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+
+decorator:
+  datasource:
+    p6spy:
+      multiline: false
+      log-format: "%(executionTime) ms|%(category)|connection %(connectionId)|%(sqlSingleLine)"

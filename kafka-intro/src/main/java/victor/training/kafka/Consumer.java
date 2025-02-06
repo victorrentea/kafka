@@ -3,6 +3,7 @@ package victor.training.kafka;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import victor.training.kafka.inbox.Inbox;
@@ -21,29 +22,32 @@ public class Consumer {
 
   @KafkaListener(topics = "myTopic")
   public void consume(ConsumerRecord<String, Event> record) throws InterruptedException {
-    var event = record.value();
-    switch (event) {
-      case Event.EventCausingError e:
-        log.error("Throwing exception for " + e);
+    switch (record.value()) {
+      case Event.EventCausingError event:
+        log.error("Throwing exception for " + event);
         throw new RuntimeException("Exception processing " + event);
-      case Event.EventTakingLong e:
-        log.error("Long processing {}", e);
+      case Event.EventTakingLong event:
+        log.error("Long processing {}", event);
         Thread.sleep(12000);
         break;
       case Event.EventOK(String work):
         log.info("Processing work: " + work);
         break;
-      case Event.EventForLater e:
-        log.info("Processing later: " + e);
+      case Event.EventForLater event:
+        log.info("Inserting in inbox for later processing: " + event);
         long timestampLong = record.timestamp();
         LocalDateTime timestamp =  Instant.ofEpochMilli(timestampLong)
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime();
-        inboxRepo.save(new Inbox(e.work(), timestamp));
+        try {
+          inboxRepo.save(new Inbox(event.work(), timestamp, event.idempotencyKey()));
+        } catch (DataIntegrityViolationException ex) {
+          log.warn("Ignoring Duplicate event: " + event);
+        }
         break;
       default:
-        log.error("Unknown event: " + event);
+        log.error("Unknown record: " + record);
     }
-    log.info("Normal completion of " + event);
+    log.info("Handled of " + record);
   }
 }
