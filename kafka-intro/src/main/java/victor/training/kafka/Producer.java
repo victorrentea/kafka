@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @RestController
@@ -37,10 +39,12 @@ public class Producer {
        // ? la shutdown spring se trimit cele ramase pe tzeava
 
     // #3 async
-    future.thenAccept(result -> {
+    Executor executor = Executors.newFixedThreadPool(2);
+    future.thenAcceptAsync(result -> {
+      //API.call send offset lu mama / DB
       log.info("Message sent to partition " + result.getRecordMetadata().partition() + " cu offset "
         + result.getRecordMetadata().offset());
-    });
+    }, executor);
 
     log.info("Messages sent");
   }

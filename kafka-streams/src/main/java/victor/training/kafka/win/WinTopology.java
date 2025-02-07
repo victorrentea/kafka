@@ -35,7 +35,7 @@ public class WinTopology {
   }
   public static void topology(StreamsBuilder builder) {
 
-      // 1) Hoping Window: eg: sa detectezi nr de castiguri > 10 in 5 minute, evaluate la fiecare secunda
+    // 1) Hoping Window: eg: sa detectezi nr de castiguri > 10 in 5 minute, evaluate la fiecare secunda
     // la castiguri > 1000E/min => chemi baetii
 
     // 2) Tumbling Window de 5s: ferestre nesuprapuse consecutive: eg aduni metrici ca-n graphana: calculand "running-average"

@@ -39,8 +39,14 @@ public class TimeTopologyITest {
   }
 
   @SneakyThrows
-  private static void send(KafkaProducer<String, Long> producer, long value) {
-    producer.send(new ProducerRecord<String, Long>("time-input", 0, null, "k", value)).get();
+  private static void send(KafkaProducer<String, Long> producer, long value, long timestamp, String key) {
+    producer.send(new ProducerRecord<String, Long>(
+        "time-input", 0, timestamp, key, value)).get();
+  }
+
+  @SneakyThrows
+  private static void sendDummy(KafkaProducer<String, Long> producer) {
+    producer.send(new ProducerRecord<String, Long>("time-input", 0, null, "dummy", null)).get();
   }
 
   private static KafkaProducer<String, Long> createProducer() {
@@ -87,15 +93,18 @@ public class TimeTopologyITest {
          KafkaConsumer<String, Long> consumer = createConsumer();) {
 
       CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-        while (System.currentTimeMillis() - t0 < 6_000) {
+        while (System.currentTimeMillis() - t0 < 7_000) {
           ConsumerRecords<String, Long> records = consumer.poll(Duration.ofMillis(100));
           records.forEach(record -> System.out.println(record.topic() + ": " + record.key() + " -> " + record.value()));
         }
       });
+      long t0=System.currentTimeMillis();
       for (int i = 0; i < 20; i++) {
-        Thread.sleep(100);
-        send(producer, 10);
+//        Thread.sleep(100);
+        send(producer,  1000,t0+i*100, "k");
       }
+      Thread.sleep(1100);
+      send(producer,0, t0+2000+1100, "kkk");
       System.out.println("Sent all");
       future.get();
       System.out.println("Done");

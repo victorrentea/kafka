@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -29,6 +30,9 @@ public class Consumer {
   // => #1 DLT unde sunt trimise mesajele care nu pot fi procesate
   // => #2 retry-topic unde sunt trimise mesajele pentru retry 1 data
   public void consume(ConsumerRecord<String, Event> record) throws InterruptedException {
+//    List<Long> productIds = records .map
+    // SELECT PRODUCTS WHERE ID IN (1,2,3)
+    // API call GET /products?ids=1,2,3
     switch (record.value()) {
       case Event.EventOK(String work):
         log.info("Received event: " + work);
