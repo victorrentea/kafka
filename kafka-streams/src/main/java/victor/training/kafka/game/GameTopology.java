@@ -32,10 +32,13 @@ public class GameTopology {
       double compensationAmount,
       Duration duration) {
 
+
     streamsBuilder.addStateStore(Stores.keyValueStoreBuilder(
         Stores.persistentKeyValueStore("game-finished-timestamps"),
         String(), Long())
     );
+
+
     streamsBuilder.stream(GAME_FINISHED_TOPIC,
             Consumed.with(String(), new JsonSerde<>(GameFinished.class)))
         .groupBy((unused, gameFinished) -> gameFinished.userId(),

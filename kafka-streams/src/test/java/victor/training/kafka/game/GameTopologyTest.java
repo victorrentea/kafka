@@ -18,6 +18,7 @@ public class GameTopologyTest {
   public static final Duration DURATION = Duration.ofDays(7);
   public static final int CONSECUTIVE_LOSSES = 5;
   public static final int COMPENSATION_AMOUNT = 10;
+  public static final Instant T0 = Instant.now();
   private TopologyTestDriver testDriver;
   private TestInputTopic<String, GameFinished> gameFinishedInTopic;
   private TestOutputTopic<String, CompensatingPayout> compensationPayoutOutTopic;
@@ -46,7 +47,7 @@ public class GameTopologyTest {
       .gameType("game")
       .betAmount(1)
       .payoutAmount(0)
-      .timestamp(Instant.now().toEpochMilli());
+      .timestamp(T0.toEpochMilli());
 
   @Test
   void tooFew() {
@@ -80,11 +81,11 @@ public class GameTopologyTest {
 
   @Test
   void tooSoon() {
-    long t0 = Instant.now().toEpochMilli();
+    long t0 = T0.toEpochMilli();
     for (int i = 0; i < CONSECUTIVE_LOSSES; i++) {
       gameFinishedInTopic.pipeInput(lossEvent.roundId("round-" + i).timestamp(t0).build());
     }
-    long lateTs = Instant.now().toEpochMilli() + DURATION.toMillis() - 3000;
+    long lateTs = T0.toEpochMilli() + DURATION.toMillis() - 3000;
     for (int i = 0; i < CONSECUTIVE_LOSSES; i++) {
       gameFinishedInTopic.pipeInput(lossEvent.roundId("round-" + i).timestamp(lateTs).build());
     }
@@ -95,19 +96,18 @@ public class GameTopologyTest {
 
   @Test
   void soonAfter() {
-    long t0 = Instant.now().toEpochMilli();
     for (int i = 0; i < CONSECUTIVE_LOSSES; i++) {
-      gameFinishedInTopic.pipeInput(lossEvent.roundId("round-" + i).timestamp(t0).build());
+      gameFinishedInTopic.pipeInput(lossEvent.roundId("round-" + i).timestamp(T0.toEpochMilli()).build());
     }
-    long lateTs = t0 + DURATION.toMillis() + 10000;
+    Instant T1 = T0.plus(DURATION).plusMillis(1000);
     for (int i = 0; i < CONSECUTIVE_LOSSES; i++) {
-      gameFinishedInTopic.pipeInput(lossEvent.roundId("round-B" + i).timestamp(lateTs).build());
+      gameFinishedInTopic.pipeInput(lossEvent.roundId("round-B" + i).timestamp(T1.toEpochMilli()).build());
     }
 
     assertThat(compensationPayoutOutTopic.readKeyValuesToList())
         .containsExactly(
-            new KeyValue<>("user", new CompensatingPayout("user", COMPENSATION_AMOUNT, t0)),
-            new KeyValue<>("user", new CompensatingPayout("user", COMPENSATION_AMOUNT, lateTs))
+            new KeyValue<>("user", new CompensatingPayout("user", COMPENSATION_AMOUNT, T0.toEpochMilli())),
+            new KeyValue<>("user", new CompensatingPayout("user", COMPENSATION_AMOUNT, T1.toEpochMilli()))
         );
   }
   // TODO per game too
