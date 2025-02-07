@@ -1,6 +1,7 @@
 package victor.training.kafka.time;
 
 import lombok.SneakyThrows;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -8,83 +9,100 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
-import org.junit.jupiter.api.*;
-import victor.training.kafka.words.WordsTopology;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("ALL")
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TimeTopologyITest {
 
-  private static KafkaStreams kafkaStreams;
-  private static KafkaProducer<String, String> producer;
-  private static KafkaConsumer<String, String> consumer;
-
-  @BeforeAll
-  static void before() {
-    kafkaStreams = createKafkaStreams();
-    kafkaStreams.start();
-    producer = createProducer();
-    consumer = createConsumer();
-    send("a", Duration.ofSeconds(1));
-  }
-
-  @SneakyThrows
-  private static void send(String letter, Duration afterDelay) {
-    Thread.sleep(afterDelay.toMillis());
-    producer.send(new ProducerRecord<String, String>("time-input", "k", letter)).get();
-  }
-
-  private static KafkaStreams createKafkaStreams() {
+  private static KafkaStreams createKafkaStreams(Topology topology) {
     Properties properties = new Properties();
     properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "app");
     properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    properties.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, "1"); // disable caching for faster outcome
     properties.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, "0"); // disable caching for faster outcome
     properties.put("internal.leave.group.on.close", "true"); // faster restart as per https://dzone.com/articles/kafka-streams-tips-on-how-to-decrease-rebalancing
-    StreamsBuilder streams = new StreamsBuilder();
-    WordsTopology.createTopology(streams);
-    Topology topology = streams.build();
     System.out.println(topology.describe());
-    return new KafkaStreams(topology, properties);
+    KafkaStreams streams = new KafkaStreams(topology, properties);
+    streams.start();
+    return streams;
   }
 
-  private static KafkaProducer<String, String> createProducer() {
+  @SneakyThrows
+  private static void send(KafkaProducer<String, Long> producer, long value) {
+    producer.send(new ProducerRecord<String, Long>("time-input", 0, null, "k", value)).get();
+  }
+
+  private static KafkaProducer<String, Long> createProducer() {
     Properties props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
     props.put(ProducerConfig.CLIENT_ID_CONFIG, "java");
-    return new KafkaProducer<>(props, Serdes.String().serializer(), Serdes.String().serializer());
+    KafkaProducer<String, Long> producer = new KafkaProducer<>(props, Serdes.String().serializer(), Serdes.Long().serializer());
+    return producer;
   }
 
-  private static KafkaConsumer<String, String> createConsumer() {
+  private static KafkaConsumer<String, Long> createConsumer() {
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    props.put(ProducerConfig.CLIENT_ID_CONFIG, "java");
-    KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props, Serdes.String().deserializer(), Serdes.String().deserializer());
-    consumer.subscribe(List.of("time-tumbling"));
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    props.put(ConsumerConfig.GROUP_ID_CONFIG, "time");
+    props.put("internal.leave.group.on.close", "true");
+    KafkaConsumer<String, Long> consumer = new KafkaConsumer<>(props, Serdes.String().deserializer(), Serdes.Long().deserializer());
+    consumer.subscribe(List.of("time-tumbling", "time-sliding", "time-hopping", "time-session"));
     return consumer;
   }
 
-  @AfterAll
-  static void after() {
-    kafkaStreams.close();
-  }
+
+  long t0 = System.currentTimeMillis();
 
   @Test
-  void explore() {
-    for (int i = 0; i < 20; i++) {
-      send("A", Duration.ofSeconds(1));
-    }
+  void tumbling() throws ExecutionException, InterruptedException {
+    experiment(TimeTopology.tumbling());
+  }
+  @Test
+  void sliding() throws ExecutionException, InterruptedException {
+    experiment(TimeTopology.sliding());
+  }
+  @Test
+  void hopping() throws ExecutionException, InterruptedException {
+    experiment(TimeTopology.hopping());
+  }
+  @Test
+  void session() throws ExecutionException, InterruptedException {
+    experiment(TimeTopology.session());
+  }
 
-//    ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
-//    assertThat(tumbling.readValuesToList())
-//        .containsExactly("AAAA", "AAAAA", "AAAAA", "AAAAA");
-//    records.records("time-tumbling")
+  private void experiment(Topology windowTopology) throws InterruptedException, ExecutionException {
+    try (KafkaStreams kafkaStreams = createKafkaStreams(windowTopology);
+         KafkaProducer<String, Long> producer = createProducer();
+         KafkaConsumer<String, Long> consumer = createConsumer();) {
+
+      CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+        while (System.currentTimeMillis() - t0 < 6_000) {
+          ConsumerRecords<String, Long> records = consumer.poll(Duration.ofMillis(100));
+          records.forEach(record -> System.out.println(record.topic() + ": " + record.key() + " -> " + record.value()));
+        }
+      });
+      for (int i = 0; i < 20; i++) {
+        Thread.sleep(100);
+        send(producer, 10);
+      }
+      System.out.println("Sent all");
+      future.get();
+      System.out.println("Done");
+    }
+  }
+
+  class TumblingTest {
 
   }
 }

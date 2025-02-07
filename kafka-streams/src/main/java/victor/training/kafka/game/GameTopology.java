@@ -2,10 +2,12 @@ package victor.training.kafka.game;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.processor.TimestampExtractor;
 import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
 import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
 import org.apache.kafka.streams.processor.api.FixedKeyProcessorSupplier;
@@ -40,7 +42,12 @@ public class GameTopology {
 
 
     streamsBuilder.stream(GAME_FINISHED_TOPIC,
-            Consumed.with(String(), new JsonSerde<>(GameFinished.class)))
+            Consumed.with(String(), new JsonSerde<>(GameFinished.class)/*, new TimestampExtractor() {
+              @Override
+              public long extract(ConsumerRecord<String, GameFinished> record, long partitionTime) {
+                return record.timestamp();
+              }
+            }*/))
         .groupBy((unused, gameFinished) -> gameFinished.userId(),
             Grouped.with(String(), new JsonSerde<>(GameFinished.class)))
         .aggregate(
