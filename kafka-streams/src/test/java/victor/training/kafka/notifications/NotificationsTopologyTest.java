@@ -121,6 +121,16 @@ public class NotificationsTopologyTest {
   }
 
   @Test
+//  @Disabled("⭐️Only for the brave")
+  void p7_publishesAnError_whenUnknownUser() {
+    notification.pipeInput(new Notification("Hello", "jdoe"));
+    var errorTopic = testDriver.createOutputTopic("errors",
+        Serdes.String().deserializer(), Serdes.String().deserializer());
+
+    assertThat(errorTopic.readValuesToList()).containsExactly("Unknown user: jdoe");
+  }
+
+  @Test
 //  @Disabled("⭐️Challenge #2")
   void p99_out_of_order_notifications_within_1_second() throws InterruptedException {
     userUpdated.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
