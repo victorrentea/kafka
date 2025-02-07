@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class NotificationsTopologyTest {
   public static final String EMAIL = "jdoe@example.com";
   private TopologyTestDriver testDriver;
-  private TestInputTopic<String, Notification> notificationInputTopic;
-  private TestInputTopic<String, UserUpdated> userUpdatedInputTopic;
+  private TestInputTopic<String, Notification> notification;
+  private TestInputTopic<String, UserUpdated> userUpdated;
   private TestOutputTopic<String, SendEmail> outputTopic;
 
   @BeforeEach
@@ -28,12 +28,16 @@ public class NotificationsTopologyTest {
     Properties props = new Properties();
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
+    props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, "org.apache.kafka.common.serialization.Serdes$StringSerde");
     Topology topology = NotificationsTopology.topology();
     System.out.println(topology.describe());
     testDriver = new TopologyTestDriver(topology, props);
-    notificationInputTopic = testDriver.createInputTopic("notification", Serdes.String().serializer(), new JsonSerde<>(Notification.class).serializer());
-    userUpdatedInputTopic = testDriver.createInputTopic("user-updated", Serdes.String().serializer(), new JsonSerde<>(UserUpdated.class).serializer());
-    outputTopic = testDriver.createOutputTopic("send-email", Serdes.String().deserializer(), new JsonSerde<>(SendEmail.class).deserializer());
+    notification = testDriver.createInputTopic("notification", Serdes.String().serializer(),
+        new JsonSerde<>(Notification.class).serializer());
+    userUpdated = testDriver.createInputTopic("user-updated", Serdes.String().serializer(),
+        new JsonSerde<>(UserUpdated.class).serializer());
+    outputTopic = testDriver.createOutputTopic("send-email", Serdes.String().deserializer(),
+        new JsonSerde<>(SendEmail.class).deserializer());
   }
 
   @AfterEach
@@ -43,39 +47,39 @@ public class NotificationsTopologyTest {
 
   @Test
   void p1_bootstrap() { // TODO to fix this test, you are allowed to hard-code the "dummy" in production code 😉. KISS.
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", "dummy", true));
-    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
-    sendDummyNotification();
+    userUpdated.pipeInput("jdoe", new UserUpdated("jdoe", "dummy", true));
+    notification.pipeInput(new Notification("Hello", "jdoe"));
+    //sendDummyNotification();
     // builder.stream("..", with(..))
     //.    .mapValue(->.."dummy"..)
     //     .to("..", with(..))
-
     assertThat(outputTopic.readValuesToList()).containsExactly(new SendEmail("Hello", "dummy"));
   }
 
   @Test
   void p2_sendsToEmailFromUserUpdated() {
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
-    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+    userUpdated.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
+    notification.pipeInput(new Notification("Hello", "jdoe"));
     sendDummyNotification();;
     // kStream.selectKey(->email).repartition(with...)
     // var kTable = kStream.toTable(with...)
     // kStream.join(kTable, (streamValue, tableValue) -> ...)
 
-    assertThat(outputTopic.readValuesToList()).containsExactly(new SendEmail("Hello", EMAIL));
+    assertThat(outputTopic.readValuesToList())
+        .containsExactly(new SendEmail("Hello", EMAIL));
   }
 
   @Test
   void p3_doesntSend_whenUnknownUser() {
-    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+    notification.pipeInput(new Notification("Hello", "jdoe"));
 
     assertThat(outputTopic.readValuesToList()).isEmpty();
   }
 
   @Test
   void p4_doesntSend_whenUserOptedOut() {
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, false));
-    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+    userUpdated.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, false));
+    notification.pipeInput(new Notification("Hello", "jdoe"));
     // var kTable = .stream.filter.toTable
 
     assertThat(outputTopic.readValuesToList()).isEmpty();
@@ -83,9 +87,10 @@ public class NotificationsTopologyTest {
 
   @Test
   void p5_broadcast() {
-    userUpdatedInputTopic.pipeInput("u1", new UserUpdated("u1", "u1@example.com", true));
-    userUpdatedInputTopic.pipeInput("u2", new UserUpdated("u2", "u2@example.com", true));
-    var broadcastInputTopic = testDriver.createInputTopic("broadcast", Serdes.String().serializer(), new JsonSerde<>(Broadcast.class).serializer());
+    userUpdated.pipeInput("u1", new UserUpdated("u1", "u1@example.com", true));
+    userUpdated.pipeInput("u2", new UserUpdated("u2", "u2@example.com", true));
+    var broadcastInputTopic = testDriver.createInputTopic("broadcast",
+        Serdes.String().serializer(), new JsonSerde<>(Broadcast.class).serializer());
     broadcastInputTopic.pipeInput(new Broadcast("Broadcast message", List.of("u1", "u2")));
 
     assertThat(outputTopic.readValuesToList()).containsExactlyInAnyOrder(
@@ -95,8 +100,8 @@ public class NotificationsTopologyTest {
 
   @Test
   void p6_doesnt_broadcast_toOptOuts() {
-    userUpdatedInputTopic.pipeInput("u1", new UserUpdated("u1", "u1@example.com", true));
-    userUpdatedInputTopic.pipeInput("u2", new UserUpdated("u2", "u2@example.com", false));
+    userUpdated.pipeInput("u1", new UserUpdated("u1", "u1@example.com", true));
+    userUpdated.pipeInput("u2", new UserUpdated("u2", "u2@example.com", false));
     var broadcastInputTopic = testDriver.createInputTopic("broadcast", Serdes.String().serializer(), new JsonSerde<>(Broadcast.class).serializer());
     broadcastInputTopic.pipeInput(new Broadcast("Broadcast message", List.of("u1", "u2")));
 
@@ -108,7 +113,7 @@ public class NotificationsTopologyTest {
 //  @Disabled("⭐️Only for the brave")
   @CaptureSystemOutput
   void p7_logs_whenUnknownUser(OutputCapture outputCapture) {
-    notificationInputTopic.pipeInput(new Notification("Hello", "jdoe"));
+    notification.pipeInput(new Notification("Hello", "jdoe"));
     sendDummyNotification();
     // kStream.leftJoin(kTable, (streamValue, tableValue) -> if.. + log).filter(
 
@@ -118,10 +123,10 @@ public class NotificationsTopologyTest {
   @Test
 //  @Disabled("⭐️Challenge #2")
   void p99_out_of_order_notifications_within_1_second() throws InterruptedException {
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
+    userUpdated.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
     // TODO debate: how can this happen in real life?
-    notificationInputTopic.pipeInput(new Notification("#2", "jdoe"), Instant.now().plusMillis(500));
-    notificationInputTopic.pipeInput(new Notification("#1", "jdoe"), Instant.now());
+    notification.pipeInput(new Notification("#2", "jdoe"), Instant.now().plusMillis(500));
+    notification.pipeInput(new Notification("#1", "jdoe"), Instant.now());
     // send dummy event to update stream time
     sendDummyNotification();
     assertThat(outputTopic.readValuesToList()).containsExactly(
@@ -132,11 +137,11 @@ public class NotificationsTopologyTest {
   @Test
 //  @Disabled("⭐️Challenge #3")
   void p99_eliminates_duplicated_notifications_within_1_second() throws InterruptedException {
-    userUpdatedInputTopic.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
+    userUpdated.pipeInput("jdoe", new UserUpdated("jdoe", EMAIL, true));
     // TODO how can this happen in real life
-    notificationInputTopic.pipeInput(new Notification("#1", "jdoe"), Instant.now().plusMillis(500));
-    notificationInputTopic.pipeInput(new Notification("#1", "jdoe"), Instant.now());
-    notificationInputTopic.pipeInput(new Notification("#2", "jdoe"), Instant.now());
+    notification.pipeInput(new Notification("#1", "jdoe"), Instant.now().plusMillis(500));
+    notification.pipeInput(new Notification("#1", "jdoe"), Instant.now());
+    notification.pipeInput(new Notification("#2", "jdoe"), Instant.now());
     // send dummy event to update stream time
     sendDummyNotification();
     assertThat(outputTopic.readValuesToList()).containsExactly(
@@ -146,6 +151,6 @@ public class NotificationsTopologyTest {
   }
 
   private void sendDummyNotification() {
-    notificationInputTopic.pipeInput(new Notification("DUMMY", "DUMMY"), Instant.now().plus(1, ChronoUnit.DAYS));
+    notification.pipeInput(new Notification("DUMMY", "DUMMY"), Instant.now().plus(1, ChronoUnit.DAYS));
   }
 }
