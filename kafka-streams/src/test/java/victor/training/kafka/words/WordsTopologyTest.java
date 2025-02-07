@@ -58,15 +58,15 @@ public class WordsTopologyTest {
         .containsEntry("hello", 1L);
   }
 
-  @Test
-  void splitWords() {
-    inputTopic.pipeInput("key", "Hi");
-    inputTopic.pipeInput("key", "Hello world");
-
-    var wordTopic = testDriver.createOutputTopic("out-topic", Serdes.String().deserializer(), Serdes.String().deserializer());
-
-    assertThat(wordTopic.readValuesToList()).contains("hi", "hello", "world");
-  }
+//  @Test
+//  void splitWords() {
+//    inputTopic.pipeInput("key", "Hi");
+//    inputTopic.pipeInput("key", "Hello world");
+//
+//    var wordTopic = testDriver.createOutputTopic("out-topic", Serdes.String().deserializer(), Serdes.String().deserializer());
+//
+//    assertThat(wordTopic.readValuesToList()).contains("hi", "hello", "world");
+//  }
   @Test
   void twoWords() {
     inputTopic.pipeInput("key", "Hello world");

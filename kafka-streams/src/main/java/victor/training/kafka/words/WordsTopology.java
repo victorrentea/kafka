@@ -32,17 +32,22 @@ public class WordsTopology {
   public static Topology topology() {
     StreamsBuilder builder = new StreamsBuilder();
     builder.stream("word-input", Consumed.with(Serdes.String(), Serdes.String())) // citesc
-        .mapValues(v -> v.toLowerCase())
-//        .map((k,v) -> KeyValue.pair(k,v.toLowerCase())) // evita
-        //.filter((k, v) -> !"hello".equals(v))
-        .flatMapValues(v -> List.of(v.split("\\s+")))
-        .peek((k, v) -> System.out.println("record: " + k + "-" + v))
-        .to("out-topic", Produced.with(Serdes.String(), Serdes.String())); // scriu
 
-    builder.stream("out-topic", Consumed.with(Serdes.String(), Serdes.String()))
-        .groupBy((k,v)->v, Grouped.with(Serdes.String(), Serdes.String())) // repartitionare
-        .count() // de cate ori apare key KTable=tabela persistata in Kafka
-        .toStream() // emite doar la update + bufferizat
+        .mapValues(v -> v.toLowerCase())
+
+        // ["a b", "c"] -> ["a", "b", "c"]
+        .flatMapValues(v -> List.of(v.split("\\s+")))
+
+        .peek((k, v) -> System.out.println("record: " + k + "-" + v))
+
+        .groupBy((key,value)->value, Grouped.with(Serdes.String(), Serdes.String())) // repartitionare
+
+        // numara apartiile cheilor intr-un KTable
+        .count()
+
+        // emite doar la update (aici mereu) + bufferizat
+        .toStream()
+
         .to("word-count-output", Produced.with(Serdes.String(), Serdes.Long()));
 
     return builder.build();

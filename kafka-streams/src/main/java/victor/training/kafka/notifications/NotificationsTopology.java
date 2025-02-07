@@ -47,50 +47,6 @@ public class NotificationsTopology {
   public static Topology topology() {
     StreamsBuilder streamsBuilder = new StreamsBuilder();
 
-    KTable<String, UserUpdated> userKTable = streamsBuilder.stream("user-updated", Consumed.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)))
-        .filter((key, value) -> value.acceptsEmailNotifications())
-        .toTable(Materialized.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)));
-
-    streamsBuilder.stream("notification", Consumed.with(Serdes.String(), new JsonSerde<>(Notification.class)))
-        .selectKey((key, value) -> value.recipientUsername())
-        .repartition(Repartitioned.with(Serdes.String(), new JsonSerde<>(Notification.class)))
-
-        .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(Notification.class)))
-        .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofSeconds(1)))
-        .aggregate(() -> List.of(),
-            (key, value, windowBuffer) -> Stream.concat(windowBuffer.stream(), Stream.of(value)).toList(),
-            (aggKey, aggOne, aggTwo) -> Stream.concat(aggOne.stream(), aggTwo.stream()).toList(),
-            Materialized.with(Serdes.String(), new JsonSerde<>(new TypeReference<List<Notification>>() {
-            })))
-        .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
-        .toStream()
-        .flatMap((key, buffer) -> {
-          Set<String> uniqueKeys = new HashSet<>();
-          return buffer.stream()
-              .filter(n -> uniqueKeys.add(n.message()))
-              .sorted(Comparator.comparing(Notification::message)) // imagine sorting by a timestamp in payload
-              .map(notification -> KeyValue.pair(key.key(), notification))
-              .toList();
-        })
-        .repartition(Repartitioned.with(Serdes.String(), new JsonSerde<>(Notification.class)))
-
-        // enrich the notification with user email address
-        .leftJoin(userKTable, (notification, userUpdated) -> {
-          if (userUpdated == null) {
-            log.warn("Unknown user: {}", notification.recipientUsername());
-            return null;
-          }
-          return new SendEmail(notification.message(), userUpdated.email());
-        })
-        .filter((key, value) -> value != null)
-        .to("send-email", Produced.with(Serdes.String(), new JsonSerde<>(SendEmail.class)));
-
-    streamsBuilder.stream("broadcast", Consumed.with(Serdes.String(), new JsonSerde<>(Broadcast.class)))
-        .flatMap((k, broadcast) -> broadcast.recipientUsernames().stream()
-            .map(username -> KeyValue.pair(username, broadcast.message())).toList())
-        .repartition(Repartitioned.with(Serdes.String(), Serdes.String()))
-        .join(userKTable, (message, userUpdated) -> new SendEmail(message, userUpdated.email()))
-        .to("send-email", Produced.with(Serdes.String(), new JsonSerde<>(SendEmail.class)));
 
     return streamsBuilder.build();
   }
