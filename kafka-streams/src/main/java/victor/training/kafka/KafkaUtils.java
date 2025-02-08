@@ -15,9 +15,9 @@ import java.util.Properties;
 
 public class KafkaUtils {
   public static void createTopic(String topicName) {
-    Properties properties = new Properties();
-    properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    try (var adminClient = AdminClient.create(properties)) {
+    Properties props = new Properties();
+    props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    try (var adminClient = AdminClient.create(props)) {
       adminClient.createTopics(List.of(new NewTopic(topicName, 1, (short) 1)));
     }
   }

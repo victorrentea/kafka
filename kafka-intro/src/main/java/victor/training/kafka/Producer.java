@@ -16,17 +16,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Profile("!test")
 public class Producer {
+
   @EventListener(ApplicationStartedEvent.class)
   public void onStartup() {
     log.info("⭐️⭐️⭐ APP STARTED ⭐️⭐️⭐️");
     produceEvent();
   }
 
+  private final KafkaTemplate<String, Event> kafkaTemplate;
   @GetMapping("produce")
   public void produceEvent() {
     MDC.put("traceId", "123"); // pretend setup by (a) an HTTP filter or (b) a Kafka Listener interceptor
     // TODO send sync/async/fire-and-forget
+    kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"));
     // TODO extract offset of sent message
+    kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"))
+        .thenAcceptAsync(result -> log.info("Sent message offset: " + result.getRecordMetadata().offset()));
     log.info("Messages sent");
   }
 }

@@ -21,14 +21,14 @@ import static org.apache.kafka.common.serialization.Serdes.String;
 public class MetricsTopology {
 
   public static void main(String[] args) { // vanilla Java (no Spring)
-    Properties properties = new Properties();
-    properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "metrics");
-    properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    properties.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, "0"); // disable caching for faster outcome
-    properties.put("internal.leave.group.on.close", "true"); // faster restart as per https://dzone.com/articles/kafka-streams-tips-on-how-to-decrease-rebalancing
+    Properties props = new Properties();
+    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "metrics");
+    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    props.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, "0"); // disable caching for faster outcome
+    props.put("internal.leave.group.on.close", "true"); // faster restart as per https://dzone.com/articles/kafka-streams-tips-on-how-to-decrease-rebalancing
 
     KafkaUtils.createTopic("page-views");
-    KafkaStreams kafkaStreams = new KafkaStreams(topology(), properties);
+    KafkaStreams kafkaStreams = new KafkaStreams(topology(), props);
 
     kafkaStreams.start();
 

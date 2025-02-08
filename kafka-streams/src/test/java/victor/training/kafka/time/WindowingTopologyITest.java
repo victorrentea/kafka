@@ -23,17 +23,17 @@ import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("ALL")
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class TimeTopologyITest {
+public class WindowingTopologyITest {
 
   private static KafkaStreams createKafkaStreams(Topology topology) {
-    Properties properties = new Properties();
-    properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "app");
-    properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    properties.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, "1"); // disable caching for faster outcome
-    properties.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, "0"); // disable caching for faster outcome
-    properties.put("internal.leave.group.on.close", "true"); // faster restart as per https://dzone.com/articles/kafka-streams-tips-on-how-to-decrease-rebalancing
+    Properties props = new Properties();
+    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "app");
+    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, "1"); // disable caching for faster outcome
+    props.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, "0"); // disable caching for faster outcome
+    props.put("internal.leave.group.on.close", "true"); // faster restart as per https://dzone.com/articles/kafka-streams-tips-on-how-to-decrease-rebalancing
     System.out.println(topology.describe());
-    KafkaStreams streams = new KafkaStreams(topology, properties);
+    KafkaStreams streams = new KafkaStreams(topology, props);
     streams.start();
     return streams;
   }
@@ -66,19 +66,19 @@ public class TimeTopologyITest {
 
   @Test
   void tumbling() throws ExecutionException, InterruptedException {
-    experiment(TimeTopology.tumbling());
+    experiment(WindowingTopology.tumbling());
   }
   @Test
   void sliding() throws ExecutionException, InterruptedException {
-    experiment(TimeTopology.sliding());
+    experiment(WindowingTopology.sliding());
   }
   @Test
   void hopping() throws ExecutionException, InterruptedException {
-    experiment(TimeTopology.hopping());
+    experiment(WindowingTopology.hopping());
   }
   @Test
   void session() throws ExecutionException, InterruptedException {
-    experiment(TimeTopology.session());
+    experiment(WindowingTopology.session());
   }
 
   private void experiment(Topology windowTopology) throws InterruptedException, ExecutionException {

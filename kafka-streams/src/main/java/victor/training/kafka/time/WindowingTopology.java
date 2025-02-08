@@ -14,7 +14,7 @@ import static org.apache.kafka.common.serialization.Serdes.Long;
 import static org.apache.kafka.common.serialization.Serdes.String;
 
 @Slf4j
-public class TimeTopology {
+public class WindowingTopology {
   public static Topology tumbling() {
     StreamsBuilder streamsBuilder = new StreamsBuilder();
     streamsBuilder.stream("time-input", Consumed.with(String(), Long()))
