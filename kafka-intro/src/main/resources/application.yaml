@@ -22,7 +22,6 @@ spring:
 #      value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
         interceptor.classes: victor.training.kafka.interceptor.ProducerTrackingInterceptor # adds traceId to sent message header
-
     consumer:
       group-id: app
       properties:

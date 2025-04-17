@@ -3,8 +3,12 @@ package victor.training.kafka;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import victor.training.kafka.inbox.Inbox;
 import victor.training.kafka.inbox.InboxRepo;
@@ -13,15 +17,22 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.List;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class Consumer {
   private final InboxRepo inboxRepo;
+  @Value("#{a}")
+  private final KafkaTemplate<?, ?> kafkaTemplate;
 
-  @KafkaListener(topics = "myTopic")
+  @KafkaListener(topics = "myTopic",groupId = "#{java.util.Random.}")
   public void consume(ConsumerRecord<String, Event> record) throws InterruptedException {
+//    RecordHeader replyMessageHeader = new RecordHeader("correlation-id", record.headers().headers("correlation-id").iterator().next().getBytes(ZoneOffset.UTC));
+//    kafkaTemplate.send(new ProducerRecord<>("myTopic", "key", new Event.EventOK("Hello"),
+//        List.of(replyMessageHeader));
+
     switch (record.value()) {
       // TODO DELETE:
       case Event.EventCausingError event:

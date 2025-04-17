@@ -44,15 +44,18 @@ public class WordsTopologyTest {
 
   @Test
   void oneWord() {
-    inputTopic.pipeInput("key", "hello");
+    inputTopic.pipeInput("userId", "HelLo Hello World");
+    inputTopic.pipeInput("userId", "Hello");
 
     assertThat(outputTopic.readKeyValuesToMap())
-        .containsEntry("hello", 1L);
+        .containsEntry("hello", 2L)
+        .containsEntry("world", 1L)
+    ;
   }
 
   @Test
   void oneWordLower() {
-    inputTopic.pipeInput("key", "Hello");
+    inputTopic.pipeInput("userId", "Hello");
 
     assertThat(outputTopic.readKeyValuesToMap())
         .containsEntry("hello", 1L);
@@ -60,17 +63,26 @@ public class WordsTopologyTest {
 
   @Test
   void twoWords() {
-    inputTopic.pipeInput("key", "Hello world");
+    inputTopic.pipeInput("userId", "Hello world");
 
     assertThat(outputTopic.readKeyValuesToMap())
         .containsEntry("hello", 1L)
         .containsEntry("world", 1L);
   }
+  @Test
+  @Disabled
+  void oare() {
+    inputTopic.pipeInput("userId", "Hello hello world");
+
+    assertThat(outputTopic.readKeyValuesToMap())
+        .containsEntry("hello", 2L)
+        .containsEntry("world", 1L);
+  }
 
   @Test
   void twoMessages() {
-    inputTopic.pipeInput("key", "Hello World");
-    inputTopic.pipeInput("key", "Hello");
+    inputTopic.pipeInput("userId", "Hello World");
+    inputTopic.pipeInput("userId", "Hello");
 
     assertThat(outputTopic.readKeyValuesToMap())
         .containsEntry("hello", 2L)
@@ -80,8 +92,8 @@ public class WordsTopologyTest {
   @Test
   @Disabled("only for the strong of heart")
   void realMessages() {
-    inputTopic.pipeInput("key", "Hello World");
-    inputTopic.pipeInput("key", "Hello");
+    inputTopic.pipeInput("userId", "Hello World");
+    inputTopic.pipeInput("userId", "Hello");
 
     assertThat(outputTopic.readKeyValuesToList()).containsExactly(
         // TODO observe and explain the actual value
