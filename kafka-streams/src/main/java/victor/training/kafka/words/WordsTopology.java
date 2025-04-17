@@ -9,10 +9,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StoreQueryParameters;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Grouped;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
@@ -67,7 +64,13 @@ public class WordsTopology {
         // k, "hello"
         // k, "world"
         .groupBy((k,v)-> v, Grouped.with(String(), String())) // creeaza +1 topic
-        .count() // => KTable
+//        .count() // => KTable
+        .aggregate(() -> 0L, new Aggregator<String, String, Long>() {
+          @Override
+          public Long apply(String key, String value, Long old) {
+            return old+1;
+          }
+        }, Materialized.with(String(), Long()))
         .toStream() // => KStream<String,Long> cu un mesaj pt fiecare update al KTable de mai sus
         .peek((k,v)->log.info("Received message: {} {}", k, v))
         .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
