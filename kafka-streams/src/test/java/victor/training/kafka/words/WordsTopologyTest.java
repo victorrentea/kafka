@@ -48,7 +48,7 @@ public class WordsTopologyTest {
     inputTopic.pipeInput("userId", "Hello");
 
     assertThat(outputTopic.readKeyValuesToMap())
-        .containsEntry("hello", 2L)
+        .containsEntry("hello", 3L)
         .containsEntry("world", 1L)
     ;
   }
