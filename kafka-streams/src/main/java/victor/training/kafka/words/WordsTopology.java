@@ -54,23 +54,11 @@ public class WordsTopology {
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
     streamsBuilder.<String, String>stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        // k, "Hello hello world"
-        // k, "hello"
         .flatMapValues((k,v)->Arrays.stream(v.split(" "))
             .map(String::toLowerCase)
             .toList())
-        // k, "hello"
-        // k, "hello"
-        // k, "hello"
-        // k, "world"
         .groupBy((k,v)-> v, Grouped.with(String(), String())) // creeaza +1 topic
-//        .count() // => KTable
-        .aggregate(() -> 0L, new Aggregator<String, String, Long>() {
-          @Override
-          public Long apply(String key, String value, Long old) {
-            return old+1;
-          }
-        }, Materialized.with(String(), Long()))
+        .count() // => KTable
         .toStream() // => KStream<String,Long> cu un mesaj pt fiecare update al KTable de mai sus
         .peek((k,v)->log.info("Received message: {} {}", k, v))
         .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));

@@ -59,23 +59,14 @@ public class NotificationsTopology {
     StreamsBuilder streamsBuilder = new StreamsBuilder();
 
     KTable<String, UserUpdated> kTable = streamsBuilder.stream("user-updated", Consumed.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)))
-
         .toTable(Materialized.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)));
-
     streamsBuilder.stream("broadcast", Consumed.with(Serdes.String(), new JsonSerde<>(Broadcast.class)))
-
         .flatMapValues(broadcast -> broadcast.recipientUsernames().stream()
             .map(username -> new Notification(broadcast.message(), username))
             .toList())
-
         .to("notification", Produced.with(Serdes.String(), new JsonSerde<>(Notification.class)));
-
     KStream<String, SendEmail> kStream = streamsBuilder.stream("notification", Consumed.with(Serdes.String(), new JsonSerde<>(Notification.class)))
-
         .selectKey((k, notification) -> notification.recipientUsername()) // cauzeaza un write/read in remote broker
-
-
-
         .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(Notification.class)))
         .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofSeconds(1)))
         .aggregate(() -> List.of(),
@@ -94,11 +85,6 @@ public class NotificationsTopology {
               .toList();
         })
         .repartition(Repartitioned.with(Serdes.String(), new JsonSerde<>(Notification.class)))
-
-
-
-
-
         .leftJoin(kTable, (notification, user) -> { // TODO extrage o functie de aici
           if (user == null) {
             log.error("Unknown user: {}", notification.recipientUsername());
@@ -116,7 +102,7 @@ public class NotificationsTopology {
 
 
     Map<String, KStream<String, SendEmail>> branches = kStream.split(Named.as("branch-"))
-        .branch((key, value) -> ERROR_USER_NOT_FOUND.equals(value.message()), Branched.as("error"))
+        .branch((k, v) -> ERROR_USER_NOT_FOUND.equals(v.message()), Branched.as("error"))
         .defaultBranch(Branched.as("success"));
 
     branches.get("branch-error")
