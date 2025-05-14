@@ -1,0 +1,21 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+participant B
+participant C
+database DB
+
+group transaction
+    B->C: M
+'    C->DB: insert M in INBOX
+'    C->DB: write C offset!
+    C->C: process(M)
+    C->DB: updates+
+    C->B: Ack M
+end
+
+'Poller->DB: select M from INBOX
+'Poller->DB: delete M from INBOX
+
+@enduml
+

@@ -1,0 +1,15 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+
+B->C: M
+alt ok
+    C->C!!: process(M)
+else error
+'    hnote over C: log(error)
+'    hnote over C: retry N times \n + max time
+'    C->B: M to DLQ
+'    C->B: ErrorM
+end
+
+@enduml

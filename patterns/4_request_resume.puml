@@ -1,0 +1,20 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+database DB order 9
+participant C order 10
+
+->P
+activate P
+P->DB: write workflow state
+P-->C: M {id}
+deactivate P
+activate C
+C->C: id=process(M)
+C-->P: DoneEvent
+deactivate C
+activate P
+P->DB: read workflow state
+P->P: more work
+@enduml
+

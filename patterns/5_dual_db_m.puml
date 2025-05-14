@@ -1,0 +1,21 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+database " " as DB order 9
+participant B order 10
+
+group transaction
+    P->DB: update
+    P->B: M
+'    P->DB: insert M into OUTBOX
+end
+
+'Poller->DB: select M from OUTBOX
+'Poller->B: M
+'Poller->DB: delete M from OUTBOX
+
+'group CDC
+'    DB->B:M
+'end
+@enduml
+

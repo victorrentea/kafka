@@ -1,0 +1,6 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+
+P->C: PlaceOrder
+@enduml

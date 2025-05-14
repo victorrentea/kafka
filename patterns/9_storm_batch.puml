@@ -1,0 +1,9 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+
+->P:run batch
+P->B: 10.000.000 x M
+
+@enduml
+

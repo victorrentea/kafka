@@ -1,0 +1,12 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+participant P
+participant "?"
+
+P->B: M
+B->C: M
+
+hnote over "?": after a while
+"?"->C: GET M~
+@enduml

@@ -1,0 +1,8 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+
+P-->B: M {Person}
+B-->C: M {Person}
+note over P: GDPR !
+@enduml

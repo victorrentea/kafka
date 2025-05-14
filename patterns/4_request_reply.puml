@@ -1,0 +1,15 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+->P
+activate P
+P->C: M
+activate C
+C->C: id=p(M)
+C->P: Reply-to-M
+deactivate C
+P->P: after work
+<-P
+deactivate P
+@enduml
+

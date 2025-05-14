@@ -1,0 +1,7 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+->P:call {TraceId:42}
+P->C: M
+C->:calls
+@enduml

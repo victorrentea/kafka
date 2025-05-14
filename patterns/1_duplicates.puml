@@ -1,0 +1,7 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+
+P->B: M
+B->C: M
+@enduml

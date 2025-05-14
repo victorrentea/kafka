@@ -1,0 +1,15 @@
+@startuml
+hide footbox
+skinparam monochrome reverse
+participant B
+participant C
+
+group transaction
+    B->C: M1
+    C->B: M2
+end
+@enduml
+- Send N
+- Receive N
+- Stateful
+
