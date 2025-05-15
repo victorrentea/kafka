@@ -1,9 +1,10 @@
 @startuml
+title Consumer Error Handling
 hide footbox
 skinparam monochrome reverse
 
 B->C: M
-alt ok
+alt
     C->C!!: process(M)
 else error
 '    hnote over C: log(error)

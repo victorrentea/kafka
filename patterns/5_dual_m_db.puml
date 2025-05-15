@@ -1,4 +1,5 @@
 @startuml
+title Atomic Consume + SQL
 hide footbox
 skinparam monochrome reverse
 participant B

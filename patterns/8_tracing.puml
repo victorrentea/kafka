@@ -1,7 +1,9 @@
 @startuml
+title Tracing
 hide footbox
 skinparam monochrome reverse
-->P:call {TraceId:42}
-P->C: M
+
+->P:call {..} \nTraceId:42
+P->C: M {..}
 C->:calls
 @enduml

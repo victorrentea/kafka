@@ -1,4 +1,5 @@
 @startuml
+title Commands vs Events
 hide footbox
 skinparam monochrome reverse
 

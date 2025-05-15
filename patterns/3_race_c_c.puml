@@ -1,12 +1,13 @@
 @startuml
+title Consumer Race
 hide footbox
 skinparam monochrome reverse
-database DB order 10
+database DB order 9
 
 B->C1: M {id:7,A}
 B->C2: M {id:7,B}
-C1->DB: select R id=7
-C2->DB: select R id=7
-C1->DB: update R+A
-C2->DB: update R+B
+C1<-DB: R = select id=7
+C2<-DB: R = select id=7
+C1->DB: update R + A
+C2->DB: update R + B
 @enduml

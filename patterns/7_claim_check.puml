@@ -1,4 +1,5 @@
 @startuml
+title Claim Check Pattern
 hide footbox
 skinparam monochrome reverse
 

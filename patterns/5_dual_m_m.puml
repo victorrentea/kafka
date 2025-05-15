@@ -1,4 +1,5 @@
-@startuml
+    @startuml
+title Atomic Consume-Produce
 hide footbox
 skinparam monochrome reverse
 participant B
@@ -9,7 +10,6 @@ group transaction
     C->B: M2
 end
 @enduml
-- Send N
-- Receive N
-- Stateful
+- Send n*M2
+- Receive n*M1 + stateful
 

@@ -1,15 +1,18 @@
 @startuml
+title Producer Race
 hide footbox
 skinparam monochrome reverse
+queue B order 9
+actor U
 
 U->P1: Req1
 activate P1
+P1->B: M1
+deactivate P1
 U->P2: Req2
 activate P2
 P2->B: M2
 deactivate P2
-P1->B: M1
-deactivate P1
 
 @enduml
 

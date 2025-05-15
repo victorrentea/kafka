@@ -1,9 +1,12 @@
 @startuml
+title Event Storm from Batch
 hide footbox
 skinparam monochrome reverse
 
 ->P:run batch
-P->B: 10.000.000 x M
+alt x 10.000.000
+P->B: M
+end
 
 @enduml
 

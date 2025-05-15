@@ -1,4 +1,5 @@
 @startuml
+title Temporal Assumptions
 hide footbox
 skinparam monochrome reverse
 participant P
@@ -7,6 +8,6 @@ participant "?"
 P->B: M
 B->C: M
 
-hnote over "?": after a while
-"?"->C: GET M~
+hnote over "?": ⏱️
+"?"->C: GET M
 @enduml
