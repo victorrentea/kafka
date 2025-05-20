@@ -9,5 +9,6 @@ P->B: M
 B->C: M
 
 hnote over "?": ⏱️
+C->"?": Done Event
 "?"->C: GET M
 @enduml

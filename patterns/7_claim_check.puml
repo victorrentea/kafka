@@ -3,7 +3,9 @@ title Claim Check Pattern
 hide footbox
 skinparam monochrome reverse
 
-P-->B: M {Person}
-B-->C: M {Person}
+P-->B: M {personId}
+B-->C: M {personId}
+C->P: GET /person{personId}
+P->P.DB: write person data
 note over P: GDPR !
 @enduml

@@ -8,15 +8,19 @@ database DB
 
 group transaction
     B->C: M
-'    C->DB: insert M in INBOX
-'    C->DB: write C offset!
-    C->C: process(M)
-    C->DB: updates+
+    C->DB: insert M in INBOX
     C->B: Ack M
 end
+group CDC
+    B->BC: M
+end
 
-'Poller->DB: select M from INBOX
-'Poller->DB: delete M from INBOX
+group transaction
+    Poller->DB: select M from INBOX
+    C->C: process(M)
+    C->DB: updates+
+    Poller->DB: delete M from INBOX
+end
 
 @enduml
 

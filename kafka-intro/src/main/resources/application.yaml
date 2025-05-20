@@ -37,7 +37,7 @@ spring:
       value-deserializer: victor.training.kafka.EventSerdes.EventDeserializer
 #      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
-      concurrency: 2 # number of threads=consumers per topic of this machine
+      concurrency: 2 # number of threads=consumers instances per topic of this machine
 
     streams:
       application-id: app-streams

@@ -6,7 +6,9 @@ participant B
 participant C
 
 group transaction
-    B->C: M1
+    B->C: M1part1
+    B->C: M1part2
+    C->B: AckM1
     C->B: M2
 end
 @enduml

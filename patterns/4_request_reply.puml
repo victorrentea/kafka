@@ -4,12 +4,12 @@ hide footbox
 skinparam monochrome reverse
 ->P
 activate P
-P->C: M
+P->C: M{correlationId=uuid}
 activate C
 C->C: id=p(M)
-C->P: ReplyM
+C->P: ReplyM{correlationId=uuid}
 deactivate C
-P->P: after work
+P->P: after work (id)
 <-P
 deactivate P
 @enduml

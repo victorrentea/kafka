@@ -4,12 +4,11 @@ hide footbox
 skinparam monochrome reverse
 database DB order 10
 
-P->B: M1
-P->B: M2
+P->B: M1{k:3}
+P->B: M2{k:3}
 
-B->C2: M1
-B->C1: M2
-C1->DB: Upd2
-C2->DB: Upd1
-hnote over DB: data\ncorrupted
+B->C.part3: M1
+C.part3->DB: Upd1
+B->C.part3: M2
+C.part3->DB: Upd2
 @enduml

@@ -3,6 +3,8 @@ title Duplicates
 hide footbox
 skinparam monochrome reverse
 
-P->B: M
-B->C: M
+P->B: ItemSold {q:1,newStock:3}
+B->DEDUP:  TODO
+B->C!!: ItemSold {q:1,newStock:3}
+B->C: ItemSold {q:1,newStock:3}
 @enduml

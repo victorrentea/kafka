@@ -7,16 +7,18 @@ participant B order 10
 
 group transaction
     P->DB: update
-    P->B: M
-'    P->DB: insert M into OUTBOX
+    P->DB: insert M into OUTBOX {ik:new uuid, json}
 end
 
-'Poller->DB: M = select from OUTBOX
-'Poller->B: M
-'Poller->DB: delete M from OUTBOX
+'Poller->DB: M{ik} = select from OUTBOX
+'Poller->B: M{ik}
+'Poller->DB!!: delete M from OUTBOX
+'Poller->DB: M{ik} = select from OUTBOX
+'Poller->B: M{ik}
 
-'group CDC
-'    DB->B: M
-'end
+
+group CDC/Debezium
+    DB->B: M
+end
 @enduml
 

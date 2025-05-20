@@ -4,8 +4,8 @@ hide footbox
 skinparam monochrome reverse
 
 group loop ♾
-    P1->P2: M
-    P2->P1: M
+    A->B: M
+    B->A: M
 end
 
 @enduml

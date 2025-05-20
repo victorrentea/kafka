@@ -3,14 +3,16 @@ title Consumer Error Handling
 hide footbox
 skinparam monochrome reverse
 
-B->C: M
+P->C: M
 alt
-    C->C!!: process(M)
-else error
-'    hnote over C: log(error)
+    loop timed retry 10
+        C->C!!: process(M)
+    end
+else catch (error)
+'    hnote over C: log.error("[ALARM-P1]M")
 '    hnote over C: retry N times \n + max time
 '    C->B: M to DLQ
-'    C->B: ErrorM
+    C->B: PaymentFailed
 end
 
 @enduml

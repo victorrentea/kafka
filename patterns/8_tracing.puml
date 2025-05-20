@@ -4,6 +4,6 @@ hide footbox
 skinparam monochrome reverse
 
 ->P:call {..} \nTraceId:42
-P->C: M {..}
-C->:calls
+P-->C: M {..} \nTraceId:42
+C->:calls \nTraceId:42
 @enduml

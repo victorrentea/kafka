@@ -3,5 +3,6 @@ title Commands vs Events
 hide footbox
 skinparam monochrome reverse
 
-P->C: PlaceOrder
+P->C: PlaceOrder\n<<command>>
+P->C: OrderPlaced\n<<event>>
 @enduml

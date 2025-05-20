@@ -6,8 +6,9 @@ database DB order 9
 
 B->C1: M {id:7,A}
 B->C2: M {id:7,B}
-C1<-DB: R = select id=7
-C2<-DB: R = select id=7
-C1->DB: update R + A
-C2->DB: update R + B
+C1<-DB: R{v=4} = select id=7
+C2<-DB: R{v=4} = select id=7
+C1->DB: update R{v=4} + A
+hnote over DB: R.v=5
+C2->DB!!: update R{v=4} + B
 @enduml
