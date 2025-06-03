@@ -9,3 +9,4 @@ C->P: GET /person{personId}
 P->P.DB: write person data
 note over P: GDPR !
 @enduml
+§
