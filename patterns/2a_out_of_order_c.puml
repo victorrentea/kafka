@@ -4,11 +4,12 @@ hide footbox
 skinparam monochrome reverse
 database DB order 10
 
-P->B: M1{k:3}
-P->B: M2{k:3}
+P->B: M1{id:7,C1}
+P->B: M2{id:7,C2}
 
-B->C.part3: M1
-C.part3->DB: Upd1
-B->C.part3: M2
-C.part3->DB: Upd2
+B->C2: M1{id:7,C1}
+B->C1: M2{id:7,C2}
+C1->DB: Upd C2
+C2->DB!!: Upd C1
+hnote over DB: Upd C1 fails \n**IF AFTER** Upd C2
 @enduml
