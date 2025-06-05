@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service;
 public class DuplicatesListener {
   @KafkaListener(topics = "duplicates")
   public void consume(String message) {
-    log.info("Process " + message);
+    log.info("Process Message {}", message);
+    // DB.insert(order)
     if (Math.random() < .5) {
       System.out.println("Boom!");
       throw new IllegalArgumentException("Boom");
