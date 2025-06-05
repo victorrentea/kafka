@@ -1,0 +1,12 @@
+@startuml
+title Event Loop
+hide footbox
+skinparam monochrome reverse
+
+group loop ♾
+    A->B: M
+    B->A: M
+end
+
+@enduml
+

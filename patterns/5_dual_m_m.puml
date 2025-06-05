@@ -1,0 +1,16 @@
+    @startuml
+title Atomic Consume-Produce
+hide footbox
+skinparam monochrome reverse
+participant T1
+participant C
+
+group transaction
+    T1->C: M1
+    C->T1: AckM1
+    C->T2: M2
+end
+@enduml
+- Send n*M2 or to 2 topics
+- Receive n*M1 + stateful
+

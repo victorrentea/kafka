@@ -1,0 +1,18 @@
+@startuml
+title Consumer Error Handling
+hide footbox
+skinparam monochrome reverse
+
+P->C: M
+alt
+    loop timed retry 10
+        C->C!!: process(M)
+    end
+else catch (error)
+'    hnote over C: retry N times ± max time
+'    hnote over C: log.error("[ALARM-P1]M")
+'    C->B: M to DLQ
+'    C->B: PaymentFailedEvent
+end
+
+@enduml

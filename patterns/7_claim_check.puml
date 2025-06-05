@@ -1,0 +1,11 @@
+@startuml
+title Claim Check Pattern
+hide footbox
+skinparam monochrome reverse
+
+P-->C: M {id}
+C->P: GET abc/{id}
+@enduml
+? GDPR
+? Large Payload
+

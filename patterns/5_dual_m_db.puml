@@ -1,0 +1,16 @@
+@startuml
+title Atomic Consume + SQL
+hide footbox
+skinparam monochrome reverse
+participant B
+participant C
+database DB
+
+group transaction
+    B->C: M
+    C->DB: updates
+    C->B: Ack M
+end
+
+@enduml
+? inbox pattern

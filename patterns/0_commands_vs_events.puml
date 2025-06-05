@@ -1,0 +1,8 @@
+@startuml
+title Commands vs Events
+hide footbox
+skinparam monochrome reverse
+
+P->C: <<command>>\nPlaceOrder
+P->C: <<event>>\nOrderPlaced
+@enduml

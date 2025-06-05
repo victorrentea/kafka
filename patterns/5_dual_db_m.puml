@@ -1,0 +1,15 @@
+@startuml
+title Atomic SQL + Produce
+hide footbox
+skinparam monochrome reverse
+database " " as DB order 9
+queue B order 10
+
+group transaction
+    P->DB: updates
+    P->B: Send M
+end
+@enduml
+? transactional outbox pattern
+? CDC/Debezium
+

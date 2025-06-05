@@ -1,0 +1,23 @@
+@startuml
+title Request - Resume
+hide footbox
+skinparam monochrome reverse
+database DB order 9
+participant C order 10
+
+->P
+activate P
+P->DB: write workflow state
+P-->C: RequestM
+deactivate P
+activate C
+C->C: id=process(RequestM)
+C-->P: ReplyM
+deactivate C
+activate P
+P<-DB: read workflow state
+hnote over P: more work
+@enduml
+? how to connect reply with request
+? what instance of P receives the ReplyM
+? "reply" or "event" from C
