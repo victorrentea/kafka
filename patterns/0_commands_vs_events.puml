@@ -3,6 +3,7 @@ title Commands vs Events
 hide footbox
 skinparam monochrome reverse
 
-P->C: <<command>>\nPlaceOrder
-P->C: <<event>>\nOrderPlaced
+Checkout->Teleport: <<command>>\nPlaceOrder
+Checkout<-Teleport: <<event>>\nOrderPlaced
+Reminder<-Teleport: <<event>>\nOrderPlaced
 @enduml

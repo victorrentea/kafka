@@ -3,9 +3,11 @@ title Duplicates
 hide footbox
 skinparam monochrome reverse
 
-P->B: ItemSold {q:1}
-B->C: ItemSold {q:1}
-B->C: ItemSold {q:1}
+Inventory->B: ItemSold {q:1,newStock:11}
+hnote over Catalog: stock 12
+B->Catalog: ItemSold {q:1,newStock:11}
+B->Catalog: ItemSold {q:1,newStock:11}
+hnote over Catalog: stock 11
 @enduml
 ? inbox
 ? duplicates between P->B
