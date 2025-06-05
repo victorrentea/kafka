@@ -3,13 +3,16 @@ title Duplicates detected via message id from broker
 hide footbox
 skinparam monochrome reverse
 
-Rabbit->C: M1{id:7}
+Rabbit->C: M1{id:uuid}
 note over Cache: Redis\nDB
-C->Cache: put id:7
-Rabbit->C: M1{id:7}
-C->Cache!!: put id:7
-hnote over C: skip duplicate
-
+C->Cache: put id:uuid
+hnote over C: process
+Rabbit->C: M1{id:uuid}
+C->Cache!!: put id:uuid
+hnote over C: skip dup
+hnote over Cache: clear old ones\n(retention=1d)
+'dedup window size=? "how old duplicate can I imagine receiving"
+'confirm with biz!
 
 @enduml
 ? inbox
