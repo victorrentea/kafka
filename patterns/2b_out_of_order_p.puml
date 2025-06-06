@@ -4,16 +4,18 @@ hide footbox
 skinparam monochrome reverse
 actor U
 
-U->Tomcat1: REST Req1
-activate Tomcat1
-hnote over Tomcat1: slow call of API/DB
-U->Tomcat2: REST Req2
-activate Tomcat2
-hnote over Tomcat2: fast call of API/DB
-Tomcat2->B: M2
-deactivate Tomcat2
-Tomcat1->B: M1
-deactivate Tomcat1
+U->Thread1: REST Req1
+activate Thread1
+hnote over Thread1: x1=time()/seq++
+hnote over Thread1: slow call of API/DB
+U->Thread2: REST Req2
+activate Thread2
+hnote over Thread2: x2=time()/seq++
+hnote over Thread2: fast call of API/DB
+Thread2->B: M2{key=7,observedAt=x2}
+deactivate Thread2
+Thread1->B: M1{key=7,observedAt=x1}
+deactivate Thread1
 @enduml
 ? receivedAt vs observedAt
 
