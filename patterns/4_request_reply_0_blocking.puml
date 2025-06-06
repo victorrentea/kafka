@@ -2,16 +2,25 @@
 title Request - Reply via correlationId
 hide footbox
 skinparam monochrome reverse
+->P2:HTTP call
 ->P:HTTP call
 activate P
 hnote over P: corrId=new UUID()
 hnote over C: different dept\nof the bank
 P-->C: RequestM{corrId}
 hnote over P: blocks\nfor reply
+'wastes a thread
+'set a timeout!
+'depending on their availability
+'P1+P2 will use different consumer groups to receive all replies filtering them by the correlation Ids
+'fragile: thread state if kept in mem
 activate C
 C->C: id=process(RequestM)
 C-->P: ReplyM{id,corrId}
 deactivate C
+alt no reply
+<--P: timeout error
+end
 hnote over P: more work
 <-P
 deactivate P

@@ -3,16 +3,33 @@ title Consumer Error Handling
 hide footbox
 skinparam monochrome reverse
 
-P->C: M
+B->C: M
 alt
-'    loop timed retry 10
+    loop retry x 10
         C->C!!: process(M)
-'    end
+    end
 else catch (error)
-'    hnote over C: retry N times ± max time
-'    hnote over C: log.error("[ALARM-P1]M")
-'    C->B: M to DLQ
-'    C->B: PaymentFailedEvent
+    '1) discard the message (skip it) catch(e) {/*nothing*/}
+    'for transient self-correcting data: eg: current temperature/5s, stock values
+    'esp if they come in on a clock
+    'what if I drop 99% of messages for 3 mon --> freshness
+    ' idea: publish a metric with number of messages/store last processed
+    ' increment a counter (Micrometer)💖 + you email/impl(devOps) the alarm in prod
+
+    '2) log.error (skip it) if not sensitive (GDPR, card..) -> alarms scraping the logs
+    ' default
+
+    '3) send to Dead Letter (skip it)
+    '+ easy to replay
+    '+ privacy
+    '+ easier to raise alarm
+    C->DLQ: r.i.p. M
+    DLQ->:raise alarm
+
+    '4) send an error message if it's valuable for business
+    'PaymentFailedEvent{orderId} in an eShop
+
+    '5) freeze that partition/business ID
 end
 
 @enduml

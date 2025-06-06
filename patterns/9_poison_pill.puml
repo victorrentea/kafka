@@ -1,0 +1,17 @@
+@startuml
+title Poison Pill
+hide footbox
+skinparam monochrome reverse
+
+'hnote over B:
+B->C:OrderPlacedEvent\n{items:[1000]}
+loop every item
+C->:GET call 100ms
+end
+hnote over C: freeze for long
+hnote over B: probably C is dead
+B->C2!!:OrderPlacedEvent\n{items:[1000]}
+B->C3!!:OrderPlacedEvent\n{items:[1000]}
+
+@enduml
+

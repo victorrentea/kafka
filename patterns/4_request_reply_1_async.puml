@@ -7,7 +7,7 @@ participant C order 10
 
 ->P
 activate P
-P->DB: write workflow state
+P->DB: write workflow state{corrId, ts}
 P-->C: RequestM
 deactivate P
 hnote over P: thread\nreleased
@@ -16,8 +16,13 @@ C->C: id=process(RequestM)
 C-->P: ReplyM
 deactivate C
 activate P
-P<-DB: read workflow state
+P<-DB: read workflow state{corrId}
 hnote over P: more work
+
+alt no reply detected by a watchdog
+P<-P: ??
+note over P: usually devs forget
+end
 @enduml
 ? how to connect reply with request
 ? what instance of P receives the ReplyM

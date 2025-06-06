@@ -1,0 +1,14 @@
+@startuml
+title Consumer Error Handling
+hide footbox
+skinparam monochrome reverse
+
+B->C: M
+C->C!!: process(M)
+hnote over C: temp error\n(503)
+B<-C: error
+B->C: M (retry) x 3-5-10
+'infinite retry!
+'!try to send an unparseable message to your Kafka listener
+
+@enduml
