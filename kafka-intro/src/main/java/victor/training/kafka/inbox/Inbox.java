@@ -2,27 +2,32 @@ package victor.training.kafka.inbox;
 
 import jakarta.persistence.*;
 import lombok.ToString;
+import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static jakarta.persistence.EnumType.STRING;
+import static victor.training.kafka.inbox.Inbox.Status.PENDING;
+
 @ToString
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"idempotency_key"})) // TODO delete
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = "idempotency_key")) // TODO undo
 public class Inbox {
   @Id
   @GeneratedValue
   private Long id;
   private String work;
   private UUID idempotencyKey;
-  @Enumerated(EnumType.STRING)
-  private Status status = Status.PENDING;
+  @Enumerated(STRING)
+  private Status status = PENDING;
   public enum Status {
     PENDING, IN_PROGRESS, DONE, ERROR
   }
   private String error;
+
   private LocalDateTime messageTimestamp;
-  private LocalDateTime createdAt = LocalDateTime.now();
+  private LocalDateTime receivedAt = LocalDateTime.now();
   private LocalDateTime startedAt;
 
   protected Inbox() {} // for Hibernate only
@@ -41,7 +46,7 @@ public class Inbox {
   }
 
   public Inbox start() {
-    if(status != Status.PENDING) {
+    if(status != PENDING) {
       throw new IllegalStateException("Can't start if not PENDING");
     }
     status = Status.IN_PROGRESS;

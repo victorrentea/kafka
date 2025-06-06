@@ -6,7 +6,7 @@ database " " as DB order 9
 queue B order 10
 
 group transaction
-    P->DB: updates
+    P->DB: update(s)
     P->B: Send M
 end
 @enduml

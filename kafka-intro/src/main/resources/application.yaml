@@ -2,7 +2,7 @@ spring.application.name: app
 
 logging:
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%16.16t] <%-3X{traceId}> %clr(%-5level %-30.30logger{29}) - %msg%n"
+    console: "%d{HH:mm:ss.SSS} [%20.20t] <%-3X{traceId}> %clr(%-5level %-30.30logger{29}) - %msg%n"
   level:
     org.apache.kafka.clients.producer.ProducerConfig: warn
     org.apache.kafka.clients.consumer.ConsumerConfig: warn
@@ -18,7 +18,7 @@ spring:
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: victor.training.kafka.EventSerdes.EventSerializer
+      value-serializer: victor.training.kafka.Event.Serializer
 #      value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
         interceptor.classes: victor.training.kafka.interceptor.ProducerTrackingInterceptor # adds traceId to sent message header
@@ -35,24 +35,15 @@ spring:
 
         interceptor.classes: victor.training.kafka.interceptor.MyConsumerInterceptor
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: victor.training.kafka.EventSerdes.EventDeserializer
+      value-deserializer: victor.training.kafka.Event.Deserializer
 #      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
       concurrency: 2 # number of threads=consumers per topic of this machine
-
-    streams:
-      application-id: app-streams
-      properties:
-        max.poll.interval.ms: 2000
-        auto.commit.interval.ms: 0
-        request.timeout.ms: 2000
-        auto.create.topics.enable: true
-#        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
 
 decorator:
   datasource:
     p6spy:
       multiline: false
       log-format: "%(executionTime) ms|%(category)|connection %(connectionId)|%(sqlSingleLine)"
-      # ignore the polling query
+      # ignore the query polling the inbox
       log-filter.pattern: "^(?!.*from inbox i1_0 where i1_0.status='PENDING').*$"

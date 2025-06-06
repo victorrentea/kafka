@@ -5,9 +5,9 @@ skinparam monochrome reverse
 
 P->C: M
 alt
-    loop timed retry 10
+'    loop timed retry 10
         C->C!!: process(M)
-    end
+'    end
 else catch (error)
 '    hnote over C: retry N times ± max time
 '    hnote over C: log.error("[ALARM-P1]M")

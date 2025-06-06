@@ -1,0 +1,14 @@
+@startuml
+title Duplicates by Producer
+hide footbox
+skinparam monochrome reverse
+
+P->B: M
+B->
+hnote over P: ⏱️
+P->B: M
+hnote over B: ignore\nduplicate
+@enduml
+? ts
+? uuid
+? seq + p thread id

@@ -25,7 +25,7 @@ public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Obje
       // TODO set on thread the traceId
       MDC.put("traceId", traceId); // TODO delete
     }
-    log.info("Received: {} from partition {}", record.value(), record.partition());
+    log.info("Received (p={}): {} -> record: {}", record.partition(), record.value(), record);
     return record;
   }
 
