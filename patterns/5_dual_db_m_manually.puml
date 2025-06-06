@@ -1,0 +1,23 @@
+@startuml
+title Dual Write: SQL + Message
+hide footbox
+skinparam monochrome reverse
+database " " as DB order 9
+queue B order 10
+
+group transaction
+    P->DB: update(s)
+    P->OUTBOX: insert M
+end
+Poller<-OUTBOX: select M
+Poller->B: Send M{ik}
+
+hnote over B: at-least-once\ndelivery
+
+hnote over Poller: timeout
+Poller->B: Send M{ik} (retry)
+Poller->OUTBOX: M delete/status=Sent
+
+@enduml
+? transactional outbox pattern
+? CDC/Debezium

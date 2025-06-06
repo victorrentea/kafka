@@ -41,7 +41,8 @@ public class WordsTopology {
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
     streamsBuilder.<String, String>stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        .flatMapValues((key, value) -> Arrays.asList(value.toLowerCase().split(" ")))
+        .mapValues(text->text.toLowerCase())
+        .flatMapValues((key, value) -> Arrays.asList(value.split(" ")))
         .groupBy((key, value) -> value, Grouped.with(String(), String()))
         .count()
         .toStream()

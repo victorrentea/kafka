@@ -5,10 +5,11 @@ skinparam monochrome reverse
 participant T1
 participant C
 
+T1->C: M1
 group transaction
-    T1->C: M1
-    C->T1: AckM1
-    C->T2: M2
+    C->T1: Ack M1
+    C->T2: M2++\nfiltered\ntransformed\nrouted to another topic\nsplit in 2
+    C->T2: M3
 end
 @enduml
 - +Send M3 to T2/T3

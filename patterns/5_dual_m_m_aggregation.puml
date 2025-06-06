@@ -1,0 +1,20 @@
+    @startuml
+title Atomic Consume-Produce
+hide footbox
+skinparam monochrome reverse
+participant T1
+participant Aggregator
+
+group transaction
+    T1->Aggregator: M1
+    hnote over Aggregator: preserve\nstate where??
+    T1->Aggregator: M2
+    Aggregator->T2: M3
+end
+
+'Kafka Streams can use KTables also stored transactionally in Kafka
+
+@enduml
+- +Send M3 to T2/T3
+- Receive M1b => stateful
+

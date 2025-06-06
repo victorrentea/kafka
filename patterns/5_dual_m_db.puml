@@ -2,14 +2,22 @@
 title Atomic Consume + SQL
 hide footbox
 skinparam monochrome reverse
-participant B
+queue B
 participant C
 database DB
 
+'B->C: M
+'C->INBOX: insert M
+'C->B: Ack M
+alt CDC
+    B->INBOX:M
+end
+
 group transaction
-    B->C: M
-    C->DB: update(s)
-    C->B: Ack M
+    Poller->INBOX: select M
+    INBOX->DB: update(s)
+    Poller->API!!: call API
+    Poller->INBOX: delete M
 end
 
 @enduml

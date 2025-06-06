@@ -1,0 +1,21 @@
+@startuml
+title Dual Write: SQL + Message
+hide footbox
+skinparam monochrome reverse
+database "SQL" as DB order 9
+queue B order 10
+
+group transaction
+    P->DB: update(s)
+    P->OUTBOX: insert M
+end
+
+hnote over DB: +1 tx in log
+
+alt CDC tail the tx
+    OUTBOX->B: M to Kafka
+end
+
+@enduml
+? transactional outbox pattern
+? CDC/Debezium

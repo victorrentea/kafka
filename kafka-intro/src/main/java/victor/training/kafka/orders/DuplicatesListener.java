@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -14,6 +15,7 @@ public class DuplicatesListener {
 
   public record OrderCreatedEvent(String ik, String data) {}
 
+  @Transactional
   @KafkaListener(topics = "duplicates")
   public void consume(ConsumerRecord<?, OrderCreatedEvent> record) {
     log.info("Process {}", record);

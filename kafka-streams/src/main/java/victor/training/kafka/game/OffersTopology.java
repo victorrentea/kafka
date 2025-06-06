@@ -46,6 +46,7 @@ public class OffersTopology {
 
     public Agg1 apply(GameResult newResult) {
       if (newResult.isWin()) return withConsecutiveLosses(0).withBonusNow(false);
+      // give a bonus every 7 days AND every 5 lost games to increase and maintain Player addiction
       long daysSinceLastWin = Duration.between(lastBonusInstant, newResult.timestamp()).toDays();
       if (consecutiveLosses + 1 == NUMBER_OF_LOSES_FOR_BONUS && daysSinceLastWin > MIN_DAYS_BETWEEN_BONUS) {
         return withConsecutiveLosses(0).withLastBonusInstant(Instant.now()).withBonusNow(true);
