@@ -1,13 +1,13 @@
 @startuml
-title Temporal Expectations
+title Temporal Expectations should be controlled via message chains
 hide footbox
 skinparam monochrome reverse
 participant P
-participant "?"
+participant "P"
 
-P->B: M
-B->C: M
+P-->C: M
 
-hnote over "?": ⏱️
-"?"->C: GET M\nExpecting done
+C-->P: MDoneEvent
+hnote over "P": after event received
+"P"->C: GET M\nExpecting done
 @enduml
