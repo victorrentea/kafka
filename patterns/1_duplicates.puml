@@ -1,0 +1,20 @@
+@startuml
+title Duplicates detected via idempotency key
+hide footbox
+skinparam monochrome reverse
+
+hnote over P: int sequence;
+P->Rabbit: M1{seq:7}
+Rabbit->C: M1{seq:7}
+note over Cache: Redis\nDB
+C->Cache: put seq:7
+hnote over P: timeout
+P->Rabbit: M1{seq:7}
+Rabbit->C: M1{seq:7}
+C->Cache!!: put seq:7
+hnote over C: skip duplicate
+
+
+@enduml
+? inbox
+? duplicates between Producer->Rabbit
