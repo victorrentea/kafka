@@ -12,9 +12,9 @@ import java.util.Iterator;
 @Slf4j
 public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Object, Object> {
   @Override
-  public ConsumerRecord<Object, Object> intercept(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
-    // TODO get value of header 'traceId'
-    // TODO delete
+  public ConsumerRecord<Object, Object> intercept(
+      ConsumerRecord<Object, Object> record,
+      Consumer<Object, Object> consumer) {
     Iterator<Header> headerValues = record.headers().headers("traceId").iterator();
     if (!headerValues.hasNext()) {
       log.warn("No traceId header found");
@@ -22,8 +22,7 @@ public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Obje
       Header header = headerValues.next();
       String traceId = new String(header.value());
       log.trace("Stored traceId: {}", traceId);
-      // TODO set on thread the traceId
-      MDC.put("traceId", traceId); // TODO delete
+      MDC.put("traceId", traceId);
     }
     log.info("Received (p={}): {} -> record: {}", record.partition(), record.value(), record);
     return record;
@@ -31,7 +30,6 @@ public class ConsumerRecordTrackingInterceptor implements RecordInterceptor<Obje
 
   @Override
   public void afterRecord(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
-    // TODO clear traceId from thread
-    MDC.remove("traceId"); // TODO delete
+    MDC.remove("traceId");
   }
 }
