@@ -32,7 +32,7 @@ public class OutOfOrderListener {
   // - concurrency="1" ? works in rabbit, not in kafka
   // - reorder via inbox
 
-  @KafkaListener(topics = SIM_TOPIC)
+  @KafkaListener(topics = SIM_TOPIC, concurrency = "1")
   public void consume(ConsumerRecord<String, SimEvent> record) throws InterruptedException, JsonProcessingException {
     SimEvent simEvent = record.value();
     var sim = simRepo.findById(simEvent.simId()).orElseThrow();

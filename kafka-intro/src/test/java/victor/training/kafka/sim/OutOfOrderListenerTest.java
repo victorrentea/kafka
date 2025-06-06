@@ -33,6 +33,9 @@ public class OutOfOrderListenerTest {
     var simId = simRepo.save(new Sim()).id();
 
     // temporal coupling of the processing
+    var messageKey = simId+""; // groupId in Artemis
+    // messages with the same key will be processed sequentially by 1 consumer thread only, in the order they were sent
+    // partition to which a kafka message will be sent is hash(key) % partition_count
     kafkaTemplate.send(SIM_TOPIC, randomUUID().toString(), new AddCredit(simId, 10));
     kafkaTemplate.send(SIM_TOPIC, randomUUID().toString(), new ActivateOffer(simId, "National10", 10));
 
