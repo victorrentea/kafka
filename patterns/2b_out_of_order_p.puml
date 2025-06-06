@@ -2,15 +2,12 @@
 title Producer Race
 hide footbox
 skinparam monochrome reverse
-actor U
 
-U->pod1: REST Req1
+LB->pod1: REST Req1\nSeq:x1
 activate pod1
-hnote over pod1: x1=time()/seq++
 hnote over pod1: slow call of API/DB
-U->pod2: REST Req2
+LB->pod2: REST Req2\nSeq:x2
 activate pod2
-hnote over pod2: x2=time()/seq++
 hnote over pod2: fast call of API/DB
 pod2->B: M2{key=7,observedAt=x2}
 deactivate pod2
