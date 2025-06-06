@@ -30,6 +30,8 @@ public class OutOfOrderListener {
   // - message.key / partitioning / kafka
 
   // - concurrency="1" ? works in rabbit, not in kafka.
+  // Rabbit solution: route messages by a key to 4(eg) queues: sim-1, sim-2, sim-3, sim-4
+  //     + connect 1 thread to each of the "sub-queues"
 
   // - reorder via inbox
 
