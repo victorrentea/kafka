@@ -4,5 +4,5 @@ hide footbox
 skinparam monochrome reverse
 
 P->C: <<command>>\nPlaceOrder
-P->C: <<event>>\nOrderPlaced
+P<-C: <<event>>\nOrderPlaced
 @enduml

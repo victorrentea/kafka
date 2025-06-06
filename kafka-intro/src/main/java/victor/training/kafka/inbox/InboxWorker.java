@@ -1,10 +1,12 @@
 package victor.training.kafka.inbox;
 
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class InboxWorker {
   @SneakyThrows

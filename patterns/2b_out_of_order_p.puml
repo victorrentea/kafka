@@ -9,10 +9,10 @@ U->P1: Req1
 activate P1
 U->P2: Req2
 activate P2
-P2->B: M2{observedAt:ts2}
+P2->B: M2{time:ts2}
 deactivate P2
-P1->B: M1{observedAt:ts1}
+P1->B: M1{time:ts1}
 deactivate P1
 @enduml
-
+? receivedAt vs observedAt
 

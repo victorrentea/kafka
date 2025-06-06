@@ -10,6 +10,7 @@ activate P
 P->DB: write workflow state
 P-->C: RequestM
 deactivate P
+hnote over P: thread\nreleased
 activate C
 C->C: id=process(RequestM)
 C-->P: ReplyM

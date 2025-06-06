@@ -11,6 +11,6 @@ group transaction
     C->T2: M2
 end
 @enduml
-- Send n*M2 or to 2 topics
-- Receive n*M1 + stateful
+- +Send M3 to T2/T3
+- Receive M1b => stateful
 

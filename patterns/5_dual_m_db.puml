@@ -8,7 +8,7 @@ database DB
 
 group transaction
     B->C: M
-    C->DB: updates
+    C->DB: update(s)
     C->B: Ack M
 end
 

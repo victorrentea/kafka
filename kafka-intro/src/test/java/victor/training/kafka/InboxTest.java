@@ -30,7 +30,7 @@ class InboxTest {
     UUID idempotencyKey = UUID.randomUUID();
     EventForLater event = new EventForLater("work", idempotencyKey);
     kafkaTemplate.send("myTopic", "k", event);
-    kafkaTemplate.send("myTopic", "k", event); // retry
+    kafkaTemplate.send("myTopic", "k", event); // = producer/broker retry
 
     Thread.sleep(3000);
     verify(worker, Mockito.times(1)).process("work");
@@ -38,11 +38,14 @@ class InboxTest {
 
   @Test
   void reordersMessagesByTimestamp() throws InterruptedException {
+    var t0 = new Date().getTime() - 100;
+    var t1 = new Date().getTime();
+
     kafkaTemplate.send("myTopic", 1,
-        new Date().getTime(),
+        t1,
         "k", new EventForLater("work2", UUID.randomUUID()));
     kafkaTemplate.send("myTopic", 1,
-        new Date().getTime() - 100,
+        t0,
         "k", new EventForLater("work1", UUID.randomUUID()));
 
     Thread.sleep(3000);

@@ -7,6 +7,7 @@ group loop ♾
     A->B: M
     B->A: M
 end
+hnote over B: crash
 
 @enduml
 

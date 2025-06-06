@@ -9,5 +9,5 @@ P->B: M
 B->C: M
 
 hnote over "?": ⏱️
-"?"->C: GET M
+"?"->C: GET M\nExpecting done
 @enduml

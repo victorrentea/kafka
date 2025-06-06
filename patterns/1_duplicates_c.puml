@@ -1,0 +1,14 @@
+@startuml
+title Duplicated Consume
+hide footbox
+skinparam monochrome reverse
+
+P->B: M
+B->C: M
+hnote over C: ?
+B->C: M
+@enduml
+? when does B re-send?
+? idempotent M semantics
+? client generated idempotency key
+? inbox pattern
