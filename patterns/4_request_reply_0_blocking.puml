@@ -1,14 +1,16 @@
 @startuml
-title Request - Reply
+title Request - Reply via correlationId
 hide footbox
 skinparam monochrome reverse
-->P
+->P:HTTP call
 activate P
-P->C: RequestM
+hnote over P: corrId=new UUID()
+hnote over C: different dept\nof the bank
+P-->C: RequestM{corrId}
 hnote over P: blocks\nfor reply
 activate C
 C->C: id=process(RequestM)
-C->P: ReplyM
+C-->P: ReplyM{id,corrId}
 deactivate C
 hnote over P: more work
 <-P
