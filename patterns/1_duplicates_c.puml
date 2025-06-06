@@ -9,6 +9,6 @@ hnote over C: ?
 B->C: M
 @enduml
 ? when does B re-send?
-? idempotent M semantics
-? client generated idempotency key
+? idempotent/self-correcting M semantics
+? producer-generated idempotency key
 ? inbox pattern

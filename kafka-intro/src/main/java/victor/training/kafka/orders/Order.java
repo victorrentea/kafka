@@ -11,7 +11,6 @@ import lombok.*;
 @Table(name = "ORDERS")
 public class Order {
   @Id
-  @GeneratedValue
-  private Long id;
+  private String id; // or a second UK
   private String data;
 }
