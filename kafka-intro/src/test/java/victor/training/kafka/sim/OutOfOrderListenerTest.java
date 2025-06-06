@@ -14,10 +14,11 @@ import java.util.UUID;
 
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static victor.training.kafka.sim.OutOfOrderListener.SIM_TOPIC;
-import static victor.training.kafka.sim.SimEvent.CreditAdded;
-import static victor.training.kafka.sim.SimEvent.OfferActivated;
+import static victor.training.kafka.sim.SimEvent.AddCredit;
+import static victor.training.kafka.sim.SimEvent.ActivateOffer;
 
 @SpringBootTest
 //@EmbeddedKafka // or via Kafka from docker-compose.yaml
@@ -30,8 +31,10 @@ public class OutOfOrderListenerTest {
   @RepeatedTest(5)
   void explore() {
     var simId = simRepo.save(new Sim()).id();
-    kafkaTemplate.send(SIM_TOPIC, UUID.randomUUID().toString(), new CreditAdded(simId, 10));
-    kafkaTemplate.send(SIM_TOPIC, UUID.randomUUID().toString(), new OfferActivated(simId, "National10", 10));
+
+    // temporal coupling of the processing
+    kafkaTemplate.send(SIM_TOPIC, randomUUID().toString(), new AddCredit(simId, 10));
+    kafkaTemplate.send(SIM_TOPIC, randomUUID().toString(), new ActivateOffer(simId, "National10", 10));
 
     Awaitility.await()
         .pollInterval(ofMillis(500))
