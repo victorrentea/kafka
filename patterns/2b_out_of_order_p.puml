@@ -2,17 +2,18 @@
 title Producer Race
 hide footbox
 skinparam monochrome reverse
-queue B order 9
 actor U
 
 U->P.pod1: REST Req1
 activate P.pod1
-P.pod1->B: M1
-deactivate P.pod1
+hnote over P.pod1: slow call of API/DB
 U->P.pod2: REST Req2
 activate P.pod2
+hnote over P.pod2: fast call of API/DB
 P.pod2->B: M2
 deactivate P.pod2
+P.pod1->B: M1
+deactivate P.pod1
 @enduml
 ? receivedAt vs observedAt
 
