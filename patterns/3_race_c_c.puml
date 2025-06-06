@@ -1,17 +1,22 @@
 @startuml
-title Consumer Race via optimistic locking
+title Consumer Race via optimistic locking + retry
 hide footbox
 skinparam monochrome reverse
 database DB order 9
 
 B->C1: M {id:7,A}
-->HTTP: M {id:7,B}
+B->C2: M {id:7,B}
 hnote over DB: R.v4
 C1<-DB: R.v4 = SELECT id=7
-HTTP<-DB: R.v4 = SELECT id=7
+C2<-DB: R.v4 = SELECT id=7
 C1->DB: UPDATE R.v4 + A
 hnote over DB: R.v5 + A
-HTTP->DB!!: UPDATE R.v4 + B
-<-HTTP: error to waiting http client
+C2->DB!!: UPDATE R.v4 + B
+B<-C2: optimistic locking error
+alt retry
+    B->C2: M {id:7,B}
+    C2<-DB: R.v5 + A = SELECT id=7
+    C2->DB: UPDATE R.v5 + A+ B
+end
 
 @enduml
