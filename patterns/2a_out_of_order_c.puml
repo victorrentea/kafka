@@ -1,13 +1,25 @@
 @startuml
-title Consumer Race
+title Consumer  - Resequencer
 hide footbox
 skinparam monochrome reverse
 queue B
 database DB order 10
 
-B->C1: M1{id:7,U1}
 B->C2: M2{id:7,U2}
-C2->DB: U2
-C1->DB!!: U1
-hnote over DB: Update U1 fails when\napplied **AFTER** U2
+C2->INBOX_tab: save M2
+B<-C2: Ack M2
+Poller->INBOX_tab: null=select the NEXT
+B->C1: M1{id:7,U1}
+C1->INBOX_tab: save M1
+B<-C1: Ack M1
+
+Poller->INBOX_tab: M1=select the NEXT
+Poller->DB: U1/M1
+Poller->INBOX_tab: delete M1
+
+Poller->INBOX_tab: M2=select the NEXT
+Poller->DB: U1/M2
+Poller->INBOX_tab: delete M2
+
+'hnote over DB: Update U1 fails when\napplied **AFTER** U2
 @enduml

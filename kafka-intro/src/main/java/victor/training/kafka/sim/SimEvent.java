@@ -7,7 +7,7 @@ public sealed interface SimEvent {
 
   Long simId();
 
-  record AddCredit(Long simId, int credit) implements SimEvent {}
+  record AddCredit(Long simId, int credit, String ik) implements SimEvent {}
 
   record ActivateOffer(Long simId, String offerId, int price) implements SimEvent {}
 }

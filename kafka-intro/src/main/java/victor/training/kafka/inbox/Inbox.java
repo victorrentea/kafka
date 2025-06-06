@@ -12,13 +12,12 @@ import static victor.training.kafka.inbox.Inbox.Status.PENDING;
 
 @ToString
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = "idempotency_key")) // TODO undo
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = "ik"))
 public class Inbox {
   @Id
   @GeneratedValue
   private Long id;
   private String work;
-  private UUID idempotencyKey;
   @Enumerated(STRING)
   private Status status = PENDING;
   public enum Status {
@@ -27,14 +26,15 @@ public class Inbox {
   private String error;
 
   private LocalDateTime messageTimestamp;
+  private String ik;
   private LocalDateTime receivedAt = LocalDateTime.now();
   private LocalDateTime startedAt;
 
   protected Inbox() {} // for Hibernate only
-  public Inbox(String work, LocalDateTime messageTimestamp, UUID idempotencyKey) {
+  public Inbox(String work, LocalDateTime messageTimestamp, String ik) {
     this.work = work;
     this.messageTimestamp = messageTimestamp;
-    this.idempotencyKey = idempotencyKey;
+    this.ik = ik;
   }
 
   public String getWork() {
