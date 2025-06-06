@@ -18,7 +18,6 @@ import victor.training.kafka.sim.SimEventListener;
 public class OfferPurchasedEventProcessor {
   public static final String OFFER_PURCHASED_TOPIC = "offer-purchased-topic";
   private final KafkaTemplate<?, SimEvent> kafkaTemplate;
-  private final OfferEventListener offerEventListener;
 
   @KafkaListener(topics = OFFER_PURCHASED_TOPIC)
   @Transactional
