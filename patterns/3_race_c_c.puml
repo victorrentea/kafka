@@ -4,11 +4,12 @@ hide footbox
 skinparam monochrome reverse
 database DB order 9
 
-B->C1: M {id:7,A}
-B->C2: M {id:7,B}
+B->C: M {key:7,A}
 hnote over DB: R
-C1<-DB: R = SELECT id=7 FOR UPDATE
-C2->DB!!: R = SELECT id=7 FOR UPDATE
-C1->DB: UPDATE R + A
-hnote over DB: R + A
+C<-DB: R = SELECT id=7
+C->DB: UPDATE R + A
+B->C: M {key:7,B}
+C->DB: R+A = SELECT id=7
+C->DB: UPDATE R +A+ B
+hnote over DB: R + A+B
 @enduml
