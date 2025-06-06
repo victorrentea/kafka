@@ -5,14 +5,14 @@ skinparam monochrome reverse
 queue B order 9
 actor U
 
-U->P1: Req1
-activate P1
-U->P2: Req2
-activate P2
-P2->B: M2{time:ts2}
-deactivate P2
-P1->B: M1{time:ts1}
-deactivate P1
+U->P.pod1: REST Req1
+activate P.pod1
+P.pod1->B: M1
+deactivate P.pod1
+U->P.pod2: REST Req2
+activate P.pod2
+P.pod2->B: M2
+deactivate P.pod2
 @enduml
 ? receivedAt vs observedAt
 

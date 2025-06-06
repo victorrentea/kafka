@@ -29,7 +29,8 @@ public class OutOfOrderListener {
 
   // - message.key / partitioning / kafka
 
-  // - concurrency="1" ? works in rabbit, not in kafka
+  // - concurrency="1" ? works in rabbit, not in kafka.
+
   // - reorder via inbox
 
   @KafkaListener(topics = SIM_TOPIC, concurrency = "1")
