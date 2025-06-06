@@ -4,13 +4,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.*;
 
 @Data
 @Entity
-@Table(name = "ORDERS")
+@Table(name = "ORDERS",
+    uniqueConstraints = @UniqueConstraint(columnNames = "idempotency_key"))
 public class Order {
   @Id
-  private String id; // or a second UK
+  @GeneratedValue// from a sequence
+  private Long id; // numeric, as usual
+  private String idempotencyKey; // from client
   private String data;
 }
