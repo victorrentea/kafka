@@ -12,5 +12,6 @@ HTTP<-DB: R.v4 = SELECT id=7
 C1->DB: UPDATE R.v4 + A
 hnote over DB: R.v5 + A
 HTTP->DB!!: UPDATE R.v4 + B
+<-HTTP: error to waiting http client
 
 @enduml
