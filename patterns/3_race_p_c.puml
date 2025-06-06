@@ -11,3 +11,4 @@ B->C: M
 hnote over "?": ⏱️
 "?"->C: GET M\nExpecting done
 @enduml
+- chain an event back from C

@@ -2,19 +2,19 @@
 title Request - Reply
 hide footbox
 skinparam monochrome reverse
-->P
-activate P
-P->C: RequestM
-hnote over P: blocks\nfor reply
-activate C
-C->C: id=process(RequestM)
-C->P: ReplyM
-deactivate C
-hnote over P: more work
-<-P
-deactivate P
+->A
+activate A
+A->B: RequestM
+hnote over A: blocks\nfor reply
+activate B
+B->B: r=process(RequestM)
+B->A: ReplyM{r}
+deactivate B
+hnote over A: more work
+<-A
+deactivate A
 @enduml
 ? how to correlate ReplyM with RequestM
-? what instance of P processes the Reply
+? what instance of A processes the Reply
 ? dynamic Rabbit queue
 ? when to use

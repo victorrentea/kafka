@@ -18,14 +18,13 @@ spring:
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: victor.training.kafka.Event.Serializer
-#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: victor.training.kafka.intro.Event.Serializer
       properties:
-        interceptor.classes: victor.training.kafka.interceptor.ProducerTrackingInterceptor # adds traceId to sent message header
-
+        interceptor.classes: victor.training.kafka.interceptor.ProducerTraceIdInterceptor
     consumer:
       group-id: app
       properties:
+        spring.json.trusted.packages: victor.*
         session.timeout.ms: 15000 # default: 45s - no heartbeats from consumer => considered dead. see also heartbeat.interval.ms=3s default
         max.poll.interval.ms: 15000 # default: 5m - max time between polls. Affects long processing time of a message
 #        max.poll.records: 1 #default: 500
@@ -33,10 +32,9 @@ spring:
         enable.auto.commit: false # default: true = commit offsets automatically even if messages are not yet processed
 #        auto.commit.interval.ms: 1000 # default: 5000
 
-        interceptor.classes: victor.training.kafka.interceptor.MyConsumerInterceptor
+        interceptor.classes: victor.training.kafka.interceptor.ConsumerPollAckInterceptor
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: victor.training.kafka.Event.Deserializer
-#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: victor.training.kafka.intro.Event.Deserializer
     listener:
       concurrency: 2 # number of threads=consumers per topic of this machine
 

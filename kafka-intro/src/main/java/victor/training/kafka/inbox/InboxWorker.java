@@ -11,9 +11,10 @@ import org.springframework.stereotype.Service;
 public class InboxWorker {
   @SneakyThrows
   public void process(String work) {
+    // TODO undo
     log.info("Processing task: {}", work);
     Thread.sleep(1000);
-    if (Math.random() < 0.1) {
+    if (Math.random() < 0.5) {
       throw new RuntimeException("Error during processing (pretend)");
     }
     log.info("Normal completion of task: {}", work);

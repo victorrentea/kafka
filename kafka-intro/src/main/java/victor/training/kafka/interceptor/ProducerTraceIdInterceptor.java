@@ -9,18 +9,17 @@ import org.jboss.logging.MDC;
 import java.util.Map;
 
 @Slf4j
-public class ProducerTrackingInterceptor implements ProducerInterceptor<String, Object> {
+@SuppressWarnings("unused") // used in .yaml
+public class ProducerTraceIdInterceptor implements ProducerInterceptor<String, Object> {
 
   @Override
   public ProducerRecord<String, Object> onSend(ProducerRecord<String, Object> record) {
-    // TODO get traceId from thread
-    String headerValue = (String) MDC.get("traceId");//TODO delete
-    if (headerValue != null) {
-      log.info("Adding traceId header: " + headerValue);
-      // TODO add the traceId header
-      record.headers().add("traceId", headerValue.getBytes()); // TODO delete
+    String traceIdFromCurrentThread = (String) MDC.get("traceId");
+    if (traceIdFromCurrentThread != null) {
+      log.info("Adding header: traceId={}", traceIdFromCurrentThread);
+      record.headers().add("traceId", traceIdFromCurrentThread.getBytes());
     } else {
-      log.warn("No traceId header found");
+      log.warn("No traceId found on current thread");
     }
     return record;
   }

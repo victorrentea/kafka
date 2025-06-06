@@ -13,7 +13,7 @@ public interface InboxRepo extends JpaRepository<Inbox, Long> {
       from Inbox inbox
       where inbox.status = 'PENDING'
         and inbox.receivedAt < :createdUntil
-      order by inbox.messageTimestamp
+      order by inbox.observedAt
       limit 1
       """)
   Optional<Inbox> findNext(LocalDateTime createdUntil);

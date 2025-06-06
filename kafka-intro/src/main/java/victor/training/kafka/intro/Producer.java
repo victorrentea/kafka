@@ -1,4 +1,4 @@
-package victor.training.kafka;
+package victor.training.kafka.intro;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +7,7 @@ import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("!test")
 public class Producer {
 
-  @EventListener(ApplicationStartedEvent.class)
+//  @EventListener(ApplicationStartedEvent.class)
+//  @Transactional(transactionManager = "kafkaTransactionManager")
   public void onStartup() {
     log.info("⭐️⭐️⭐ APP STARTED ⭐️⭐️⭐️");
     produceEvent();

@@ -1,10 +1,13 @@
-package victor.training.kafka;
+package victor.training.kafka.intro;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.context.annotation.Bean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.stereotype.Component;
 import victor.training.kafka.inbox.Inbox;
 import victor.training.kafka.inbox.InboxRepo;
@@ -12,7 +15,6 @@ import victor.training.kafka.inbox.InboxRepo;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 
 @Slf4j
 @Component
@@ -51,6 +53,15 @@ public class Consumer {
         log.error("Unknown record: " + record);
     }
     log.info("Handled " + record);
+  }
+
+  @Bean
+  public NewTopic myTopic() {
+    return TopicBuilder.name("myTopic")
+        .partitions(2)
+        .replicas(2)
+//        .config(TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")
+        .build();
   }
 }
 

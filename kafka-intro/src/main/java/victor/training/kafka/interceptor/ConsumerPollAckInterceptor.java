@@ -5,15 +5,14 @@ import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
-import victor.training.kafka.Event;
 
 import java.util.Map;
 
 @Slf4j
 @SuppressWarnings("unused")
-public class MyConsumerInterceptor implements ConsumerInterceptor<String, Event> {
+public class ConsumerPollAckInterceptor<T> implements ConsumerInterceptor<String, T> {
   @Override
-  public ConsumerRecords<String, Event> onConsume(ConsumerRecords<String, Event> records) {
+  public ConsumerRecords<String, T> onConsume(ConsumerRecords<String, T> records) {
     log.info("Polled {} records from partitions {}", records.count(),records.partitions());
     return records;
   }

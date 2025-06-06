@@ -1,11 +1,10 @@
-package victor.training.kafka;
+package victor.training.kafka.intro;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
-
-import java.util.UUID;
+import victor.training.kafka.JsonUtils;
 
 @JsonTypeInfo(use = Id.NAME)
 public sealed interface Event {
@@ -15,7 +14,7 @@ public sealed interface Event {
   }
   record EventCausingError(String work) implements Event {
   }
-  record EventForLater(String work, UUID idempotencyKey) implements Event {
+  record EventForLater(String work, String idempotencyKey) implements Event {
   }
 
   @SuppressWarnings("unused") // used in .yaml

@@ -6,8 +6,8 @@ participant B
 participant C
 database DB
 
+B->C: M
 group transaction
-    B->C: M
     C->DB: update(s)
     C->B: Ack M
 end

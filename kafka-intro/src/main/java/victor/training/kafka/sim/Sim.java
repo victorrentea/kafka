@@ -12,6 +12,10 @@ public class Sim {
   @GeneratedValue
   private Long id;
 
+  private String phoneNumber;
+
+  private boolean active = true;
+
   private int credit = 0;
 
   private String activeOfferId;

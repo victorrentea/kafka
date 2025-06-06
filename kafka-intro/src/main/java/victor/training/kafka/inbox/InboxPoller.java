@@ -28,19 +28,19 @@ public class InboxPoller {
 
     if (taskOptional.isEmpty()) return;
 
-    var task = taskOptional.get();
-    log.trace("Start task {}",task);
+    var taskJson = taskOptional.get();
+    log.trace("Start task {}",taskJson);
 
     // TODO UNDO
-    inboxRepo.save(task.start());
+    inboxRepo.save(taskJson.start());
     // from here move to a background thread
     try {
-      inboxWorker.process(task.getWork());
+      inboxWorker.process(taskJson.getWork());
 
-      inboxRepo.save(task.done());
+      inboxRepo.save(taskJson.done());
     } catch (Exception e) {
-      log.error("Task failed: {}", task, e);
-      inboxRepo.save(task.error(e.getMessage()));
+      log.error("Task failed: {}", taskJson, e);
+      inboxRepo.save(taskJson.error(e.getMessage()));
     }
   }
 

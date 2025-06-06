@@ -2,10 +2,8 @@ package victor.training.kafka.inbox;
 
 import jakarta.persistence.*;
 import lombok.ToString;
-import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import static jakarta.persistence.EnumType.STRING;
 import static victor.training.kafka.inbox.Inbox.Status.PENDING;
@@ -18,7 +16,9 @@ public class Inbox {
   @GeneratedValue
   private Long id;
   private String work;
-  private UUID idempotencyKey;
+
+  private String idempotencyKey;
+
   @Enumerated(STRING)
   private Status status = PENDING;
   public enum Status {
@@ -26,14 +26,16 @@ public class Inbox {
   }
   private String error;
 
-  private LocalDateTime messageTimestamp;
+  private LocalDateTime observedAt;
   private LocalDateTime receivedAt = LocalDateTime.now();
   private LocalDateTime startedAt;
+  private LocalDateTime completedAt;
 
   protected Inbox() {} // for Hibernate only
-  public Inbox(String work, LocalDateTime messageTimestamp, UUID idempotencyKey) {
-    this.work = work;
-    this.messageTimestamp = messageTimestamp;
+
+  public Inbox(String workJson, LocalDateTime observedAt, String idempotencyKey) {
+    this.work = workJson;
+    this.observedAt = observedAt;
     this.idempotencyKey = idempotencyKey;
   }
 
@@ -59,6 +61,7 @@ public class Inbox {
       throw new IllegalStateException("Can't mark as DONE if not IN_PROGRESS");
     }
     status = Status.DONE;
+    completedAt = LocalDateTime.now();
     return this;
   }
 
