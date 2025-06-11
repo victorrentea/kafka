@@ -1,15 +1,18 @@
 @startuml
 title Atomic SQL + Produce
 hide footbox
-skinparam monochrome reverse
-database " " as DB order 9
+database "Aerospike" as DB order 9
 queue B order 10
 
-group transaction
+alt tx
     P->DB: update(s)
-    P->B: Send M
+    P->DB: insert into outbox M
 end
+Poller->DB: select M from outbox
+Poller->B!!: Send M
 @enduml
 ? transactional outbox pattern
 ? CDC/Debezium
 
+"you never send a message before writing to the DB"
+Because aerospike is more likely to fail

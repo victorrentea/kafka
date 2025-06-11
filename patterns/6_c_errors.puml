@@ -1,7 +1,6 @@
 @startuml
 title Consumer Error Handling
 hide footbox
-skinparam monochrome reverse
 
 P->C: M
 alt

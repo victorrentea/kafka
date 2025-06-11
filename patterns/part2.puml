@@ -1,0 +1,77 @@
+ 	@startuml
+
+title Finish State Initialisation Flow
+
+autonumber1
+
+queue "Kafka" as kafka
+participant "Pet Club Service" as pet #DC143C
+database "Aerospike" as aerospike #CC99FF
+participant "Segmentation Service" as segmentation #78b0ff
+participant "BI Service" as bi #78b0ff
+participant "Rule Engine" as re #78b0ff
+participant "Messaging" as messaging #78b0ff
+
+kafka --> pet: milestone service state_init response
+
+pet -> aerospike: get game setting configuration
+activate aerospike
+aerospike -> pet: game setting config
+deactivate aerospike
+
+alt if no applicable settings found
+    pet -x pet: stop flow
+end
+
+pet -> aerospike: get pet bet index config
+activate aerospike
+aerospike -> pet: pet bet index config
+deactivate aerospike
+
+pet -> aerospike: get pet bet index promo config
+activate aerospike
+aerospike -> pet: pet bet index promo config
+deactivate aerospike
+
+pet -> pet: select active promos
+pet -> segmentation: evaluate segments (+ bet index main feature + config segments + promos segments + PRAS segment)
+activate segmentation
+segmentation -> pet
+deactivate segmentation
+pet -> aerospike: get state
+activate aerospike
+aerospike -> pet
+deactivate aerospike
+alt state level == 1
+    pet -> pet: add treats for first milestone(goal taken from milestone-service?)
+    alt pet bet index main feature active
+        pet -> bi: read pet level bi properties (spin_habit_target and club_target_4)
+        activate bi
+        bi -> pet: bi properties
+        deactivate bi
+        pet -> pet: calculate target and progress ranges (apply capping and rounding)
+        pet -> re: start rule
+        activate re
+        re -> pet: rule record
+        deactivate re
+        alt any pet bet index promo active
+            pet -> pet: select the user available promo (based on segments and priorities)
+            alt if there is an available promo
+                pet -> pet: add promo id and multiplier in the updated state
+            end
+        end
+    end
+    pet -> aerospike: save state: INITIALIZED
+    alt pet bet index main feature active
+        alt PRAS segment active
+            pet -> pet: multiply treats amount from dto by PRAS multiplier from state
+        end
+        pet -> messaging: notify client with pet bet index user info (progress 0)
+        pet -> kafka: send bi statistics START event on pet_bet_index_statistics
+    end
+    alt new pet bet index promo started
+        pet -> kafka: send bi statistics START and FINISH events on pet_bet_index_promo_statistics
+    end
+    pet --> messaging: notify client about state: balance
+end
+@enduml 

@@ -1,13 +1,17 @@
 @startuml
 title Consumer Race
 hide footbox
-skinparam monochrome reverse
-queue B
+queue T1
+queue T2
 database DB order 10
 
-B->C1: M1{id:7,U1}
-B->C2: M2{id:7,U2}
+T1->C1: ExpGained{playerId,exp}
+C1<-DB:Player{playerId}
+T2->C2: AchivementUnlocked{playerId}
+C2<-DB:Player{playerId}
+C1->DB: U1
+C2->DB!!: U2
+T2->C2: AchivementUnlocked{playerId}
 C2->DB: U2
-C1->DB!!: U1
-hnote over DB: Update U1 fails when\napplied **AFTER** U2
+'hnote over DB: Update U1 fails when\napplied **AFTER** U2
 @enduml

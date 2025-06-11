@@ -1,7 +1,6 @@
 @startuml
 title Temporal Expectations
 hide footbox
-skinparam monochrome reverse
 participant P
 participant "?"
 

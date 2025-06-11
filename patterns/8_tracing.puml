@@ -1,7 +1,6 @@
 @startuml
 title Tracing
 hide footbox
-skinparam monochrome reverse
 
 ->A:call {..} \nTraceId:42
 A-->B: Message {..} \nTraceId:42

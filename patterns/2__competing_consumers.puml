@@ -1,7 +1,6 @@
 @startuml
 title Competing Consumers
 hide footbox
-skinparam monochrome reverse
 queue B
 B->C.thread1: M1
 hnote over C.thread1: process(M1)

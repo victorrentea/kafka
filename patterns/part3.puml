@@ -1,0 +1,30 @@
+@startuml
+queue "Kafka" as kafka
+participant "Milestone Service" as milestone #ff8888
+database "Aerospike" as aerospike
+participant "Promo Schedule" as promo
+participant "Bundles Service" as bundles
+participant "Messaging" as messaging
+
+kafka --> milestone: [milestone_command] init state
+activate milestone #ff8888
+    milestone -> aerospike: get physical lanes #cached
+    milestone -> aerospike: get virtual lanes #cached
+	milestone -> aerospike: get state if any
+	alt promo feature
+    	milestone -> promo: get promo config
+	end
+	milestone -> milestone: prepare activation context
+    milestone -> milestone: apply activation policies
+    milestone -> milestone: build state
+    milestone -> aerospike: save state
+
+    milestone -> milestone: build user snapshot
+    milestone -> bundles: resolve bundles
+    milestone --> kafka: [milestone_state_updates]\n{state...}
+    milestone --> messaging: notify client about state
+    
+    milestone --> kafka: [milestone_command_result] init command\nCorrelationId=<userId>+"Init"
+deactivate
+
+@enduml

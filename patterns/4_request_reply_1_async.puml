@@ -1,7 +1,6 @@
 @startuml
 title Request - Resume
 hide footbox
-skinparam monochrome reverse
 database DB order 9
 participant B order 10
 

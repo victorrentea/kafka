@@ -1,0 +1,15 @@
+@startuml
+title Producer Race
+hide footbox
+participant T1
+participant T2
+
+T2->C:TreatReceived\n{playerId,amount}
+C->DB: insert pending reward into a table if segment is active
+T1->C:MilestoneInitialized\n{playerId,milestones:[]}
+@enduml
+? @RetryTopic
+? inbox table pattern: persist the "pending reward in your DB"
+ + process them on a @Scheduler
+ + or on the next MilestonInitialized received ~ smth of that playerId eg FeedEvent = withdraw
+

@@ -20,6 +20,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: victor.training.kafka.intro.Event.Serializer
       properties:
+        idempotent: true
         interceptor.classes: victor.training.kafka.interceptor.ProducerTraceIdInterceptor
     consumer:
       group-id: app

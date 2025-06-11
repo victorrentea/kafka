@@ -1,0 +1,71 @@
+  @startuml
+
+title User State Initialisation Subflow
+
+autonumber
+
+participant "Pet Club Service" as pet #DC143C
+database "Aerospike" as aerospike #CC99FF
+participant "Promo Schedule Service" as promo #DC143C
+participant "Segmentation Service" as segmentation #78b0ff
+participant "BI Service" as bi #78b0ff
+participant "Multiplier Service" as multiplier #78b0ff
+queue "Kafka" as kafka
+
+pet -> promo: get maxPromoEndTs
+
+activate pet #ff8888
+
+pet -> aerospike: get game setting configuration
+activate aerospike
+aerospike -> pet: validate current time by game setting config
+deactivate aerospike
+
+pet -> aerospike: get pet bet index config
+activate aerospike
+aerospike -> pet: pet bet index config
+deactivate aerospike
+
+pet -> aerospike: get pet bet index promo config
+activate aerospike
+aerospike -> pet: pet bet index promo config
+deactivate aerospike
+
+pet -> pet: select active promos
+
+pet -> segmentation: evaluate segments (+ bet index main feature + config segments + promos segments + PRAS segment)
+activate segmentation
+segmentation -> pet
+deactivate segmentation
+alt configuration is active by time and feature is active and non idle
+    pet -> aerospike: get existing state by userId
+    activate aerospike
+    aerospike -> pet: user state
+    deactivate aerospike
+    alt state missing
+        pet -> aerospike: get Valley state by userId
+        activate aerospike
+        aerospike -> pet: valley state
+        deactivate aerospike
+        pet -> pet: add new pet to valley without popup on client side
+        pet -> pet: calculate goal target
+        pet -> bi: read pet level bi properties (For pet club: "club_target_1" or "club_target_2" ...)
+        activate bi
+        bi -> pet: bi properties
+        deactivate bi
+        alt any read bi properties is less than "goal cap settings property" value
+            pet -> multiplier: read multiplier "pet-club-fallback-goal"
+            activate multiplier
+            multiplier -> pet
+            deactivate multiplier
+            pet -> pet: set invalid bi property value = multiplier "pet-club-fallback-goal" x "goal fallback settings" property value
+        end
+        pet -> aerospike: save new valley state
+        pet -> aerospike: save initial state: PARTIAL*
+        pet --> kafka: init milestone state command (with goal & level)
+    else if state is not missing
+        == Bet Index Info initialisation (when pet state exits) Subflow ==
+    end
+end
+@enduml
+  

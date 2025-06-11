@@ -19,11 +19,12 @@ public class OfferPurchasedEventProcessor {
   public static final String OFFER_PURCHASED_TOPIC = "offer-purchased-topic";
   private final KafkaTemplate<?, SimEvent> kafkaTemplate;
 
-  @KafkaListener(topics = OFFER_PURCHASED_TOPIC)
+  @KafkaListener(topics = OFFER_PURCHASED_TOPIC) // recharge + activate
   @Transactional
   public void onOfferPurchased(OfferPurchasedEvent event) {
     kafkaTemplate.send(SimEventListener.SIM_TOPIC, new CreditAdded(event.simId(), event.pricePaid()));
-//    if(true) throw new IllegalArgumentException();
+    if(true) throw new IllegalArgumentException("k8s decided to kill me");
     kafkaTemplate.send(SimEventListener.SIM_TOPIC, new OfferActivated(event.simId(), event.offerId(), event.pricePaid()));
   }
+  // ATOMIC = {consumer offset++, send, send}
 }
