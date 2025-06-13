@@ -9,6 +9,7 @@ hnote over P: ⏱️
 P->B: M
 hnote over B: ignore\nduplicate
 @enduml
+Ideas:
 ? ts
 ? uuid
 ? seq + p thread id

@@ -1,0 +1,24 @@
+@startuml
+title Idempotent Kafka Producer\nvia thread_id + sequence number
+hide footbox
+skinparam monochrome reverse
+
+hnote over KProducer: 1 thread
+KProducer->KProducer: p_id=uuid()\nseq=0
+
+->KProducer++: send M1
+KProducer->KProducer: seq++
+KProducer->KBroker++: M1{...}\nIdempotency-Key: p_id,seq(=1)
+KBroker--
+KBroker->:M1
+hnote over KProducer: timeout before\nreceiving an ACK
+KProducer->KBroker++: M1{...}\nIdempotency-Key: p_id,seq(=1)
+hnote over KBroker: ignore duplicate by\nIdempotency-Key
+KProducer<-KBroker--:ACK
+KProducer--
+->KProducer++: send M2
+KProducer->KProducer: seq++
+KProducer->KBroker++: M2{...}\nIdempotency-Key: p_id,seq(=2)
+KProducer<-KBroker--:ACK
+KBroker->:M2
+@enduml

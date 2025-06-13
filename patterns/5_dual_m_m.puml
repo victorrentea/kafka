@@ -13,4 +13,4 @@ end
 @enduml
 - +Send M3 to T2/T3
 - Receive M1b => stateful
-
+- Kafka supports transactional consume & produce !!

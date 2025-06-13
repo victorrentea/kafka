@@ -1,0 +1,18 @@
+@startuml
+title Dedup by Consumer\npersisting last offset for its partition
+hide footbox
+skinparam monochrome reverse
+KBroker<-KConsumer: poll from offset 7
+KConsumer++
+KBroker->KConsumer: M1\noffset(=7)
+hnote over KConsumer: processing
+alt transaction
+KConsumer->DB: updates
+KConsumer->DB: update next_offset=8
+end
+KConsumer--
+
+KBroker<-KConsumer: poll from offset 8
+KConsumer++
+KBroker->KConsumer: M2\noffset(=8)
+@enduml

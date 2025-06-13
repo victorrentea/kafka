@@ -2,10 +2,10 @@
 title Competing Consumers
 hide footbox
 skinparam monochrome reverse
-queue B
 B->C.thread1: M1
 hnote over C.thread1: process(M1)
+
 B->C.thread1: M2
 hnote over C.thread1: process(M2)
-note over C.thread1: performance?
+note over C.thread1: low throughput!
 @enduml

@@ -3,7 +3,7 @@ title Tracing
 hide footbox
 skinparam monochrome reverse
 
-->A:call {..} \nTraceId:42
-A-->B: Message {..} \nTraceId:42
-B->:calls \nTraceId:42
+->A:call {..} \nTrace-Id:42
+A-->B: Message {..} \nTrace-Id:42
+B->:calls \nTrace-Id:42
 @enduml

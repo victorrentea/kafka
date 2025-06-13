@@ -1,0 +1,13 @@
+@startuml
+title Consumer Race
+hide footbox
+skinparam monochrome reverse
+database DB order 10
+
+hnote over Partition7: messages with same key\nbelong to same paritition
+hnote over Consumer3: a partition is processed\nby ONE thread, in sequence
+Partition7->Consumer3: M1{id:7,U1}\nkey:7
+Consumer3->DB: U1
+Partition7->Consumer3: M2{id:7,U2}\nkey:7
+Consumer3->DB: U2
+@enduml

@@ -5,13 +5,15 @@ skinparam monochrome reverse
 
 P->C: M
 alt
-'    loop timed retry 10
+    loop retry 10x + timeout
         C->C!!: process(M)
-'    end
+    end
 else catch (error)
-'    hnote over C: retry N times ± max time
-'    hnote over C: log.error("[ALARM-P1]M")
-'    C->B: M to DLQ
+    hnote over C: log.error("[ALARM-P1]M")
+
+'    C->DLQ: M
+'    hnote over DLQ: alarm\n±manual replay
+
 '    C->B: PaymentFailedEvent
 end
 

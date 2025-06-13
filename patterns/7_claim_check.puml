@@ -4,8 +4,9 @@ hide footbox
 skinparam monochrome reverse
 
 P-->C: M {id}
-C->P: GET abc/{id}
+C->P++: GET abc/{id}\n(a) Authorization: ...
+C<--P--: (b) 1GB
 @enduml
-? GDPR
-? Large Payload
+(a) GDPR
+(b) Large Payload
 

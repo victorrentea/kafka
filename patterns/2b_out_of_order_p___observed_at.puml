@@ -1,0 +1,25 @@
+@startuml
+title Producer Race\nSend ObservedAt
+hide footbox
+skinparam monochrome reverse
+actor U
+
+U->P1: Req1\nTimestamp: t0
+activate P1
+U->P2: Req2\nTimestamp: t1
+activate P2
+hnote over P1: delay
+P2->B: M2 {observedAt:t1}
+deactivate P2
+P1->B: M1 {observedAt:t0}
+deactivate P1
+
+alt time window
+    B->Deduplicator: M2 {..}
+    B->Deduplicator: M1 {..}
+    hnote over Deduplicator: window size = ?\n-long: latency++\n-short: inefficient
+end
+Deduplicator->:M1 {..}
+Deduplicator->:M2 {..}
+@enduml
+
