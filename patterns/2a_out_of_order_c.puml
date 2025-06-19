@@ -1,7 +1,6 @@
 @startuml
 title Consumer Race
 hide footbox
-skinparam monochrome reverse
 queue B
 database DB order 10
 

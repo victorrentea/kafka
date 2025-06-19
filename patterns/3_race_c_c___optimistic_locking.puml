@@ -1,16 +1,22 @@
 @startuml
-title Consumer Race
+title Consumer Race\nFixed via Optimistic Locking, Retried
 hide footbox
-skinparam monochrome reverse
 database DB order 9
 
-B->C1: M {id:7,+A}
-B->C2: M {id:7,+B}
-hnote over DB: R.v5
-C1->DB: R.v5 = SELECT id=7
-C2->DB: R.v5 = SELECT id=7
-C1->DB: UPDATE R.v5 + A
-hnote over DB: R.v6 + A
-C2->DB!!: UPDATE R.v5 + B
+B->C1: M {id:7,add:+A}
+B->C2: M {id:7,add:+B}
+hnote over DB: R{X,v:1}
+C1->DB: R{X,v:1} = SELECT R WHERE id=7
+C2->DB: R{X,v:1} = SELECT R WHERE id=7
+C1->DB: UPDATE R{X+A,v:1}
+hnote over DB: R{X+A,v:2}
+C2->DB!!: UPDATE R{X+B,v:1}
 B<--C2: Optimistic Locking Ex
+hnote over DB: R{X+A,v:2}
+group retry
+B->C2: M {id:7,add:+B}
+C2->DB: R{X+A,v:2} = SELECT R WHERE id=7
+C2->DB: UPDATE R{X+A+B,v:2}
+hnote over DB: R{X+A,v:3}
+end
 @enduml

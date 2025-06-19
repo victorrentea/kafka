@@ -1,7 +1,6 @@
 @startuml
 title Duplicates by Producer
 hide footbox
-skinparam monochrome reverse
 
 P->B: M
 B->

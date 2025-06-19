@@ -1,7 +1,6 @@
 @startuml
 title Request - Reply
 hide footbox
-skinparam monochrome reverse
 ->A
 activate A
 A->B: RequestM

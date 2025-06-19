@@ -1,7 +1,6 @@
     @startuml
 title Atomic Consume-Produce
 hide footbox
-skinparam monochrome reverse
 participant T1
 participant C
 

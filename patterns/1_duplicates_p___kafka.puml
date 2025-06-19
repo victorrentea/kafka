@@ -1,7 +1,6 @@
 @startuml
 title Idempotent Kafka Producer\nvia thread_id + sequence number
 hide footbox
-skinparam monochrome reverse
 
 hnote over KProducer: 1 thread
 KProducer->KProducer: p_id=uuid()\nseq=0

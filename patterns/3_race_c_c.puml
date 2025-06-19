@@ -1,7 +1,6 @@
 @startuml
 title Consumer Race
 hide footbox
-skinparam monochrome reverse
 database DB order 9
 
 B->C1: M {id:7,+A}

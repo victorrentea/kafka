@@ -1,7 +1,6 @@
 @startuml
 title Producer Race
 hide footbox
-skinparam monochrome reverse
 queue B order 9
 actor U
 

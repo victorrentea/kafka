@@ -1,7 +1,6 @@
 @startuml
 title Producer Race\nSend ObservedAt
 hide footbox
-skinparam monochrome reverse
 actor U
 
 U->P1: Req1\nTimestamp: t0
@@ -14,7 +13,7 @@ deactivate P2
 P1->B: M1 {observedAt:t0}
 deactivate P1
 
-alt time window
+group time window
     B->Deduplicator: M2 {..}
     B->Deduplicator: M1 {..}
     hnote over Deduplicator: window size = ?\n-long: latency++\n-short: inefficient

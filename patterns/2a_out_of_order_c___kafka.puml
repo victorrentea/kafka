@@ -1,7 +1,6 @@
 @startuml
 title Consumer Race
 hide footbox
-skinparam monochrome reverse
 database DB order 10
 
 hnote over Partition7: messages with same key\nbelong to same paritition
