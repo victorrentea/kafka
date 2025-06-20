@@ -2,21 +2,24 @@
 title Producer Race\nSend ObservedAt
 hide footbox
 actor U
+participant P1
+participant P2
 
 U->P1: Req1\nTimestamp: t0
 activate P1
+P1->API++:call (200ms)
 U->P2: Req2\nTimestamp: t1
 activate P2
-hnote over P1: delay
-P2->B: M2 {observedAt:t1}
-deactivate P2
-P1->B: M1 {observedAt:t0}
-deactivate P1
+P2->API++:call (50ms)
+P2<--API--
+B<-P2--: M2 {observedAt:t1}
+P1<--API--
+B<-P1--: M1 {observedAt:t0}
 
 group time window
     B->Deduplicator: M2 {..}
     B->Deduplicator: M1 {..}
-    hnote over Deduplicator: window size = ?\n-long: latency++\n-short: inefficient
+    hnote over Deduplicator: window size = ?\n-longer: latency++\n-shorter: inefficient
 end
 Deduplicator->:M1 {..}
 Deduplicator->:M2 {..}

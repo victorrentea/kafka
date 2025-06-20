@@ -32,7 +32,7 @@ public class InboxPoller {
     log.trace("Start task {}",taskJson);
 
     // TODO UNDO
-    inboxRepo.save(taskJson.start());
+    inboxRepo.save(taskJson.start()); // prevents other instances racing with me
     // from here move to a background thread
     try {
       inboxWorker.process(taskJson.getWork());

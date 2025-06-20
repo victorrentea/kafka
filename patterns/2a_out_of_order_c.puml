@@ -1,12 +1,15 @@
 @startuml
 title Consumer Race
 hide footbox
-queue B
 database DB order 10
 
-B->C1: M1{id:7,U1}
-B->C2: M2{id:7,U2}
-C2->DB: U2
-C1->DB!!: U1
-hnote over DB: Update U1 fails when\napplied **AFTER** U2
+title Consumer Race\nvia Partitioning in Kafka
+hide footbox
+database DB order 10
+
+->Consumer: ActivateOffer{Nat5}\ntime: 11:00
+Consumer->Consumer!!: process
+hnote over Consumer: no credit
+->Consumer: AddCredit{5E}\ntime: 10:00
+Consumer->Consumer: process
 @enduml
