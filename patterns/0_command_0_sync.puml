@@ -1,0 +1,14 @@
+@startuml
+title Sync Command over HTTP
+hide footbox
+'skinparam monochrome reverse
+
+A->B++: POST /orders
+A++
+hnote over B: work
+A<--B--:200 OK\norderId: 123
+A--
+
+
+
+@enduml

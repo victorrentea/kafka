@@ -1,0 +1,9 @@
+@startuml
+title Command over Message
+hide footbox
+'skinparam monochrome reverse
+
+A-->B++: place-order\n{id:123,..}
+hnote over B: work
+
+@enduml

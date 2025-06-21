@@ -1,0 +1,17 @@
+@startuml
+title Async Command over HTTP
+hide footbox
+'skinparam monochrome reverse
+
+A->B++: POST /orders
+A++
+A<--B--:202 Accepted\norderId: 123
+A--
+A->B:GET /order/123
+A<--B: "pending"
+hnote over B: work
+A->B:GET /order/123
+A<--B: "done"
+
+
+@enduml
