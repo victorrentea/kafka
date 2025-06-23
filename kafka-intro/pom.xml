@@ -8,6 +8,9 @@
         <version>1.0</version>
     </parent>
     <artifactId>kafka-intro</artifactId>
+    <properties>
+        <testcontainers.version>1.21.1</testcontainers.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -22,6 +25,19 @@
             <groupId>com.github.gavlyukovskiy</groupId>
             <artifactId>p6spy-spring-boot-starter</artifactId>
             <version>1.10.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

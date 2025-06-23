@@ -1,8 +1,9 @@
+
 services:
   broker:
     image: confluentinc/cp-kafka:7.5.3
     hostname: broker
-    container_name: broker
+    #    container_name: broker
     ports:
       - "9092:9092"
       - "9101:9101"
@@ -28,7 +29,7 @@ services:
   schema-registry:
     image: confluentinc/cp-schema-registry:7.5.3
     hostname: schema-registry
-    container_name: schema-registry
+    #    container_name: schema-registry
     depends_on:
       - broker
     ports:
@@ -42,7 +43,7 @@ services:
   ksqldb-server:
     image: confluentinc/cp-ksqldb-server:7.8.0
     hostname: ksqldb-server
-    container_name: ksqldb-server
+    #    container_name: ksqldb-server
     depends_on:
       - broker
     ports:
@@ -63,7 +64,7 @@ services:
 
   ksqldb-cli:
     image: confluentinc/cp-ksqldb-cli:7.8.0
-    container_name: ksqldb-cli
+    #    container_name: ksqldb-cli
     depends_on:
       - broker
       - ksqldb-server
