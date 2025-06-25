@@ -1,0 +1,23 @@
+@startuml
+title Producer Race\nSend ObservedAt
+hide footbox
+actor U
+participant P1
+participant P2
+
+U->P1: Req1\nTimestamp: t0
+activate P1
+P1->DB: v1=get next vers (tiny lock)
+' TODO get next sequence from the DB
+P1->API++:call (200ms)
+U->P2: Req2\nTimestamp: t1
+activate P2
+P2->DB: v2=get next vers (tiny lock)
+P2->API++:call (50ms)
+P2<--API--
+B<-P2--: M2 {ver:2}
+P1<--API--
+B<-P1--: M1 {ver:1}
+
+@enduml
+
