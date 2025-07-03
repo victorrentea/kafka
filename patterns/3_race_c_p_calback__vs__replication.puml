@@ -1,0 +1,13 @@
+@startuml
+title Consumer Callback Race vs Produce DB Replication
+
+-> A++:call
+A -> A.PrimaryDB : UPDATE P
+A.PrimaryDB --> A.ReadReplicaDB: UPDATE P (lagging)B
+B<--A--: PUpdatedEvent
+
+B ->A++: GET P
+A->A.ReadReplicaDB: SELECT P (stale, 10s behind)
+B<--A--: P (stale!)
+
+@enduml
