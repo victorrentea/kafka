@@ -3,13 +3,13 @@ title Consumer Race
 hide footbox
 database DB order 10
 
-title Consumer Race\nvia Partitioning in Kafka
+title Consumer Race
 hide footbox
 database DB order 10
 
-->Consumer: ActivateOffer{Nat5}\ntime: 11:00
+->Consumer: ActivateOffer{Nat5}\ntime: 10:01
 Consumer->Consumer!!: process
 hnote over Consumer: no credit
-->Consumer: AddCredit{5E}\ntime: 10:00
+->Consumer: AddCredit{5 EUR}\ntime: 10:00
 Consumer->Consumer: process
 @enduml
