@@ -1,0 +1,23 @@
+@startuml
+title Producer Race\nFix: Sequence Number
+hide footbox
+actor U
+participant P1
+participant P2
+hnote over Counter: in-memory\nor remote
+U->P1: Request1\ntime: 10:00
+activate P1
+P1->Counter: seq=next seq=41
+' TODO get next sequence from the DB
+P1->API++:call (200ms)
+U->P2: Request2\ntime: 10:01
+activate P2
+P2->Counter: seq=next seq=42
+P2->API++:call (50ms)
+P2<--API--
+B<-P2--: M2 {seq:42, ..}
+P1<--API--
+B<-P1--: M1 {seq:41, ..}
+
+@enduml
+

@@ -1,0 +1,18 @@
+@startuml
+title Out of Order Messages\nFix: Resequencer
+hide footbox
+
+group time window
+    ->Resequencer: M2 {observedAt:10:01}
+    ->Resequencer: M1 {observedAt:10:00}
+
+    '->Resequencer: M2 {seq:42}
+    '->Resequencer: M1 {seq:41}
+
+    Resequencer->Resequencer: order by observedAt
+    hnote over Resequencer: time window size = ?\n-longer: latency++\n-shorter: ineffective\n?For some messages
+end
+Resequencer->:M1
+Resequencer->:M2
+@enduml
+

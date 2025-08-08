@@ -1,5 +1,5 @@
 @startuml
-title Consumer Race\nvia Partitioning in Kafka
+title Consumer Out of Order\nFix via INBOX
 hide footbox
 database DB order 10
 participant Poller order 11

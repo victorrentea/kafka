@@ -4,7 +4,7 @@ hide footbox
 ->A
 activate A
 A->B: RequestM
-hnote over A: blocks\nfor reply
+hnote over A #FFAAAA: blocks\nfor reply
 activate B
 B->B: r=process(RequestM)
 B->A: ReplyM{r}

@@ -1,0 +1,13 @@
+@startuml
+title Consumer Out of Order\nFix via Partitioning in Kafka
+hide footbox
+participant "TopicA\nPartition7" as TA_P7
+participant "Consumer3\n(1 thread)" as C3
+
+hnote over TA_P7: Messages with the same key\nare stored in the same partition
+hnote over C3: Messages in a partition\nare processed in order,\non one single thread
+TA_P7->C3++: M1 {key:7, U1}
+C3--
+TA_P7->C3++: M2 {key:7, U2}
+C3--
+@enduml

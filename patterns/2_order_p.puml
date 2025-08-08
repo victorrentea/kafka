@@ -4,13 +4,14 @@ hide footbox
 queue B order 9
 actor U
 
-U->P1: Req1
+U->P1: Request1\ntime: 10:00
 activate P1
-U->P2: Req2
+U->P2: Request2\ntime: 10:00
 activate P2
-P2->B: M2{time:ts2}
+hnote over P1: takes\nlonger
+P2->B: M2
 deactivate P2
-P1->B: M1{time:ts1}
+P1->B: M1
 deactivate P1
 @enduml
 ? receivedAt vs observedAt

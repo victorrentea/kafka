@@ -4,7 +4,7 @@ hide footbox
 participant T1
 participant C
 
-    T1->C: M1
+T1->C: M1
 group transaction
     C->T1: Ack M1
     C->T2: Send M2
@@ -12,4 +12,4 @@ end
 @enduml
 - +Send M3 to T2/T3
 - Receive M1b => stateful
-- Kafka supports transactional consume & produce !!
+- Kafka transaction (consume* + produce*)

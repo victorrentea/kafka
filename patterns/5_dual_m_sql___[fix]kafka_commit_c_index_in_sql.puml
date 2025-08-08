@@ -1,0 +1,16 @@
+@startuml
+title Atomic Consume + SQL
+hide footbox
+participant B
+participant C
+database DB
+
+B<-C: poll from curr_off
+B->C: M
+group transaction
+    C->DB: update(s)
+    C->DB: update curr_off
+end
+
+@enduml
+? inbox pattern

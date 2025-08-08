@@ -1,0 +1,20 @@
+@startuml
+title Atomic (SQL + Send)
+hide footbox
+participant P
+database SQL
+participant Poller
+queue B
+
+group transaction
+    P->SQL: update(s)
+    P->SQL: insert M into OUTBOX
+end
+
+Poller->SQL:select M from OUTBOX
+Poller->B:M{ik}
+'hnote over Poller: BOOM
+Poller->SQL:delete M
+
+@enduml
+

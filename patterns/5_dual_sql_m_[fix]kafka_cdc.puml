@@ -1,0 +1,16 @@
+@startuml
+title Atomic (SQL + Send)
+hide footbox
+participant P
+database SQL
+participant Debezium
+queue B
+
+group transaction
+    P->SQL: update(s)
+end
+
+SQL<-Debezium:tail tx log
+Debezium->B:M (exactly once)
+
+@enduml

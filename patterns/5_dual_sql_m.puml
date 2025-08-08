@@ -1,11 +1,11 @@
 @startuml
 title Atomic SQL + Produce
 hide footbox
-database " " as DB order 9
+database SQL order 9
 queue B order 10
 
 group transaction
-    P->DB: update(s)
+    P->SQL: update(s)
     P->B: Send M
 end
 @enduml

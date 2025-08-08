@@ -1,0 +1,28 @@
+@startuml
+title Producer Race\nFix: Produce ASAP
+hide footbox
+actor U
+participant P1
+participant P2
+participant "Topic A\nPartition 7" as TA_P7
+participant "Topic B\nPartition 5" as TB_P5 order 10
+
+U->P1++: Request1\ntime: 10:00
+TA_P7<-P1--:M1{key:42}
+hnote over TA_P7: same key =>\nsame partition
+U->P2++: Request2\ntime: 10:01
+TA_P7<-P2--:M2{key:42}
+
+== later ==
+TA_P7->Processor++:M1
+Processor->ExtAPI++:call (200ms)
+Processor<--ExtAPI--
+TB_P5<-Processor--:M1a
+
+hnote over TB_P5: same key =>\nsame partition
+TA_P7->Processor++:M2
+Processor->ExtAPI++:call (200ms)
+Processor<--ExtAPI--
+TB_P5<-Processor--:M2a
+@enduml
+

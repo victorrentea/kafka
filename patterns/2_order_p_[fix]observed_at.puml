@@ -1,0 +1,23 @@
+@startuml
+title Producer Race\nFix: Send ObservedAt
+hide footbox
+actor U
+participant P1
+participant P2
+
+hnote over U: a) sends time as header
+
+U->P1: Request1\ntime: 10:00
+activate P1
+hnote over P1: b) samples time ASAP
+P1->API++:call (200ms)
+U->P2: Request2\ntime: 10:01
+activate P2
+P2->API++:call (50ms)
+P2<--API--
+Topic<-P2--: M2 {observedAt:10:01}
+P1<--API--
+Topic<-P1--: M1 {observedAt:10:00}
+
+@enduml
+

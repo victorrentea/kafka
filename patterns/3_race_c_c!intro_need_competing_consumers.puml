@@ -1,0 +1,10 @@
+@startuml
+title Competing Consumers
+hide footbox
+B->C.thread1++: M1
+C.thread1--
+
+B->C.thread1++: M2
+C.thread1--
+note over C.thread1: low throughput!
+@enduml
