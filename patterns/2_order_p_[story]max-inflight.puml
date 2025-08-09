@@ -1,0 +1,13 @@
+@startuml
+title Producer Race\nmax.in.flight.requests.per.connection>=2
+hide footbox
+participant P
+queue B
+
+P->B!!:M1
+P->B:M2
+P<--B:Ack M2
+P->B:M1 (retry)
+P<--B:Ack M1
+@enduml
+
