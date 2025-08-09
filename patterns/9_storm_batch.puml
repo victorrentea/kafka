@@ -2,7 +2,7 @@
 title Event Storm from Batch
 hide footbox
 
-->P:import huge file
+->P:import XXL file
 loop x 10.000.000
 P->B: M
 end

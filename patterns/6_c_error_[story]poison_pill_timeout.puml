@@ -8,7 +8,7 @@ B->C1++: M
 C1->API++:call
 hnote over API: takes\n10+ min
 C1<--API--
-hnote over C1: no heartbeat\nsent on time
+hnote over C1 #FFAAAA: no heartbeat\nsent on time to B
 C1--
 B->B: rebalance\npartition\nto C2\n(RIP C1)
 

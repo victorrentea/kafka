@@ -1,0 +1,11 @@
+@startuml
+title (a))Sensitive/(b)Large Payload\nFix:Claim Check Pattern
+hide footbox
+
+P->P:id = uuid()
+P->Storage:store payload,id
+P-->C: M {id}
+C->P++: (a) GET abc/{id}\nAuthorization: ...
+Storage<-C--: (b) get 1GB
+@enduml
+

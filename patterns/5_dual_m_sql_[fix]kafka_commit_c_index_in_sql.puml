@@ -5,11 +5,11 @@ participant B
 participant C
 database DB
 
-B<-C: poll from curr_off
+B<-C: poll from consumer_offset
 B->C: M
 group transaction
     C->DB: update(s)
-    C->DB: update curr_off
+    C->DB: update consumer_offset
 end
 
 @enduml
