@@ -1,0 +1,23 @@
+@startuml
+title Consumer Race\nFix: Kafka Paritioning
+hide footbox
+database DB order 9
+->Partition5:M {key:7,+A}
+->Partition5:M {key:7,+B}
+note left: Topic has 10 partitions.\nhash(key)=hash(7)=25\n25 % 10=5\n->Both messages are added to partition #5
+
+hnote over C1: C1 is assigned Partition 5
+Partition5->C1++: M {id:7,+A}
+hnote over DB: R
+C1->DB: R = SELECT id=7
+C1->DB: UPDATE R + A
+C1--
+hnote over DB: R + A
+
+hnote over C1: Messages of a partition\nare processed sequentially\nin the order they were received
+
+Partition5->C1++: M {id:7,+B}
+C1->DB: R+A = SELECT id=7
+C1->DB: UPDATE R + A + B
+hnote over DB: R + A + B
+@enduml

@@ -2,9 +2,10 @@
 title Consumer Out of Order
 hide footbox
 
-->Consumer: ActivateOffer{Nat5}\nsentAt: 10:01
+->Consumer: ActivateOffer{simId:7,Nat5}\nobservedAt: 10:01
 Consumer->Consumer!!: process
 hnote over Consumer #FFAAAA: no credit
-->Consumer: AddCredit{5 EUR}\nsentAt: 10:00
+
+->Consumer: AddCredit{simId:7,5 EUR}\nobservedAt: 10:00
 Consumer->Consumer: process
 @enduml
