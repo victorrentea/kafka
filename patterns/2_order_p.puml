@@ -4,11 +4,12 @@ hide footbox
 queue B order 9
 actor U
 
-U->P1: Request1\ntime: 10:00
+U->P1: <<http>>\nRequest1\ntime: 7:00:00
 activate P1
-U->P2: Request2\ntime: 10:00
+U->P2: <<http>>\nRequest2\ntime: 7:00:01
 activate P2
-hnote over P1: takes\nlonger
+hnote over P1: 3s
+hnote over P2: 1s
 P2->B: M2
 deactivate P2
 P1->B: M1

@@ -10,7 +10,7 @@ group time window
     '->Resequencer: M1 {seq:41}
 
     Resequencer->Resequencer: order by observedAt
-    hnote over Resequencer: time window size = ?\n-longer: latency++\n-shorter: ineffective\n?For some messages
+    hnote over Resequencer: time window size = ?\n> longer: latency++\n> shorter: ineffective\n± custom/message
 end
 Resequencer->:M1
 Resequencer->:M2

@@ -1,5 +1,5 @@
 @startuml
-title Producer Race\nFix: Produce ASAP
+title Producer Race\nFix: Produce ASAP (before any network call)
 hide footbox
 actor U
 participant P1

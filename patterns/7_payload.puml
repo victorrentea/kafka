@@ -5,4 +5,3 @@ hide footbox
 P-->C: M {1 MB}
 P-->C: M {customer-pii(gdpr)}
 @enduml
-

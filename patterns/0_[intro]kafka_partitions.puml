@@ -1,0 +1,16 @@
+@startuml
+title Kafka Partitions
+hide footbox
+participant Producers
+participant "TopicA\nPartition7" as TA_P7
+participant "Consumer3\n(1 thread)" as C3
+
+Producers -> TA_P7: M1 {key:7, value:..}
+hnote over TA_P7: Messages with the same key\nare stored in the same partition:\npart=hash(M.key)%no_part
+Producers -> TA_P7: M2 {key:7, value:..}
+TA_P7->C3++: M1
+C3--
+hnote over C3: Messages in a partition\nare consumed in order,\nby ONE thread (no race)
+TA_P7->C3++: M2
+C3--
+@enduml

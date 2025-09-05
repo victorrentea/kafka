@@ -1,24 +1,24 @@
 @startuml
 title Consumer Out of Order\nFix via INBOX
 hide footbox
-database DB order 10
+database INBOX order 10
 participant Poller order 11
 
 ->Consumer: M1:ActivateOffer{Nat5}\ntime: 11:00
-Consumer->DB: INSERT M1 in INBOX
+Consumer->INBOX: INSERT M1
 ->Consumer: M2:AddCredit{5E}\ntime: 10:00
-Consumer->DB: INSERT M2 in INBOX
+Consumer->INBOX: INSERT M2
 hnote over Poller: every 1s
-Poller->DB: SELECT from INBOX\nWHERE insert_time < 5s ago\nORDER by time asc\nLIMIT 1
+Poller->INBOX: SELECT from INBOX\nWHERE insert_time < 5s ago\nORDER by time asc\nLIMIT 1
 Poller++
-DB-->Poller: M2(time:10:00)
-Poller->Poller++: process
+INBOX-->Poller: M2(time:10:00)
+Poller->Poller++: process(M2)
 Poller--
 Poller--
-Poller->DB: SELECT ..
+Poller->INBOX: SELECT ..
 Poller++
-DB-->Poller: M1(time:10:01)
-Poller->Poller++: process
+INBOX-->Poller: M1(time:10:01)
+Poller->Poller++: process(M1)
 Poller--
 Poller--
 @enduml

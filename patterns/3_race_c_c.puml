@@ -6,8 +6,8 @@ database DB order 9
 B->C1: M {id:7,+A}
 B->C2: M {id:7,+B}
 hnote over DB: R
-C1->DB: R = SELECT id=7
-C2->DB: R = SELECT id=7
+C1->DB: R = SELECT where id=7
+C2->DB: R = SELECT where id=7
 C1->DB: UPDATE R + A
 hnote over DB: R + A
 C2->DB: UPDATE R + B

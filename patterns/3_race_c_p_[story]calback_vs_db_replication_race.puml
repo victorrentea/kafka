@@ -1,0 +1,16 @@
+@startuml
+title Consumer Callback Race vs Produce DB Replication
+
+-> SystemA++:call
+SystemA -> DB.Primary : UPDATE X
+hnote over DB.Replica #FFAAAA: large lag\nvs Primary
+SystemB<--SystemA--: XUpdatedEvent{id}
+SystemB++
+SystemB->SystemA++: GET x/{id}      **// callback to source**
+SystemA->DB.Replica++: SELECT from X
+SystemA<--DB.Replica--: stale X data, 10s behind
+SystemB<--SystemA--: stale X data
+SystemB--
+DB.Primary --> DB.Replica: UPDATE X
+
+@enduml

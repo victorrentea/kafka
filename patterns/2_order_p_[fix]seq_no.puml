@@ -4,15 +4,16 @@ hide footbox
 actor U
 participant P1
 participant P2
-hnote over Counter: in-memory\nor remote
-U->P1: Request1\ntime: 10:00
+hnote over Counter: a) in-memory\nb) remote DB
+U->P1: Request1
 activate P1
-P1->Counter: seq=next seq=41
-' TODO get next sequence from the DB
+P1->Counter: get next
+P1<--Counter: 41
 P1->API++:call (200ms)
-U->P2: Request2\ntime: 10:01
+U->P2: Request2
 activate P2
-P2->Counter: seq=next seq=42
+P2->Counter: get next
+P2<--Counter: 42
 P2->API++:call (50ms)
 P2<--API--
 B<-P2--: M2 {seq:42, ..}

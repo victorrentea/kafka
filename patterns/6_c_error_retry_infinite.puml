@@ -1,0 +1,17 @@
+@startuml
+title Poison Pill Message
+hide footbox
+participant B
+participant C
+
+B->C!!: M@1f0rM€D
+->B: M2
+B->C!!: M@1f0rM€D
+->B: M3,,
+loop infinite
+B->C!!: M@1f0rM€D
+end
+hnote over B,C #FFAAAA: : consumption hangs
+
+@enduml
+Tip: uncomment progressively

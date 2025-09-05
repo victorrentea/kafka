@@ -2,10 +2,8 @@
 title Consumer Out of Order
 hide footbox
 
-->Consumer: ActivateOffer{simId:7,Nat5}\nobservedAt: 10:01
-Consumer->Consumer!!: process
-hnote over Consumer #FFAAAA: no credit
+->Consumer!!: ActivateOffer{simId:7,offer:National5}\nObservedAt: 10:01
+hnote over Consumer #FFAAAA: ERROR\ninsufficient\ncredit
 
-->Consumer: AddCredit{simId:7,5 EUR}\nobservedAt: 10:00
-Consumer->Consumer: process
+->Consumer: AddCredit{simId:7,credit: 5 EUR}\nObservedAt: 10:00
 @enduml

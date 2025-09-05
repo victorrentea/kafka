@@ -1,0 +1,10 @@
+@startuml
+title Competing Consumers
+hide footbox
+B->C.thread1++: M1
+C.thread1--
+
+B->C.thread2++: M2
+C.thread2--
+note over C.thread1,C.thread2: higher throughput\n(messages / sec)
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+title Dedup by Consumer\nFix: commit consumer offset in my SQL
+hide footbox
+participant KBroker
+database SQL order 10
+KBroker<-KConsumer: poll from offset 7
+KConsumer++
+
+KBroker-->KConsumer: M1\noffset:7
+hnote over KConsumer: processing
+group transaction
+KConsumer->SQL: update(s)
+KConsumer->SQL: update next_offset=8
+end
+KConsumer--
+KBroker<-KConsumer: poll from offset 8
+KConsumer++
+KBroker->KConsumer: M2\noffset:8
+@enduml

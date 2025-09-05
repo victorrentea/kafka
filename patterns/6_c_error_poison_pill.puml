@@ -1,0 +1,25 @@
+@startuml
+title Poison Pill Message
+hide footbox
+participant B
+participant C1
+participant API order 10
+
+B->C1++: M: OrderPlaced\n{1000 lines!}
+loop load all
+C1->API:fetch line product
+end
+hnote over C1 #FFAAAA: > 2 min later,\nheartbeat\nnot sent\non time to B
+hnote over C1 #FFAAAA: > Out of Memory Error
+C1--
+hnote over B: "C1 seems\nto have died"
+destroy C1
+B->B: reassign\npartition\nto C2
+B->C2: M {..}
+hnote over C2 #FFAAAA: <idem>
+hnote over B: "C2 seems\nto have died"
+hnote over B: **repeat**
+== All consumers die / restart in a loop ==
+
+@enduml
+Tip: uncomment progressively

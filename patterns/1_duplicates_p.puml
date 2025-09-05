@@ -4,9 +4,9 @@ hide footbox
 
 P->B: M
 B->
-hnote over P: ⏱️
+hnote over P: timeout
 P->B: M
-hnote over B: ignore\nduplicate
+hnote over B: must\ndedup
 @enduml
 Ideas:
 ? ts

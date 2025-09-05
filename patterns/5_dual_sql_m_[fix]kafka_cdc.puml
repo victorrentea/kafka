@@ -1,5 +1,5 @@
 @startuml
-title Atomic (SQL + Send)
+title Atomic (SQL + Send)\nFix: CDC with Debezium/Kafka Connect
 hide footbox
 participant P
 database SQL
@@ -10,7 +10,11 @@ group transaction
     P->SQL: update(s)
 end
 
-SQL<-Debezium:tail tx log
-Debezium->B:M (exactly once)
+Debezium->Debezium++:
+group continuously
+SQL<-Debezium:tail transaction log
+Debezium->KafkaB:M (exactly once)
+Debezium--
+end
 
 @enduml

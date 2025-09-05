@@ -1,0 +1,13 @@
+@startuml
+title Consumer ACKs
+hide footbox
+
+B->Consumer++: M1
+Consumer->Thread1++: process(M1)
+B<-Consumer--:Ack M1
+
+B->Consumer++: M2
+Consumer->Thread2++: process(M2)
+B<-Consumer--:Ack M2
+hnote over Thread1,Thread2 #FFAAAA: - race\n- overload\n- transient
+@enduml
