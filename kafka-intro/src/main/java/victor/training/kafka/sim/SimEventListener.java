@@ -11,7 +11,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.stereotype.Service;
 import victor.training.kafka.JsonUtils;
-import victor.training.kafka.inbox.Inbox;
 import victor.training.kafka.sim.SimEvent.CreditAdded;
 
 import java.time.Instant;
@@ -32,7 +31,7 @@ public class SimEventListener {
   // - same message.key => same partition = consumed in same order, by 1 thread
   // - reorder via INBOX table by message timestamp (observedAt by producer)
 
-  @KafkaListener(topics = SIM_TOPIC)
+//  @KafkaListener(topics = SIM_TOPIC)
   public void consume(ConsumerRecord<String, SimEvent> record) throws InterruptedException {
     SimEvent simEvent = record.value();
     switch (simEvent) {
@@ -59,19 +58,6 @@ public class SimEventListener {
     simRepo.save(sim);
   }
 
-  public Inbox convertToInbox(ConsumerRecord<String, SimEvent> record) {
-    long timestampLong = record.timestamp();
-    LocalDateTime timestamp = Instant.ofEpochMilli(timestampLong)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDateTime();
-    try {
-      String json = JsonUtils.sealedJackson(SimEvent.class).writeValueAsString(record.value());
-      String idempotencyKey = null; // TODO
-      return new Inbox(json, timestamp, idempotencyKey);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   @Bean
   public NewTopic simTopic() {

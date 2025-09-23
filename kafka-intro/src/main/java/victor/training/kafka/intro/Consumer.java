@@ -9,8 +9,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.stereotype.Component;
-import victor.training.kafka.inbox.Inbox;
-import victor.training.kafka.inbox.InboxRepo;
+//import victor.training.kafka.inbox.Inbox;
+//import victor.training.kafka.inbox.InboxRepo;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -20,7 +20,7 @@ import java.time.ZoneId;
 @Component
 @RequiredArgsConstructor
 public class Consumer {
-  private final InboxRepo inboxRepo;
+//  private final InboxRepo inboxRepo;
 
   @KafkaListener(topics = "myTopic")
   public void consume(ConsumerRecord<String, Event> record) throws InterruptedException {
@@ -43,7 +43,7 @@ public class Consumer {
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime();
         try {
-          inboxRepo.save(new Inbox(event.work(), timestamp, event.idempotencyKey()));
+//          inboxRepo.save(new Inbox(event.work(), timestamp, event.idempotencyKey()));
         } catch (DataIntegrityViolationException ex) {
           log.warn("Ignoring Duplicate event: " + event);
         }

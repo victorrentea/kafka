@@ -1,0 +1,17 @@
+@startuml
+'title Producer Race\nFix: Sequence Number
+hide footbox
+database DB order 10
+
+hnote over DB: last_seen = simId:7,seq:1
+Broker->Consumer:M3 {simId:7,seq:3}
+Consumer->DB: insert M3
+hnote over DB: M3 hold until seq:2 arrives
+Broker->Consumer:M2 {simId:7,seq:2}
+Consumer<-DB: select M3
+Consumer->Consumer: process M2
+Consumer->Consumer: process M3
+hnote over DB: last_seen = simId:7,seq:3
+
+@enduml
+

@@ -1,0 +1,25 @@
+@startuml
+'title Producer Race
+hide footbox
+participant Client
+participant P1
+participant P2
+
+
+Client->P1: <font color=green>Request1
+activate P1 #lightgreen
+P1->Network: call (200ms)
+activate Network #lightgreen
+Client->P2: <font color=blue>Request2
+activate P2 #lightblue
+P2->Network:call (50ms)
+activate Network #lightblue
+P2<--Network--
+P2->Topic: <font color=blue>                              M2
+P2--
+P1<--Network--
+P1->Topic: <font color=green>                                        M1
+P1--
+
+@enduml
+

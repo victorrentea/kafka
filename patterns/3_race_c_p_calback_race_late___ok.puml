@@ -1,0 +1,10 @@
+@startuml
+'title Consumer Callback Race
+hide footbox
+
+-> Producer++:update
+Consumer<--Producer--: CreditUpdatedEvent {simId}
+Consumer++
+Consumer->Producer++: GET /sim/{simId}         **//callback**
+
+@enduml

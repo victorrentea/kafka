@@ -1,23 +1,25 @@
 @startuml
 title Producer Race\nFix: Send ObservedAt
 hide footbox
-actor U
+actor Client
 participant P1
 participant P2
 
-hnote over U: a) sends time as header
+hnote over Client: a) sends initial time\nas request header
 
-U->P1: Request1\ntime: 10:00
-activate P1
+Client-[#green]>P1: <font color=green>Request1\ntime: 10:00
+activate P1 #lightgreen
 hnote over P1: b) samples time ASAP
-P1->API++:call (200ms)
-U->P2: Request2\ntime: 10:01
-activate P2
-P2->API++:call (50ms)
-P2<--API--
-Topic<-P2--: M2 {observedAt:10:01}
-P1<--API--
-Topic<-P1--: M1 {observedAt:10:00}
+P1-[#green]>Network: call (200ms)
+activate Network #lightgreen
+Client-[#blue]>P2: Request2\ntime: 10:01
+activate P2 #lightblue
+P2-[#blue]>Network:call (50ms)
+activate Network #lightblue
+P2<[#blue]--Network--
+Topic<[#blue]-P2--: M2 {observedAt:10:01}
+P1<--Network--
+Topic<[#green]-P1--: M1 {observedAt:10:00}
 
 @enduml
 

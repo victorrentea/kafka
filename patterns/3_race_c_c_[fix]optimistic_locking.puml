@@ -4,22 +4,25 @@ hide footbox
 database DB order 9
 
 hnote over DB: R{X, __v__ersion:1}
-B->C1: M {rid:7,add:+A}
-C1->DB: SELECT R where id=7
-C1<--DB: R{X,v:1}
-B->C2: M {ird:7,add:+B}
-C2->DB: SELECT R where id=7
-C2<--DB: R{X,v:1}
+B->C1++: M1 {r.id:7,add:+A}
+C1->DB++: SELECT R where id=7
+C1<--DB--: R{X,v:1}
+B->C2++: M2 {r.id:7,add:+B}
+C2->DB++: SELECT R where id=7
+C2<--DB--: R{X,v:1}
 C2->DB: UPDATE R{X+B,v:2} if v=1
-hnote over DB: R{X+B,v:2}
-C1->DB!!: UPDATE R{X+A,v:2} if v=1
-B<--DB: Optimistic Locking Error
+C2--
+hnote over DB: R{X+B,**v:2**}
+C1->DB++: UPDATE R{X+A,v:2} if **v=1**
+B<-[#red]-DB--: Optimistic Locking Error
+C1--
 hnote over DB: R{X+B,v:2}
 hnote over C1: retry
-B->C1: M {id:7,add:+A}
+B->C1++: M1 {id:7,add:+A}
 C1->DB: SELECT R where id=7
 C1<--DB: R{X+B,v:2}
 C1->DB: UPDATE R{X+A+B,v:3} if v=2
+C1--
 hnote over DB: R{X+A+B,v:3}
 
 @enduml

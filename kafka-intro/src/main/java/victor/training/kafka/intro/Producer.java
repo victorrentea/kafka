@@ -3,11 +3,8 @@ package victor.training.kafka.intro;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.logging.MDC;
-import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 

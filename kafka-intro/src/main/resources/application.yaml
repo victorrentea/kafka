@@ -16,9 +16,10 @@ inbox.time.window.ms: 10000
 spring:
   kafka:
     bootstrap-servers: localhost:9092
+
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: victor.training.kafka.intro.Event.Serializer
+      value-serializer: victor.training.kafka.intro.Event$Serializer
       properties:
         interceptor.classes: victor.training.kafka.interceptor.ProducerTraceIdInterceptor
     consumer:
@@ -34,7 +35,7 @@ spring:
 
         interceptor.classes: victor.training.kafka.interceptor.ConsumerPollAckInterceptor
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: victor.training.kafka.intro.Event.Deserializer
+      value-deserializer: victor.training.kafka.intro.Event$Deserializer
     listener:
       concurrency: 2 # number of threads=consumers per topic of this machine
 

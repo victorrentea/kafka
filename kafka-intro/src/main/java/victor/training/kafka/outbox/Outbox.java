@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static jakarta.persistence.EnumType.STRING;
-import static victor.training.kafka.inbox.Inbox.Status.PENDING;
 
 @Entity
 @Data

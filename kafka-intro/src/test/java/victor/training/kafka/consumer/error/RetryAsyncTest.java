@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 

@@ -3,14 +3,12 @@
 hide footbox
 participant "Message\nBroker" as B
 participant "Consumer1\n(Thread1)" as C1
-participant "Consumer1\n(Thread1)" as C1
-participant "Consumer2\n(Thread2)" as C2
 B->C1++: M1
 C1--
 
-B->C2++: M2
-C2--
-
 B->C1++: M2
+C1--
+
+B->C1++: M3
 C1--
 @enduml

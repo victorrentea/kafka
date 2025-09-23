@@ -4,7 +4,6 @@ hide footbox
 participant P
 database SQL
 participant Debezium
-queue B
 
 group transaction
     P->SQL: update(s)
@@ -13,7 +12,7 @@ end
 Debezium->Debezium++:
 group continuously
 SQL<-Debezium:tail transaction log
-Debezium->KafkaB:M (exactly once)
+Debezium->Kafka:Message
 Debezium--
 end
 

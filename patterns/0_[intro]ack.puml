@@ -1,0 +1,6 @@
+@startuml
+hide footbox
+Broker->Consumer++: M
+Consumer->Consumer: process(M)
+Broker<-Consumer--: Ack M
+@enduml

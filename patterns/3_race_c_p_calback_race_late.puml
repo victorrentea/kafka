@@ -1,0 +1,15 @@
+@startuml
+'title Consumer Callback Race
+hide footbox
+
+-> Producer++:update#1
+Broker<-Producer--: UpdatedEvent {id} #1
+
+->Producer++:update#2
+Broker<-Producer--: UpdatedEvent {id} #2
+Broker->Consumer++: Event#1
+Consumer->Producer++: GET /{id}   **//callback**
+Consumer<--Producer--: Data#2
+hnote over Consumer #FFAAAA: huh?!
+
+@enduml
