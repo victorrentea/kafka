@@ -20,7 +20,6 @@ import java.time.ZoneId;
 @Component
 @RequiredArgsConstructor
 public class Consumer {
-//  private final InboxRepo inboxRepo;
 
   @KafkaListener(topics = "myTopic")
   public void consume(ConsumerRecord<String, Event> record) throws InterruptedException {
@@ -36,19 +35,6 @@ public class Consumer {
         log.error("Long processing {}", event);
         Thread.sleep(12000);
         break;
-      case Event.EventForLater event:
-        log.info("Inserting in inbox for later processing: " + event);
-        long timestampLong = record.timestamp();
-        LocalDateTime timestamp =  Instant.ofEpochMilli(timestampLong)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime();
-        try {
-//          inboxRepo.save(new Inbox(event.work(), timestamp, event.idempotencyKey()));
-        } catch (DataIntegrityViolationException ex) {
-          log.warn("Ignoring Duplicate event: " + event);
-        }
-        break;
-
       default:
         log.error("Unknown record: " + record);
     }

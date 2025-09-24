@@ -14,8 +14,6 @@ public sealed interface Event {
   }
   record EventCausingError(String work) implements Event {
   }
-  record EventForLater(String work, String idempotencyKey) implements Event {
-  }
 
   @SuppressWarnings("unused") // used in .yaml
   class Serializer extends JsonSerializer<Event> {
