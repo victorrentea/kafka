@@ -1,0 +1,15 @@
+@startuml
+'title Consumer Callback Race
+hide footbox
+
+-> Producer++: <font color=green>update#1
+Broker<-Producer--: <font color=green>UpdatedEvent {id} #1
+
+->Producer++:<font color=blue>update#2
+Broker<-Producer--: <font color=blue>UpdatedEvent {id} #2
+Broker->Consumer++: <font color=green>Event#1
+Consumer->Producer++: <font color=green>GET /{id}   **//callback**
+Consumer<--Producer--: <font color=blue>Data#2
+hnote over Consumer #FFAAAA: huh?!
+
+@enduml

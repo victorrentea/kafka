@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
 import victor.training.kafka.KafkaTest;
 import victor.training.kafka.seqno.SeqNoListener.SeqMessage;
 
@@ -15,10 +17,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 import static victor.training.kafka.seqno.SeqNoListener.OUT_TOPIC;
 import static victor.training.kafka.seqno.SeqNoListener.TOPIC;
 
 @Slf4j
+@DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 public class SeqNoListenerTest extends KafkaTest {
   @Autowired
   KafkaTemplate<String, SeqMessage> kafkaTemplate;

@@ -1,6 +1,7 @@
 @startuml
 hide footbox
-Broker->Consumer++: M
+Broker->Consumer++: consume(M)
 Consumer->Worker.Thread++: process(M)
 Broker<-Consumer--: Ack M
+hnote over Worker.Thread: work
 @enduml

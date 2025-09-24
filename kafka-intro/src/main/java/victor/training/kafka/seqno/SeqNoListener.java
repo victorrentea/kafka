@@ -7,6 +7,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -14,22 +17,24 @@ public class SeqNoListener {
   public static final String TOPIC = "ooo-seqno-in";
   public static final String OUT_TOPIC = "ooo-seqno-out";
 
-  public record SeqMessage(long seqNo, String payload) {}
+  private final Map<Long, BufferedSeq> nextSeqNo = new HashMap<>();
+  record BufferedSeq(long aggId, int nextSeqNo, String payload) {}
+
+  public record SeqMessage(long aggId, int seqNo, String payload) {}
 
   private final SeqBufferRepo bufferRepo;
-  private final SeqTrackerRepo trackerRepo;
+  private final SeqTrackingRepo trackerRepo;
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   @KafkaListener(topics = TOPIC, concurrency = "1")
   @Transactional
   public void handle(SeqMessage message) {
-    log.info("Received seq={} payload={} -> buffering", message.seqNo(), message.payload());
 
     if (!bufferRepo.existsById(message.seqNo())) {
       bufferRepo.save(new SeqBuffer(message.seqNo(), message.payload()));
     }
 
-    SeqTracker tracker = trackerRepo.findById(1).orElseGet(()->trackerRepo.save(new SeqTracker()));
+    SeqTracking tracker = trackerRepo.findById(1).orElseGet(()->trackerRepo.save(new SeqTracking()));
     log.info("Got traker {}",tracker);
     long next = tracker.nextSeqNo();
     while (true) {

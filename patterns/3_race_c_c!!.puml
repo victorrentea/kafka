@@ -1,0 +1,26 @@
+@startuml
+'title Consumer Race
+'hide footbox
+database DB order 9
+
+hnote over DB: 0€, <back:yellow>v:1</back>
+Broker->Consumer1++: CreditAdded {simId:7,+5€}
+Broker->Consumer2++: CreditAdded {simId:7,+3€}
+Consumer1<[#blue]-DB:   <font color:black>                                                0€, <back:yellow>v:1</back>
+Consumer2<-DB:  <font color:black>                       0€, <back:yellow>v:1</back>
+Consumer1-[#blue]>DB: <font color=black>                                               0+5€, <back:yellow>v:2</back>
+Consumer1--
+hnote over DB: 5€, <back:yellow>v:2</back>
+Consumer2->DB: <font color=red>                      0+3€, <back:yellow>v:2</back>
+Consumer2<-[#FF0000]-DB: Optimistic Locking Error
+Consumer2--
+
+== Retry ==
+Broker->Consumer2++: CreditAdded {simId:7,+3€}
+Consumer2<-DB:  <font color:black>                        5€, <back:yellow>v:2</back>
+Consumer2->DB: <font color=black>                      5+3€, <back:yellow>v:3</back>
+Consumer2--
+hnote over DB: 8€, <back:yellow>v:3</back>
+
+
+@enduml

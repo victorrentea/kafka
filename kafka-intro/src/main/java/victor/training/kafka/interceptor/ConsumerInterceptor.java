@@ -7,7 +7,7 @@ import org.slf4j.MDC;
 import org.springframework.kafka.listener.RecordInterceptor;
 
 @Slf4j
-public class ConsumerTraceIdInterceptor implements RecordInterceptor<Object, Object> {
+public class ConsumerInterceptor implements RecordInterceptor<Object, Object> {
   @Override
   public ConsumerRecord<Object, Object> intercept(
       ConsumerRecord<Object, Object> record,
@@ -15,17 +15,23 @@ public class ConsumerTraceIdInterceptor implements RecordInterceptor<Object, Obj
 
     var traceIdHeaders = record.headers().headers("traceId");
     if (traceIdHeaders.iterator().hasNext()) {
-      var traceIdFromHeader = new String(traceIdHeaders.iterator().next().value());
-      MDC.put("traceId", traceIdFromHeader);
+      var traceId = new String(traceIdHeaders.iterator().next().value());
+      MDC.put("traceId", traceId);
     } else {
-      log.warn("No traceId header found in received message");
+//      log.warn("No traceId header found in received message");
     }
-    log.info("Received (partition={}): {} -> record: {}", record.partition(), record.value(), record);
+    log.info("START::(part:{}, off:{}), key:{}, value: {}", record.partition(), record.offset(), record.key(), record.value());
     return record;
   }
 
   @Override
   public void afterRecord(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
     MDC.remove("traceId");
+    log.info("END::");
+  }
+
+  @Override
+  public void failure(ConsumerRecord<Object, Object> record, Exception exception, Consumer<Object, Object> consumer) {
+    log.error("FAILED::" + exception.getMessage());
   }
 }

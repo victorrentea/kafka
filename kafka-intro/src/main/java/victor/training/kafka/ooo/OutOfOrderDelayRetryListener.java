@@ -13,18 +13,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class OutOfOrderDelayRetryListener {
   public static final String TOPIC = "ooo-topic";
 
-  public int open = 0;
+  public int pendingOpen = 0;
   public int pairs = 0;
 
   @KafkaListener(topics = TOPIC, concurrency = "1")
   @RetryableTopic(attempts = "2", backoff = @Backoff(delay = 100))
   public void handle(String message) {
-    log.info("::START (=" + open + ", ()=" + pairs + " on " + message);
-    if (message.equals("(")) open++;
-    if (message.equals(")") && open == 0)
+    log.info("::got \""+message+"\" - pending=" + pendingOpen + ", pairs=" + pairs);
+    if (message.equals("(")) pendingOpen++;
+    if (message.equals(")") && pendingOpen == 0)
       throw new IllegalStateException("Illegal");
-    open--;
+    pendingOpen--;
     pairs++;
-    log.info("::END");
   }
 }

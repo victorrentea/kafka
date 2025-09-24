@@ -1,0 +1,21 @@
+@startuml
+'title Consumer Callback Race vs Produce DB Replication
+hide footbox
+participant Producer
+participant Consumer order 99
+participant DB
+
+-> Producer++:update
+Producer -> DB: UPDATE\nCOMMIT
+Consumer<--Producer--: UpdatedEvent {id}
+Consumer++
+Consumer->Producer++: GET /{id}      **// callback**
+
+'⭐uncomment below
+Producer->ReadDB: SELECT
+Consumer<--Producer--: <font color=red>stale data
+DB -> ReadDB: **<font color=red>replication**
+
+Consumer--
+
+@enduml

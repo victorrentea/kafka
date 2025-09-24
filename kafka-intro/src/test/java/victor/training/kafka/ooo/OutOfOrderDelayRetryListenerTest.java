@@ -20,7 +20,7 @@ public class OutOfOrderDelayRetryListenerTest extends KafkaTest {
   @BeforeEach
   final void before() {
       outOfOrderListener.pairs = 0;
-      outOfOrderListener.open = 0;
+      outOfOrderListener.pendingOpen = 0;
   }
   @Test
   void ok() throws InterruptedException {
@@ -29,6 +29,16 @@ public class OutOfOrderDelayRetryListenerTest extends KafkaTest {
 
     Thread.sleep(2000);
     assertThat(outOfOrderListener.pairs).isEqualTo(1);
+  }
+  @Test
+  void ok2() throws InterruptedException {
+    kafkaTemplate.send(TOPIC, "(");
+    kafkaTemplate.send(TOPIC, "(");
+    kafkaTemplate.send(TOPIC, ")");
+    kafkaTemplate.send(TOPIC, ")");
+
+    Thread.sleep(2000);
+    assertThat(outOfOrderListener.pairs).isEqualTo(2);
   }
   @Test
   void scrambled() throws InterruptedException {
