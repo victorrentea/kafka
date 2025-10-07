@@ -3,14 +3,14 @@
 hide footbox
 database DB order 10
 
-Broker->Consumer:M3 {simId:7,<back:yellow>seq:3</back>}
+Broker->Consumer:<back:lightgreen>M3</back> {simId:7,<back:yellow>seq:3</back>}
 hnote over DB: last = simId:7,<back:yellow>seq:1</back>
-Consumer->DB: insert M3
-hnote over DB: M3 hold until seq:2 arrives
+Consumer->DB: insert <back:lightgreen>M3</back>
+hnote over DB: hold <back:lightgreen>M3</back> until seq:2 arrives
 Broker->Consumer:M2 {simId:7,<back:yellow>seq:2</back>}
 Consumer<-DB: select M3
 Consumer->Consumer: process M2
-Consumer->Consumer: process M3
+Consumer->Consumer: process <back:lightgreen>M3</back>
 hnote over DB: last = simId:7,<back:yellow>seq:3</back>
 
 @enduml

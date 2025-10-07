@@ -8,15 +8,15 @@ B->C1++: CreditAdded {simId:7,+5€}
 B->C2++: CreditAdded {simId:7,+3€}
 C1<-DB: 0€, <back:yellow>v:1</back>
 C2<-DB: 0€, <back:yellow>v:1</back>
-C1->DB: 0+5€, <back:yellow>v:2</back>
+C1->DB: 0+5€, <back:yellow>v:1</back>
 C1--
 hnote over DB: 5€, <back:yellow>v:2</back>
-C2->DB!!: 0+3€, <back:yellow>v:2</back>
+C2->DB!!: 0+3€, <back:yellow>v:1</back>
 C2<-[#FF0000]-DB: Optimistic Locking Error
 C2--
 B->C2++: CreditAdded {simId:7,+3€} (<back:yellow>retry</back>)
 C2<-DB: 5€, <back:lightgreen>v:2</back>
-C2->DB: 5€+3€, <back:lightgreen>v:3</back>
+C2->DB: 5€+3€, <back:lightgreen>v:2</back>
 C2--
 hnote over DB: 8€, <back:lightgreen>v:3</back>
 

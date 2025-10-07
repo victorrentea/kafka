@@ -2,14 +2,14 @@
 'title Consumer Callback Race
 hide footbox
 
--> Producer++: <font color=green>update#1
-Broker<-Producer--: <font color=green>UpdatedEvent {id} #1
+-> Producer++: <font color=green>add(5€)
+Broker<-Producer--: <font color=green>1.CreditAdded {id}
 
-->Producer++:<font color=blue>update#2
-Broker<-Producer--: <font color=blue>UpdatedEvent {id} #2
-Broker->Consumer++: <font color=green>Event#1
-Consumer->Producer++: <font color=green>GET /{id}   **//callback**
-Consumer<--Producer--: <font color=blue>Data#2
+->Producer++:<font color=blue>add(7€)
+Broker<-Producer--: <font color=blue>2.CreditAdded {id}
+Broker->Consumer++: <font color=green>1
+Consumer->Producer++: <font color=green>GET credit/{id}   **//callback**
+Consumer<--Producer--: <font color=blue>12€
 hnote over Consumer #FFAAAA: huh?!
 
 @enduml
