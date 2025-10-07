@@ -20,7 +20,7 @@ public class SeqNoListener {
   private final Map<Long, BufferedSeq> nextSeqNo = new HashMap<>();
   record BufferedSeq(long aggId, int nextSeqNo, String payload) {}
 
-  public record SeqMessage(long aggId, int seqNo, String payload) {}
+  public record SeqMessage(long aggId, long seqNo, String payload) {}
 
   private final SeqBufferRepo bufferRepo;
   private final SeqTrackingRepo trackerRepo;

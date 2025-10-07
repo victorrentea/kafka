@@ -5,17 +5,20 @@ participant Producer
 participant DB
 
 -> Producer++:update
-Producer -> DB : UPDATE
+Producer -> DB++ : UPDATE
 
-'⭐️Toggle bellow
-Producer -->: UpdatedEvent {id}
+'⭐️uncomment bellow
 'Producer --> Consumer++: UpdatedEvent {id}
-'Consumer->Producer++: GET /{id}   **// callback**
-'Producer->DB: SELECT
+
+'Consumer->Producer: GET /{id}   **// callback**
+
+'Producer++
+'Producer->DB++: <font color=red> SELECT
+'DB--
 'Producer-->Consumer: <font color=red>  old data
 'Producer--
 
-Producer -> DB : COMMIT
+Producer -> DB--: COMMIT
 Producer--
 
 @enduml

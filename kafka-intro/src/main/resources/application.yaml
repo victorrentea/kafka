@@ -13,7 +13,20 @@ server:
   port: 8080
 management.endpoints.web.exposure.include: "*"
 inbox.time.window.ms: 10000
+
 spring:
+#  rabbitmq:
+#    host: localhost
+#    port: 5672
+#    username: guest
+#    password: guest
+#    template:
+#      # default exchange, routing key, message converter
+#      exchange: app-exchange
+#      routing-key: app-routing
+#      message-converter: victor.training.rabbit.EventMessageConverter
+#      before-publish-post-processors:
+#        - victor.training.rabbit.interceptor.TraceIdPostProcessor
   kafka:
     bootstrap-servers: localhost:9092
     producer:

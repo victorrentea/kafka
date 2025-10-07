@@ -12,9 +12,9 @@ Consumer++
 Consumer->Producer++: GET /{id}      **// callback**
 
 '⭐uncomment below
-Producer->ReadDB: SELECT
-Consumer<--Producer--: <font color=red>stale data
-DB -> ReadDB: **<font color=red>replication**
+'Producer->ReadDB: SELECT
+'Consumer<--Producer--: <font color=red>stale data
+'DB -> ReadDB: **<font color=red>replication**
 
 Consumer--
 
