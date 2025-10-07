@@ -7,7 +7,7 @@ participant DB
 -> Producer++:update
 Producer -> DB++ : UPDATE
 
-'⭐️uncomment bellow
+'⭐️uncomment bellow, in chunks
 'Producer --> Consumer++: UpdatedEvent {id}
 
 'Consumer->Producer: GET /{id}   **// callback**

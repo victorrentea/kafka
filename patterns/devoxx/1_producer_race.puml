@@ -14,7 +14,7 @@ activate Network #lightgreen
 P1<--Network--
 P1->Topic: <font color=green>                                       M1
 P1--
-'---------- this🔼
+'---------- move this up🔼
 Client->P2: <font color=blue>Request2
 activate P2 #lightblue
 P2->Network:call (50ms)

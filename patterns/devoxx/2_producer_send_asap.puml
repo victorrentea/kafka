@@ -10,6 +10,7 @@ Topic<-P1--: <font color=green>           M1
 Client->P2++ #lightblue: <font color=blue>Request2
 Topic<-P2--: <font color=blue> M2
 ====
+'⭐️ Uncomment below
 'hnote over Processor: 1 thread
 'Topic->Processor++ #lightgreen: <font color=green>M1
 'Processor->Network++ #lightgreen: <font color=green>call
@@ -20,5 +21,3 @@ Topic<-P2--: <font color=blue> M2
 'Processor<--Network--
 'Topic2<-Processor--: <font color=blue>                      M2Full
 @enduml
-
-Comment tot de la ==== in jos
