@@ -13,7 +13,7 @@ Producer -> DB++#lightgreen : UPDATE
 'Consumer->Producer: GET /{id}   **// callback**
 
 'Producer++
-'Producer->DB++#lightblue: <font color=red> SELECT
+'Producer->DB++#pink: <font color=red> SELECT
 'DB--
 'Producer-->Consumer: <font color=red>  old data
 'Producer--
