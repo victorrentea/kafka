@@ -2,13 +2,13 @@ package victor.training.kafka.intro;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.jboss.logging.MDC;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @RestController
@@ -16,23 +16,30 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("!test")
 public class Producer {
 
-//  @EventListener(ApplicationStartedEvent.class)
-//  @Transactional(transactionManager = "kafkaTransactionManager")
-  public void onStartup() {
-    log.info("⭐️⭐️⭐ APP STARTED ⭐️⭐️⭐️");
-    produceEvent();
-  }
 
   private final KafkaTemplate<String, Event> kafkaTemplate;
 
   @GetMapping("produce")
-  public void produceEvent() {
+  public String produceEvent() throws ExecutionException, InterruptedException {
     MDC.put("traceId", "123");
-    kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"))
-        .thenAccept(result -> {
-          log.info("Trimis mesaj cu offset< ruleaza in threadul unic al producerului din app asta: " + result.getRecordMetadata().offset());
-//          db.insert()// network call 5ms => throughput max = 200 m/s = RAU!
-         });
-    log.info("Messages sent ?!?! sigur");
+    kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done")).get();
+    return "<a href='/produce-many'>Produce many</a> or <a href='/produce'>one</a>";
+  }
+
+  @GetMapping("produce-many")
+  public String produceEventMany() {
+    // http filter
+    String fleetId = "123"; // il iei din JWT/request header/payload/
+    MDC.put("traceId", fleetId); // apare automat in log cu %X
+
+    for (int i = 0; i < 1000; i++) {
+      kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"))
+          .thenAccept(result -> {
+            // in threadul unic al producerului
+            log.info("Trimis mesaj cu offset: " + result.getRecordMetadata().offset());
+          });
+    }
+    log.info("All messages sent: se vad in log unele trimise dupa linia asta?");
+    return "<a href='/produce-many'>Produce many</a> or <a href='/produce'>one</a>";
   }
 }

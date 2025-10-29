@@ -34,22 +34,29 @@ spring:
       value-serializer: victor.training.kafka.intro.Event$Serializer
       properties:
         interceptor.classes: victor.training.kafka.interceptor.ProducerTraceIdInterceptor
+#      acks: 0        # nu așteaptă ack – fire and forget
     consumer:
       group-id: app
-      properties:
+      properties: # kakfa-client
         spring.json.trusted.packages: victor.*
         session.timeout.ms: 15000 # default: 45s - no heartbeats from consumer => considered dead. see also heartbeat.interval.ms=3s default
         max.poll.interval.ms: 15000 # default: 5m - max time between polls. Affects long processing time of a message
-#        max.poll.records: 1 #default: 500
-#        enable.auto.commit: false # default: true = commit offsets automatically even if messages are not yet processed
-#        auto.commit.interval.ms: 1000 # default: 5000
-
         interceptor.classes: victor.training.kafka.interceptor.ConsumerPollAckInterceptor
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: victor.training.kafka.intro.Event$Deserializer
-    listener:
+    listener: #spring-kafka
       concurrency: 2 # number of threads=consumer instances per topic of this machine
-#      ack-mode: batch
+#      ack-mode: batch (default)
+#      ack-mode: record (cel mai sigur, dar intens pe broker)
+
+#      ack-mode: time count time_count
+#      ack-time: 3s
+#      ack-count: 3s
+
+#      ack-mode: manual #Acknowledgement.acknowledge()
+      # daca comiti offsetul 7, comiti toate pana la 5,6,7
+
+#      type: batch # procesare in bulk cand GET-uri batchuite
 
 decorator:
   datasource:

@@ -1,8 +1,11 @@
 package victor.training.kafka;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.EventListener;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.ContainerCustomizer;
 import org.springframework.kafka.core.ConsumerFactory;
@@ -12,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.backoff.FixedBackOff;
 import victor.training.kafka.interceptor.ConsumerInterceptor;
 
+@Slf4j
 @SpringBootApplication
 //@EnableScheduling
 public class KafkaSpringApp {
@@ -33,5 +37,10 @@ public class KafkaSpringApp {
     factory.setConsumerFactory(consumerFactory);
     factory.setCommonErrorHandler(new DefaultErrorHandler(new FixedBackOff(500L, 1)));
     return factory;
+  }
+
+  @EventListener(ApplicationStartedEvent.class)
+  public void onStartup() {
+    log.info("⭐️⭐️⭐ APP STARTED ⭐️⭐️⭐️");
   }
 }

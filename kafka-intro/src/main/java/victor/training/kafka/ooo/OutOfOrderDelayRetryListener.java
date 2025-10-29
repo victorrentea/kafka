@@ -17,7 +17,7 @@ public class OutOfOrderDelayRetryListener {
   public int pairs = 0;
 
   @KafkaListener(topics = TOPIC, concurrency = "1")
-  @RetryableTopic(attempts = "2", backoff = @Backoff(delay = 100))
+//  @RetryableTopic(attempts = "2", backoff = @Backoff(delay = 100))
   public void handle(String message) {
     log.info("::got \""+message+"\" - pending=" + pendingOpen + ", pairs=" + pairs);
     if (message.equals("(")) pendingOpen++;
