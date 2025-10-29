@@ -2,6 +2,8 @@ package victor.training.kafka.intro;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.jboss.logging.MDC;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,14 +24,11 @@ public class Producer {
   }
 
   private final KafkaTemplate<String, Event> kafkaTemplate;
+
   @GetMapping("produce")
   public void produceEvent() {
-    MDC.put("traceId", "123"); // pretend setup by (a) an HTTP filter or (b) a Kafka Listener interceptor
-    // TODO send sync/async/fire-and-forget
-    kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"));
-    // TODO extract offset of sent message
-    kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"))
-        .thenAcceptAsync(result -> log.info("Sent message offset: " + result.getRecordMetadata().offset()));
+    MDC.put("traceId", "123");
+    kafkaTemplate.send("myTopic",  new Event.EventOK("Work to be done"));
     log.info("Messages sent");
   }
 }

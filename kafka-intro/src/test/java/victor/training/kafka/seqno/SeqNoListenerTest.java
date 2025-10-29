@@ -32,10 +32,10 @@ public class SeqNoListenerTest extends KafkaTest {
   @Test
   void resequencesOutOfOrder() throws Exception {
     // send out of order
-    kafkaTemplate.send(TOPIC, new SeqMessage(2, "B"));
-    kafkaTemplate.send(TOPIC, new SeqMessage(1, "A"));
-    kafkaTemplate.send(TOPIC, new SeqMessage(4, "D"));
-    kafkaTemplate.send(TOPIC, new SeqMessage(3, "C"));
+//    kafkaTemplate.send(TOPIC, new SeqMessage(2, "B"));
+//    kafkaTemplate.send(TOPIC, new SeqMessage(1, "A"));
+//    kafkaTemplate.send(TOPIC, new SeqMessage(4, "D"));
+//    kafkaTemplate.send(TOPIC, new SeqMessage(3, "C"));
 
     // then
     assertThat(queue.poll(5, TimeUnit.SECONDS)).isEqualTo("A");

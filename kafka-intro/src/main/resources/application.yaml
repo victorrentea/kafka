@@ -49,7 +49,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: victor.training.kafka.intro.Event$Deserializer
     listener:
-      concurrency: 2 # number of threads=consumers per topic of this machine
+      concurrency: 2 # number of threads=consumer instances per topic of this machine
 
   jpa: {}
 
