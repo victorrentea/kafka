@@ -84,18 +84,23 @@ public @interface ResetKafkaOffsets {
                 .filter(endOffsets::containsKey)
                 .collect(toMap(
                     Function.identity(),
-                    tp -> {
-                      long end = endOffsets.get(tp).offset();
-                      long target = Math.max(0, end - 1);
-                      return new OffsetAndMetadata(target);
-                    }
+                    tp -> new OffsetAndMetadata(endOffsets.get(tp).offset())
                 ));
             if (!newOffsets.isEmpty()) {
-              log.info("Resetting offsets for group '{}' on {} partitions for topics {}", groupId, newOffsets.size(), topics);
+              log.info("Resetting offsets for group '{}' on {} partitions: {}", groupId, newOffsets.size(), newOffsets);
               admin.alterConsumerGroupOffsets(groupId, newOffsets).all().get(1, TimeUnit.SECONDS);
             }
-          } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            throw new RuntimeException(e);
+          } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof org.apache.kafka.common.errors.UnknownMemberIdException
+                || cause instanceof org.apache.kafka.common.errors.CoordinatorNotAvailableException
+                || cause instanceof org.apache.kafka.common.errors.RebalanceInProgressException) {
+              log.warn("Skipping offset reset for group '{}' due to transient coordinator state: {}", groupId, cause.toString());
+              continue;
+            }
+            throw new RuntimeException("Resetting failed for groupId=" + groupId, e);
+          } catch (InterruptedException | TimeoutException e) {
+            throw new RuntimeException("Resetting failed for groupId=" + groupId, e);
           }
         }
       } catch (ExecutionException | InterruptedException | TimeoutException e) {

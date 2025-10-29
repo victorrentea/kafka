@@ -37,41 +37,19 @@ public class BatchEnricherConsumer {
     for (var record : records) {
       var productId = record.value();
       Product enrichedProduct = productsById.get(productId);
-
-      // Simulate a random failure inside the transaction (at most once) to prove transactional semantics.
-//      maybeRandomFail();
-
+//      if (random.nextDouble() < .3) throw new IllegalArgumentException("BOOM");
       kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), enrichedProduct);
     }
   }
 
-  // --- Alternative non-batch implementation (for educational purposes) ---
-  // This version processes one message at a time and would call fetchMany for every single record,
-  // leading to significantly worse performance. Left here intentionally commented out.
-  //
-  // @KafkaListener(topics = BATCH_IN_TOPIC, batch = "false",
-  //     properties = {
-  //         ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG + "=org.apache.kafka.common.serialization.StringDeserializer",
-  //         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG + "=org.apache.kafka.common.serialization.LongDeserializer"
-  //     })
-  // @Transactional(transactionManager = "kafkaTransactionManager")
-  // public void consumeOne(ConsumerRecord<String, Long> record) {
-  //   Map<Long, Product> productsById = fetchMany(List.of(record.value()));
-  //   Product enrichedProduct = productsById.get(record.value());
-  //   kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), enrichedProduct);
-  // }
-
-  private final Random random = new Random();
-  private final AtomicBoolean alreadyFailedOnce = new AtomicBoolean(false);
-  // Probability of failing a send within a batch once; configurable via Spring property
-  // batchEnricher.randomFailureProb (default 0.05). Tests can override to 0.0/1.0 as needed.
-
-  private void maybeRandomFail() {
-    if (!alreadyFailedOnce.get() && random.nextDouble() < .5) {
-      alreadyFailedOnce.set(true);
-      throw new RuntimeException("Random failure to test transactional batch retry");
-    }
-  }
+  // --- Traditional non-batch implementation (for educational purposes) ---
+  // Processes one message at a time  would call fetchMany for every single record, leading to significantly worse performance.
+//   @KafkaListener(topics = BATCH_IN_TOPIC)
+   public void consumeOne(ConsumerRecord<String, String> record) {
+     Map<String, Product> productsById = fetchMany(List.of(record.value()));
+     Product enrichedProduct = productsById.get(record.value());
+     kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), enrichedProduct);
+   }
 
   @SneakyThrows
   private Map<String, Product> fetchMany(List<String> productIds) {
