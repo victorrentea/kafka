@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.config.TopicConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -35,21 +36,7 @@ public class Consumer {
     ack.acknowledge();
   }
 
-//  @KafkaListener(topics = "myTopic")
-//  @Transactional(transactionManager = "kafkaTransactionManager")
-//  public void consumeBatch(ConsumerRecords<String, Event> recordBatch) throws InterruptedException {
-//    var records = StreamSupport.stream(recordBatch.records("myTopic").spliterator(), false).toList();
-////    Thread.sleep(500);
-//    log.info("Process: " + records);
-//
-//    // enrich messages ("READ"): vin orderId: 1,6,7,4,8,
-////    List<orderIds>orderApi.getOne(orderIds)
-//
-//    //repo.save() // SQL nu e tranzactat cu kafka
-//    // nu e side effecting (WRITE): nu trimiti emailuri
-////    for (order: orders)
-////       if (vreau) kafkaTemplate.send();
-//  }
+
 
   @SneakyThrows
   private void anafCall() {
@@ -61,7 +48,7 @@ public class Consumer {
     return TopicBuilder.name("myTopic")
         .partitions(2)
         .replicas(2)
-//        .config(TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")
+        .config(TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")
         .build();
   }
 }

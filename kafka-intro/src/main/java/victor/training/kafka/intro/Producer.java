@@ -36,10 +36,17 @@ public class Producer {
       kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"))
           .thenAccept(result -> {
             // in threadul unic al producerului
-            log.info("Trimis mesaj cu offset: " + result.getRecordMetadata().offset());
+            log.info("#1 Message ACKed by broker: " + result.getRecordMetadata().offset());
           });
     }
-    log.info("All messages sent: se vad in log unele trimise dupa linia asta?");
+    for (int i = 0; i < 1000; i++) {
+      kafkaTemplate.send("words", new Event.EventOK("Work to be done"))
+          .thenAccept(result -> {
+            // in threadul unic al producerului
+            log.info("#2Message ACKed by broker: " + result.getRecordMetadata().offset());
+          });
+    }
+    log.info("All messages sent: can I see any messages acked by broker after this line?");
     return "<a href='/produce-many'>Produce many</a> or <a href='/produce'>one</a>";
   }
 }
