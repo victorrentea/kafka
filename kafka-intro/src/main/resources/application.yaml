@@ -15,18 +15,6 @@ management.endpoints.web.exposure.include: "*"
 inbox.time.window.ms: 10000
 
 spring:
-#  rabbitmq:
-#    host: localhost
-#    port: 5672
-#    username: guest
-#    password: guest
-#    template:
-#      # default exchange, routing key, message converter
-#      exchange: app-exchange
-#      routing-key: app-routing
-#      message-converter: victor.training.rabbit.EventMessageConverter
-#      before-publish-post-processors:
-#        - victor.training.rabbit.interceptor.TraceIdPostProcessor
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -37,7 +25,7 @@ spring:
 #      acks: 0        # nu așteaptă ack – fire and forget
     consumer:
       group-id: app
-      properties: # kakfa-client
+      properties:
         spring.json.trusted.packages: victor.*
         session.timeout.ms: 15000 # default: 45s - no heartbeats from consumer => considered dead. see also heartbeat.interval.ms=3s default
         max.poll.interval.ms: 15000 # default: 5m - max time between polls. Affects long processing time of a message
@@ -63,5 +51,4 @@ decorator:
     p6spy:
       multiline: false
       log-format: "%(executionTime) ms|%(category)|connection %(connectionId)|%(sqlSingleLine)"
-      # ignore the query polling the inbox
-      log-filter.pattern: "^(?!.*from inbox i1_0 where i1_0.status='PENDING').*$"
+      log-filter.pattern: "^(?!.*from inbox i1_0 where i1_0.status='PENDING').*$" # ignore the poller

@@ -19,7 +19,7 @@ public class ProducerTraceIdInterceptor implements ProducerInterceptor<String, O
       log.info("Adding header: traceId={}", traceIdFromCurrentThread);
       record.headers().add("traceId", traceIdFromCurrentThread.getBytes());
     } else {
-      log.warn("No traceId found on current thread");
+      log.debug("No traceId found on current thread");
     }
     return record;
   }
