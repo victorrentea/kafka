@@ -1,15 +1,20 @@
 services:
   broker:
-    image: confluentinc/cp-kafka:7.5.3
+#    image: confluentinc/cp-kafka:7.5.3
+    image: confluentinc/cp-kafka
+#    image: obsidiandynamics/kafdrop
     hostname: broker
     container_name: broker
     ports:
       - "9092:9092"
       - "9101:9101"
     environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
       KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+
+      KAFKA_NODE_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -18,26 +23,21 @@ services:
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
-      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
       AUTO_CREATE_TOPICS_ENABLE: 'true'
-  kafdrop:
-    image: obsidiandynamics/kafdrop:4.2.1-SNAPSHOT
+
+  kafdrop: # http://localhost:9000/
+    image: obsidiandynamics/kafdrop
     restart: "no"
     ports:
       - "9000:9000"
     environment:
       KAFKA_BROKERCONNECT: "broker:29092"
-#      SCHEMAREGISTRY_CONNECT: http://schema-registry:8081
-      SERVER_SERVLET_CONTEXTPATH: "/"
-#      CMD_ARGS: "--message.format=AVRO"
     depends_on:
       - broker
-#    networks:
-#      - local
+
   schema-registry:
     image: confluentinc/cp-schema-registry:7.5.3
     hostname: schema-registry
