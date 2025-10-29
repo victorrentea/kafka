@@ -11,13 +11,13 @@ Client->P2++ #lightblue: <font color=blue>Request2
 Topic<-P2--: <font color=blue> M2
 ====
 '⭐️ Uncomment below
-'hnote over Processor: 1 thread
-'Topic->Processor++ #lightgreen: <font color=green>M1
-'Processor->Network++ #lightgreen: <font color=green>call
-'Processor<--Network--
-'Topic2<-Processor--: <font color=green>                     M1Full
-'Topic->Processor++ #lightblue: <font color=blue>M2
-'Processor->Network++ #lightblue: <font color=blue>call
-'Processor<--Network--
-'Topic2<-Processor--: <font color=blue>                      M2Full
+hnote over Processor: 1 thread
+Topic->Processor++ #lightgreen: <font color=green>M1
+Processor->Network++ #lightgreen: <font color=green>call
+Processor<--Network--
+Topic2<-Processor--: <font color=green>                     M1Full
+Topic->Processor++ #lightblue: <font color=blue>M2
+Processor->Network++ #lightblue: <font color=blue>call
+Processor<--Network--
+Topic2<-Processor--: <font color=blue>                      M2Full
 @enduml

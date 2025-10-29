@@ -3,8 +3,8 @@ hide footbox
 database DB order 99
 
 Broker->Consumer++: consume(M)
-Broker<-Consumer: Ack M
-'Consumer->DB: updates
+Consumer->DB: updates
+'Broker<-Consumer: Ack M
 
-'Consumer->DB: kafka\nconsumer\noffsets
+Consumer->DB: kafka\nconsumer\noffsets
 @enduml

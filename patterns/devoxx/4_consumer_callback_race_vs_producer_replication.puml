@@ -12,10 +12,10 @@ Consumer++
 Consumer->Producer++: GET /{id}      **// callback**
 
 '⭐uncomment below
-'Producer->DB.replica: SELECT
+Producer->DB.replica: SELECT
 
-'Consumer<--Producer--: <font color=red>stale data
-'DB -> DB.replica: **<font color=red>replication**
+Consumer<--Producer--: <font color=red>stale data
+DB -> DB.replica: **<font color=red>replication**
 
 Consumer--
 
