@@ -42,29 +42,66 @@ public @interface ResetKafkaOffsets {
       resetOffsetsForAllGroups(bootstrapServers, List.of(annotation.value()));
     }
 
-    private static void resetOffset(String bootstrap, List<String> topics, String groupId) {
+    private static void resetOffsetsForAllGroups(String bootstrap, List<String> topics) {
       try (Admin admin = AdminClient.create(Map.of("bootstrap.servers", bootstrap))) {
+        // Describe topics and partitions
         Map<String, TopicDescription> descriptions = admin.describeTopics(topics).allTopicNames()
             .get(1, TimeUnit.SECONDS);
         List<TopicPartition> partitions = descriptions.values().stream()
             .flatMap(d -> d.partitions().stream()
                 .map(tpi -> new TopicPartition(d.name(), tpi.partition())))
             .toList();
+        if (partitions.isEmpty()) {
+          log.info("No partitions found for topics {}. Nothing to reset.", topics);
+          return;
+        }
+        // Get latest offsets for all partitions
         Map<TopicPartition, OffsetSpec> offsetRequest = partitions.stream()
             .collect(toMap(Function.identity(), tp -> OffsetSpec.latest()));
         Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> endOffsets = admin.listOffsets(offsetRequest).all()
             .get(1, TimeUnit.SECONDS);
-        Map<TopicPartition, OffsetAndMetadata> newOffsets = endOffsets.entrySet().stream()
-            .collect(toMap(
-                Map.Entry::getKey,
-                e -> new OffsetAndMetadata(e.getValue().offset() - 1)
-            ));
 
-        admin.alterConsumerGroupOffsets(groupId , newOffsets).all()
-            .get(1, TimeUnit.SECONDS);
+        // List all consumer groups
+        List<String> allGroupIds = admin.listConsumerGroups().all()
+            .get(1, TimeUnit.SECONDS)
+            .stream().map(ConsumerGroupListing::groupId)
+            .toList();
+
+        for (String groupId : allGroupIds) {
+          try {
+            Map<TopicPartition, OffsetAndMetadata> committed = admin.listConsumerGroupOffsets(groupId)
+                .partitionsToOffsetAndMetadata()
+                .get(1, TimeUnit.SECONDS);
+
+            // Filter only partitions from the provided topics where this group has committed offsets
+            Map<TopicPartition, OffsetAndMetadata> relevant = committed.entrySet().stream()
+                .filter(e -> topics.contains(e.getKey().topic()))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if (relevant.isEmpty()) {
+              continue; // this group didn't consume from these topics
+            }
+            Map<TopicPartition, OffsetAndMetadata> newOffsets = relevant.keySet().stream()
+                .filter(endOffsets::containsKey)
+                .collect(toMap(
+                    Function.identity(),
+                    tp -> {
+                      long end = endOffsets.get(tp).offset();
+                      long target = Math.max(0, end - 1);
+                      return new OffsetAndMetadata(target);
+                    }
+                ));
+            if (!newOffsets.isEmpty()) {
+              log.info("Resetting offsets for group '{}' on {} partitions for topics {}", groupId, newOffsets.size(), topics);
+              admin.alterConsumerGroupOffsets(groupId, newOffsets).all().get(1, TimeUnit.SECONDS);
+            }
+          } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            throw new RuntimeException(e);
+          }
+        }
       } catch (ExecutionException | InterruptedException | TimeoutException e) {
         throw new RuntimeException(e);
       }
     }
+
   }
 }
