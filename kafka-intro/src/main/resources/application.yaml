@@ -41,8 +41,7 @@ spring:
         session.timeout.ms: 15000 # default: 45s - no heartbeats from consumer => considered dead. see also heartbeat.interval.ms=3s default
         max.poll.interval.ms: 15000 # default: 5m - max time between polls. Affects long processing time of a message
 #        max.poll.records: 1 #default: 500
-
-        enable.auto.commit: false # default: true = commit offsets automatically even if messages are not yet processed
+#        enable.auto.commit: false # default: true = commit offsets automatically even if messages are not yet processed
 #        auto.commit.interval.ms: 1000 # default: 5000
 
         interceptor.classes: victor.training.kafka.interceptor.ConsumerPollAckInterceptor
@@ -50,8 +49,7 @@ spring:
       value-deserializer: victor.training.kafka.intro.Event$Deserializer
     listener:
       concurrency: 2 # number of threads=consumer instances per topic of this machine
-
-  jpa: {}
+#      ack-mode: batch
 
 decorator:
   datasource:

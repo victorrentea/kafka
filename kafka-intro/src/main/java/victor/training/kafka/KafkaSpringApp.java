@@ -13,7 +13,7 @@ import org.springframework.util.backoff.FixedBackOff;
 import victor.training.kafka.interceptor.ConsumerInterceptor;
 
 @SpringBootApplication
-@EnableScheduling
+//@EnableScheduling
 public class KafkaSpringApp {
   public static void main(String[] args) {
     SpringApplication.run(KafkaSpringApp.class, args);
@@ -23,7 +23,6 @@ public class KafkaSpringApp {
   public ContainerCustomizer<Object, Object, ConcurrentMessageListenerContainer<Object, Object>> kafkaContainerCustomizer() {
     return container -> container.setRecordInterceptor(new ConsumerInterceptor());
   }
-
 
   @Bean
   public ConcurrentKafkaListenerContainerFactory<String, String>

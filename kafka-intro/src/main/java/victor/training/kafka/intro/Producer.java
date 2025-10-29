@@ -28,7 +28,11 @@ public class Producer {
   @GetMapping("produce")
   public void produceEvent() {
     MDC.put("traceId", "123");
-    kafkaTemplate.send("myTopic",  new Event.EventOK("Work to be done"));
-    log.info("Messages sent");
+    kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"))
+        .thenAccept(result -> {
+          log.info("Trimis mesaj cu offset< ruleaza in threadul unic al producerului din app asta: " + result.getRecordMetadata().offset());
+//          db.insert()// network call 5ms => throughput max = 200 m/s = RAU!
+         });
+    log.info("Messages sent ?!?! sigur");
   }
 }
