@@ -1,4 +1,4 @@
-package victor.training.kafka.testutil;
+package victor.training.kafka.transactions;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.toMap;
 @ExtendWith(ResetKafkaOffsets.Extension.class)
 public @interface ResetKafkaOffsets {
   String[] value();
-  long waitMillis() default 0;
+  long waitMillis() default 1000;
 
   @Slf4j
   class Extension implements BeforeEachCallback {

@@ -1,0 +1,29 @@
+spring.application.name: app-tx
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%20.20t] <%-3X{traceId}> %clr(%-5level %-30.30logger{29}) - %msg%n"
+  level:
+    org.apache.kafka.clients.producer.ProducerConfig: warn
+    org.apache.kafka.clients.consumer: warn
+    org.apache.kafka.clients.admin.AdminClientConfig: warn
+    org.apache.kafka.common.metrics.Metrics: warn
+    org.apache.kafka.streams.StreamsConfig: warn
+    root: info
+server:
+  port: 8080
+management.endpoints.web.exposure.include: "*"
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      transaction-id-prefix: txn-
+    consumer:
+      group-id: app-tx
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      concurrency: 2 # number of threads=consumer instances per topic of this machine

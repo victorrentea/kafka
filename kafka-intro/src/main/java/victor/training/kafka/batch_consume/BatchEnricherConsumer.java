@@ -1,4 +1,4 @@
-package victor.training.kafka;
+package victor.training.kafka.batch_consume;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -7,12 +7,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
@@ -28,36 +25,40 @@ public class BatchEnricherConsumer {
 
   public record Product(String id, String name, String description){}
 
+
+//   @KafkaListener(topics = BATCH_IN_TOPIC) // Traditional: process one message at a time
+  public void consume(ConsumerRecord<String, String> record) {
+    Map<String, Product> productsById = fetchManyFromRemote(List.of(record.value()));
+    Product enrichedProduct = productsById.get(record.value());
+    kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), enrichedProduct);
+  }
+
   @KafkaListener(topics = BATCH_IN_TOPIC, batch = "true")
-//  @Transactional(transactionManager = "kafkaTransactionManager")
-  public void consumeBatch(List<ConsumerRecord<String, String>> records) {
+  public void consume(List<ConsumerRecord<String, String>> records) {
     log.info("Process: {} records : {}", records.size(), records);
+
     List<String> productIds = records.stream().map(ConsumerRecord::value).toList();
-    Map<String, Product> productsById = fetchMany(productIds);
+    Map<String, Product> productsById = fetchManyFromRemote(productIds);
     for (var record : records) {
       var productId = record.value();
       Product enrichedProduct = productsById.get(productId);
-//      if (random.nextDouble() < .3) throw new IllegalArgumentException("BOOM");
       kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), enrichedProduct);
+    }
+//    randomError(); // requires transactional (see kafka-tx module)
+  }
+
+  private void randomError() {
+    if (Math.random()<.5) {
+      log.error("DUMMY ERROR");
+      throw new RuntimeException("BUG🐞");
     }
   }
 
-  // --- Traditional non-batch implementation (for educational purposes) ---
-  // Processes one message at a time  would call fetchMany for every single record, leading to significantly worse performance.
-//   @KafkaListener(topics = BATCH_IN_TOPIC)
-   public void consumeOne(ConsumerRecord<String, String> record) {
-     Map<String, Product> productsById = fetchMany(List.of(record.value()));
-     Product enrichedProduct = productsById.get(record.value());
-     kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), enrichedProduct);
-   }
-
   @SneakyThrows
-  private Map<String, Product> fetchMany(List<String> productIds) {
+  private Map<String, Product> fetchManyFromRemote(List<String> productIds) {
     Thread.sleep(100+productIds.size());
-    return productIds.stream().collect(toMap(Function.identity(), this::dummyProduct));
+    return productIds.stream().collect(toMap(Function.identity(), id ->
+        new Product(id, "name-" + id, "desc-" + id)));
   }
 
-  private Product dummyProduct(String id) {
-    return new Product(id, "name-" + id, "desc-" + id);
-  }
 }

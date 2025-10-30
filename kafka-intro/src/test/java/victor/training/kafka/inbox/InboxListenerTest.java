@@ -1,13 +1,11 @@
 package victor.training.kafka.inbox;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import victor.training.kafka.KafkaTest;
 import victor.training.kafka.inbox.InboxListener.Message;
-import victor.training.kafka.ooo.OutOfOrderDelayRetryListener;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static victor.training.kafka.inbox.InboxListener.TOPIC;

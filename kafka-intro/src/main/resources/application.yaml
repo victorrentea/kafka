@@ -5,10 +5,11 @@ logging:
     console: "%d{HH:mm:ss.SSS} [%20.20t] <%-3X{traceId}> %clr(%-5level %-30.30logger{29}) - %msg%n"
   level:
     org.apache.kafka.clients.producer.ProducerConfig: warn
-    org.apache.kafka.clients.consumer.ConsumerConfig: warn
+    org.apache.kafka.clients.consumer: warn
     org.apache.kafka.clients.admin.AdminClientConfig: warn
     org.apache.kafka.common.metrics.Metrics: warn
     org.apache.kafka.streams.StreamsConfig: warn
+    root: info
 server:
   port: 8080
 management.endpoints.web.exposure.include: "*"
@@ -22,13 +23,13 @@ spring:
       value-serializer: victor.training.kafka.intro.Event$Serializer
       properties:
         interceptor.classes: victor.training.kafka.interceptor.ProducerTraceIdInterceptor
-#      acks: 0        # nu așteaptă ack – fire and forget
+    #      acks: 0 # producer does not wait for broker ack = fire and forget; default =1;
     consumer:
       group-id: app
       properties:
         spring.json.trusted.packages: victor.*
         session.timeout.ms: 15000 # default: 45s - no heartbeats from consumer => considered dead. see also heartbeat.interval.ms=3s default
-        max.poll.interval.ms: 15000 # default: 5m - max time between polls. Affects long processing time of a message
+        max.poll.interval.ms: 15000 # =15s (default=5m) = max time between polls. Affects long processing time of a message
         interceptor.classes: victor.training.kafka.interceptor.ConsumerPollAckInterceptor
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: victor.training.kafka.intro.Event$Deserializer
@@ -37,14 +38,14 @@ spring:
 #      ack-mode: batch (default)
 #      ack-mode: record (cel mai sigur, dar intens pe broker)
 
-#      ack-mode: time count time_count
+#      ack-mode: time/count/time_count
 #      ack-time: 3s
 #      ack-count: 3s
 
 #      ack-mode: manual #Acknowledgement.acknowledge()
-      # daca comiti offsetul 7, comiti toate pana la 5,6,7
+      # WARNING: commiting offset 7 => commit all before that
 
-#      type: batch # procesare in bulk cand GET-uri batchuite
+#      type: batch # bulk-process
 
 decorator:
   datasource:

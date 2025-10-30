@@ -24,6 +24,18 @@ public class ProducerTraceIdInterceptor implements ProducerInterceptor<String, O
     return record;
   }
 
+//@Configuration
+//class RabbitConfig { // ~ equivalent
+//  @Bean
+//  RabbitTemplateCustomizer addBeforePublish() {
+//    return template -> template.addBeforePublishPostProcessors(
+//        message -> {
+//          message.getMessageProperties().setHeader("traceId", MDC.get("traceId"));
+//          return message;
+//        });
+//  }
+//}
+
   @Override
   public void onAcknowledgement(RecordMetadata metadata, Exception exception) {
     // No-op

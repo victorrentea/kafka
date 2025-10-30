@@ -2,21 +2,26 @@ package victor.training.kafka.seqno;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class SeqBuffer {
-  @Id
-  private long seqNo;
-  private String payload;
+  record AggIdSeqNo(int aggId, long seqNo) implements Serializable {}
 
-  // Explicit getter to ensure availability even if Lombok annotation processing is not active
-  public String getPayload() {
-    return payload;
+  @Id
+  private AggIdSeqNo id;
+  private String payload;
+  private LocalDateTime insertedAt = LocalDateTime.now();
+
+  public SeqBuffer() {
+  }
+
+  public SeqBuffer(AggIdSeqNo id, String payload) {
+    this.id = id;
+    this.payload = payload;
   }
 }

@@ -4,11 +4,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import victor.training.kafka.seqno.SeqBuffer.AggIdSeqNo;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static java.util.Comparator.naturalOrder;
+import static java.util.stream.Collectors.groupingBy;
 
 @Slf4j
 @Component
@@ -16,31 +25,32 @@ import java.util.Map;
 public class SeqNoListener {
   public static final String TOPIC = "ooo-seqno-in";
   public static final String OUT_TOPIC = "ooo-seqno-out";
+  public static final Duration TIME_WINDOW = Duration.ofSeconds(3);
 
-  private final Map<Long, BufferedSeq> nextSeqNo = new HashMap<>();
-  record BufferedSeq(long aggId, int nextSeqNo, String payload) {}
-
-  public record SeqMessage(long aggId, long seqNo, String payload) {}
+  public record SeqMessage(int aggId, long seqNo, String payload) {}
 
   private final SeqBufferRepo bufferRepo;
-  private final SeqTrackingRepo trackerRepo;
+  private final SeqTrackerRepo trackerRepo;
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   @KafkaListener(topics = TOPIC, concurrency = "1")
   @Transactional
   public void handle(SeqMessage message) {
-
-    if (!bufferRepo.existsById(message.seqNo())) {
-      bufferRepo.save(new SeqBuffer(message.seqNo(), message.payload()));
+    if (bufferRepo.existsById(new AggIdSeqNo(message.aggId, message.seqNo))) {
+      log.warn("Duplicate detected: ignoring " + message);
+      return;
     }
+    bufferRepo.save(new SeqBuffer(new AggIdSeqNo(message.aggId, message.seqNo), message.payload()));
 
-    SeqTracking tracker = trackerRepo.findById(1).orElseGet(()->trackerRepo.save(new SeqTracking()));
-    log.info("Got traker {}",tracker);
-    long next = tracker.nextSeqNo();
+    SeqTracker tracker = trackerRepo.findById(message.aggId())
+        .orElseGet(() -> trackerRepo.save(new SeqTracker().aggId(message.aggId())));
+    log.info("Tracker from DB: {}", tracker);
+    long nextSeqNo = tracker.nextSeqNo();
     while (true) {
-      log.info("Look in DB for seqno {}", next);
-      SeqBuffer buffered = bufferRepo.findById(next).orElse(null);
+      log.info("Look in DB for seqno {}", nextSeqNo);
+      SeqBuffer buffered = bufferRepo.findById(new AggIdSeqNo(message.aggId, nextSeqNo)).orElse(null);
       if (buffered == null) break;
+
       // publish
       log.info("Publishing in-order {} to {}", buffered.payload(), OUT_TOPIC);
       try {
@@ -48,12 +58,65 @@ public class SeqNoListener {
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
-      bufferRepo.deleteById(next);
-      next++;
+      bufferRepo.delete(buffered);
+      nextSeqNo++;
     }
-    if (next != tracker.nextSeqNo()) {
-      tracker.nextSeqNo(next);
+    if (nextSeqNo != tracker.nextSeqNo()) {
+      tracker.nextSeqNo(nextSeqNo);
       trackerRepo.save(tracker);
+    }
+  }
+
+  @Scheduled(fixedRate = 1000)
+  public void sendBufferedMessagesOlderThanTimeWindow() {
+    List<SeqBuffer> old = bufferRepo.findSeqBufferByInsertedAtBefore(LocalDateTime.now().minus(TIME_WINDOW));
+    log.info("Scheduled check found {} old buffered messages", old.size());
+
+    // Group old buffered messages by aggregate id
+    Map<Integer, List<SeqBuffer>> byAggId = old.stream().collect(groupingBy(b -> b.id().aggId()));
+
+    for (Map.Entry<Integer, List<SeqBuffer>> entry : byAggId.entrySet()) {
+      int aggId = entry.getKey();
+      List<SeqBuffer> buffers = entry.getValue();
+      if (buffers.isEmpty()) continue;
+
+      // Determine the next sequence number to publish for this aggregate
+      SeqTracker tracker = trackerRepo.findById(aggId)
+          .orElseGet(() -> trackerRepo.save(new SeqTracker().aggId(aggId)));
+
+      long nextSeqNo = tracker.nextSeqNo();
+
+      // Choose the smallest available old seqNo that is >= nextSeqNo (skip the gap)
+      final long currentNext = nextSeqNo;
+      Long firstAvailableSeq = buffers.stream()
+          .map(b -> b.id().seqNo())
+          .filter(seq -> seq >= currentNext)
+          .min(naturalOrder())
+          .orElse(null);
+
+      if (firstAvailableSeq == null) continue;
+
+      nextSeqNo = firstAvailableSeq;
+
+      // From that point, publish all consecutive buffered messages if present
+      while (true) {
+        SeqBuffer buffered = bufferRepo.findById(new AggIdSeqNo(aggId, nextSeqNo)).orElse(null);
+        if (buffered == null) break;
+
+        log.info("[timeout] Publishing {} for aggId={}, seqNo={} to {}", buffered.payload(), aggId, nextSeqNo, OUT_TOPIC);
+        try {
+          kafkaTemplate.send(OUT_TOPIC, buffered.payload()).get();
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+        bufferRepo.delete(buffered);
+        nextSeqNo++;
+      }
+
+      if (nextSeqNo != tracker.nextSeqNo()) {
+        tracker.nextSeqNo(nextSeqNo);
+        trackerRepo.save(tracker);
+      }
     }
   }
 }

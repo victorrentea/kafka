@@ -32,6 +32,6 @@ public class ConsumerInterceptor implements RecordInterceptor<Object, Object> {
 
   @Override
   public void failure(ConsumerRecord<Object, Object> record, Exception exception, Consumer<Object, Object> consumer) {
-    log.error("FAILED::" + exception.getMessage());
+    log.error("ERROR::" + exception + " caused by " + exception.getCause());
   }
 }

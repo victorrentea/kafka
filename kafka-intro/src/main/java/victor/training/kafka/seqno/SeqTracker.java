@@ -6,9 +6,9 @@ import lombok.Data;
 
 @Entity
 @Data
-public class SeqTracking {
+public class SeqTracker {
   @Id
-  private int id = 1;
+  private int aggId;
   private long nextSeqNo = 1;
 
 }

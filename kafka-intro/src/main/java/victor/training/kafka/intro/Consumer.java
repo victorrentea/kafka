@@ -36,19 +36,12 @@ public class Consumer {
     ack.acknowledge();
   }
 
-
-
-  @SneakyThrows
-  private void anafCall() {
-    Thread.sleep(61_000);
-  }
-
   @Bean
   public NewTopic myTopic() {
     return TopicBuilder.name("myTopic")
-        .partitions(2)
+        .partitions(3)
         .replicas(2)
-        .config(TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")
+        //.config(TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")
         .build();
   }
 }

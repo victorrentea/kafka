@@ -6,29 +6,23 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.retry.annotation.Backoff;
-import org.springframework.scheduling.SchedulingTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RestController;
-import victor.training.kafka.intro.Event;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.CompletableFuture.delayedExecutor;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 @RestController
-public class OutOfOrderDelayRetryListener {
+public class OutOfOrderListener {
   public static final String TOPIC = "ooo-topic";
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   public int pendingOpen = 0;
   public int pairs = 0;
 
-  @RetryableTopic(attempts = "2", backoff = @Backoff(delay = 100)) // delayed retry by spring-kafka
+  @RetryableTopic//(attempts = "3", backoff = @Backoff(delay = 1000)) // by spring-kafka
   @KafkaListener(topics = TOPIC, concurrency = "1")
   public void handle(String message) throws InterruptedException {
     log.info("::got \""+message+"\" - pending(=" + pendingOpen + ", pairs()=" + pairs);
