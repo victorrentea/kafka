@@ -41,7 +41,7 @@ public class Consumer {
     return TopicBuilder.name("myTopic")
         .partitions(3)
         .replicas(2)
-        //.config(TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")
+        .config(TopicConfig.COMPRESSION_TYPE_CONFIG, "zstd")
         .build();
   }
 }

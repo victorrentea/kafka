@@ -11,15 +11,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.sql.DataSource;
 
-@EnableSchedulerLock(defaultLockAtMostFor = "P1D")
-@EnableScheduling
 @Configuration
 public class SchedulerConfig {
-  @Bean
-  public LockProvider lockProvider(DataSource dataSource) {
-    return new JdbcTemplateLockProvider(dataSource);
-  }
-
   @Bean
   @ConfigurationProperties(prefix = "scheduler-workers")
   public ThreadPoolTaskExecutor schedulerWorkers() {
