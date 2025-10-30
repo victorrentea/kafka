@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
-import victor.training.kafka.KafkaTest;
+import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.race.RaceListener.Message;
 import victor.training.kafka.testutil.ResetKafkaOffsets;
 
@@ -15,11 +15,11 @@ import static org.assertj.core.api.Assertions.anyOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
-import static victor.training.kafka.race.RaceListener.TOPIC;
+import static victor.training.kafka.race.RaceListener.RACE_TOPIC;
 
 @Slf4j
-@ResetKafkaOffsets(TOPIC)
-public class RaceListenerTest extends KafkaTest {
+@ResetKafkaOffsets(RACE_TOPIC)
+public class RaceListenerTest extends IntegrationTest {
   public static final int N = 1000;
   public static final String CLIENT_ID = UUID.randomUUID().toString();
   @Autowired
@@ -31,7 +31,7 @@ public class RaceListenerTest extends KafkaTest {
   void ok() throws InterruptedException {
     raceRepo.save(new RaceEntity().id(CLIENT_ID).total(0));
     for (int i = 0; i < N; i++) {
-      kafkaTemplate.send(TOPIC, new Message(CLIENT_ID, i));
+      kafkaTemplate.send(RACE_TOPIC, new Message(CLIENT_ID, i));
       // Fix#1: partition key
       // Fix#2: JPA optimistic locking (WARNING: message is discarded after 10 optimistic locking errors)
     }

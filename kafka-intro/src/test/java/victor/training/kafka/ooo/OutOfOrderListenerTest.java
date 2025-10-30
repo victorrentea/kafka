@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
-import victor.training.kafka.KafkaTest;
+import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.testutil.ResetKafkaOffsets;
 
 import static java.time.Duration.ofSeconds;
@@ -15,7 +15,7 @@ import static victor.training.kafka.ooo.OutOfOrderListener.TOPIC;
 
 @Slf4j
 @ResetKafkaOffsets({TOPIC, TOPIC + "-retry", TOPIC + "-dlt"})
-public class OutOfOrderListenerTest extends KafkaTest {
+public class OutOfOrderListenerTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, String> kafkaTemplate;
   @Autowired

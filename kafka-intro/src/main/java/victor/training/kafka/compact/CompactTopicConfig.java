@@ -14,7 +14,7 @@ public class CompactTopicConfig {
     return TopicBuilder.name(COUNTRY_TOPIC)
         .partitions(1)
         .replicas(2)
-        .compact()
+        .compact() // are voie sa stearga recordurile precedente pentru aceeasi cheie, cand Kafka vrea sa faca curat
         // trigger an eager compactation (only for demo purposes)
         .config("segment.ms", "1000")
         .config("min.cleanable.dirty.ratio","0.01")

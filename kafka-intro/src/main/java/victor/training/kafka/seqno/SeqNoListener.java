@@ -11,8 +11,6 @@ import victor.training.kafka.seqno.SeqBuffer.AggIdSeqNo;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,17 +21,17 @@ import static java.util.stream.Collectors.groupingBy;
 @Component
 @RequiredArgsConstructor
 public class SeqNoListener {
-  public static final String TOPIC = "ooo-seqno-in";
+  public static final String IN_TOPIC = "ooo-seqno-in";
   public static final String OUT_TOPIC = "ooo-seqno-out";
   public static final Duration TIME_WINDOW = Duration.ofSeconds(3);
 
   public record SeqMessage(int aggId, long seqNo, String payload) {}
 
   private final SeqBufferRepo bufferRepo;
-  private final SeqTrackerRepo trackerRepo;
+  private final NextSeqRepo nextSeqRepo;
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  @KafkaListener(topics = TOPIC, concurrency = "1")
+  @KafkaListener(topics = IN_TOPIC, concurrency = "1")
   @Transactional
   public void handle(SeqMessage message) {
     if (bufferRepo.existsById(new AggIdSeqNo(message.aggId, message.seqNo))) {
@@ -42,18 +40,17 @@ public class SeqNoListener {
     }
     bufferRepo.save(new SeqBuffer(new AggIdSeqNo(message.aggId, message.seqNo), message.payload()));
 
-    SeqTracker tracker = trackerRepo.findById(message.aggId())
-        .orElseGet(() -> trackerRepo.save(new SeqTracker().aggId(message.aggId())));
-    log.info("Tracker from DB: {}", tracker);
-    long nextSeqNo = tracker.nextSeqNo();
+    NextSeq nextSeq = nextSeqRepo.findById(message.aggId())
+        .orElseGet(() -> nextSeqRepo.save(new NextSeq().aggId(message.aggId())));
+    log.info("Tracker from DB: {}", nextSeq);
+    long nextSeqNo = nextSeq.nextSeqNo();
     while (true) {
       log.info("Look in DB for seqno {}", nextSeqNo);
       SeqBuffer buffered = bufferRepo.findById(new AggIdSeqNo(message.aggId, nextSeqNo)).orElse(null);
       if (buffered == null) break;
 
-      // publish
-      log.info("Publishing in-order {} to {}", buffered.payload(), OUT_TOPIC);
       try {
+        log.info("Publish {} to {}", buffered.payload(), OUT_TOPIC);
         kafkaTemplate.send(OUT_TOPIC, buffered.payload()).get();
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -61,15 +58,18 @@ public class SeqNoListener {
       bufferRepo.delete(buffered);
       nextSeqNo++;
     }
-    if (nextSeqNo != tracker.nextSeqNo()) {
-      tracker.nextSeqNo(nextSeqNo);
-      trackerRepo.save(tracker);
+    if (nextSeqNo != nextSeq.nextSeqNo()) {
+      nextSeq.nextSeqNo(nextSeqNo);
+      nextSeqRepo.save(nextSeq);
     }
   }
 
   @Scheduled(fixedRate = 1000)
   public void sendBufferedMessagesOlderThanTimeWindow() {
     List<SeqBuffer> old = bufferRepo.findSeqBufferByInsertedAtBefore(LocalDateTime.now().minus(TIME_WINDOW));
+    if (old.isEmpty()) {
+      return; // nothing to do
+    }
     log.info("Scheduled check found {} old buffered messages", old.size());
 
     // Group old buffered messages by aggregate id
@@ -81,8 +81,8 @@ public class SeqNoListener {
       if (buffers.isEmpty()) continue;
 
       // Determine the next sequence number to publish for this aggregate
-      SeqTracker tracker = trackerRepo.findById(aggId)
-          .orElseGet(() -> trackerRepo.save(new SeqTracker().aggId(aggId)));
+      NextSeq tracker = nextSeqRepo.findById(aggId)
+          .orElseGet(() -> nextSeqRepo.save(new NextSeq().aggId(aggId)));
 
       long nextSeqNo = tracker.nextSeqNo();
 
@@ -115,7 +115,7 @@ public class SeqNoListener {
 
       if (nextSeqNo != tracker.nextSeqNo()) {
         tracker.nextSeqNo(nextSeqNo);
-        trackerRepo.save(tracker);
+        nextSeqRepo.save(tracker);
       }
     }
   }

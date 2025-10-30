@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import victor.training.kafka.KafkaTest;
+import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.batch_consume.BatchEnricherConsumer.Product;
 import victor.training.kafka.testutil.ResetKafkaOffsets;
 
@@ -21,7 +21,7 @@ import static victor.training.kafka.batch_consume.BatchEnricherConsumer.BATCH_OU
 
 @Slf4j
 @ResetKafkaOffsets({BATCH_IN_TOPIC, BATCH_OUT_TOPIC})
-class BatchEnricherConsumerTest extends KafkaTest {
+class BatchEnricherConsumerTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, String> kafkaTemplate;
 

@@ -22,7 +22,7 @@ import static victor.training.kafka.compact.CompactTopicConfig.COUNTRY_TOPIC;
 @Slf4j
 @RequiredArgsConstructor
 public class CountrySeekToStartListener implements ConsumerSeekAware {
-  // A) Re-seek to start
+  // A) Seek to start at every startuo
   @Override
   public void onPartitionsAssigned(Map<TopicPartition, Long> assignments,
                                    ConsumerSeekCallback callback) {
@@ -31,7 +31,11 @@ public class CountrySeekToStartListener implements ConsumerSeekAware {
   }
 
   // Use CountryController to create countries
-  @KafkaListener(topics = COUNTRY_TOPIC)
+  @KafkaListener(topics = COUNTRY_TOPIC,
+      properties = {
+          "key.deserializer=org.apache.kafka.common.serialization.StringDeserializer",
+          "value.deserializer=org.apache.kafka.common.serialization.StringDeserializer"
+      })
   public void consumeSeeking(ConsumerRecord<String, String> countryRecord) {
     log.info("A) Got country: " + countryRecord.value());
   }

@@ -15,7 +15,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.kafka.transaction.KafkaTransactionManager;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.backoff.FixedBackOff;
@@ -27,18 +27,18 @@ import java.util.UUID;
 @Service
 public class RaceListener {
   private final RaceRepo raceRepo;
-  public static final String TOPIC = "race-topic";
+  public static final String RACE_TOPIC = "race-topic";
 
   @Bean
   public NewTopic raceTopic() {
-    return TopicBuilder.name(TOPIC)
+    return TopicBuilder.name(RACE_TOPIC)
         .partitions(3)
         .build();
   }
 
   record Message(String id, int seq) {}
 
-  @KafkaListener(topics = TOPIC, concurrency = "3",containerFactory = "multeRetryuri")
+  @KafkaListener(topics = RACE_TOPIC, concurrency = "3",containerFactory = "multeRetryuri")
   @Transactional // DB
   public void consume(Message message) throws InterruptedException {
     RaceEntity entity = raceRepo.findById(message.id()).orElseThrow();
@@ -55,6 +55,7 @@ public class RaceListener {
       factory.setConsumerFactory(consumerFactory);
       DefaultErrorHandler errorHandler = new DefaultErrorHandler(
           new FixedBackOff(50L, 100));
+      errorHandler.addRetryableExceptions(ObjectOptimisticLockingFailureException.class);
       factory.setCommonErrorHandler(errorHandler);
       return factory;
     }

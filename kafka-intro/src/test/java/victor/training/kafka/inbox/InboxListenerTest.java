@@ -1,11 +1,10 @@
 package victor.training.kafka.inbox;
 
 import lombok.extern.slf4j.Slf4j;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
-import victor.training.kafka.KafkaTest;
+import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.inbox.InboxListener.Message;
 import victor.training.kafka.testutil.ResetKafkaOffsets;
 
@@ -18,7 +17,7 @@ import static victor.training.kafka.inbox.InboxListener.TOPIC;
 
 @Slf4j
 @ResetKafkaOffsets(TOPIC)
-public class InboxListenerTest extends KafkaTest {
+public class InboxListenerTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, Message> kafkaTemplate;
   @Autowired

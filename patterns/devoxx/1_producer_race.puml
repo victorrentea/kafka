@@ -8,12 +8,14 @@ participant P2
 
 Client->P1: <font color=green>Request1
 activate P1 #lightgreen
-P1->Network: call (<font color=red>200ms</font>)
+P1->Network: call (<font color=red>20,000ms</font>)
 activate Network #lightgreen
 '<- place here
 P1<--Network--
 P1->Topic: <font color=green>                                       M1
 P1--
+
+'---🔽start: move this section up
 Client->P2: <font color=blue>Request2
 activate P2 #lightblue
 P2->Network:call (50ms)
@@ -21,6 +23,6 @@ activate Network #lightblue
 P2<--Network--
 P2->Topic: <font color=blue>                              M2
 P2--
-'---------- move this up🔼
+'--- 🔼end
 @enduml
 

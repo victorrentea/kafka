@@ -20,18 +20,22 @@ public class ConsumerInterceptor implements RecordInterceptor<Object, Object> {
     } else {
 //      log.warn("No traceId header found in received message");
     }
-    log.info("START::(part:{}, off:{}), key:{}, value: {}", record.partition(), record.offset(), record.key(), record.value());
+    log.info("::START ({}-{}:{}), key:{}, value: {}", record.topic(),record.partition(), record.offset(), record.key(), record.value());
     return record;
+  }
+
+  @Override
+  public void success(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
+    log.info("::SUCCESS ({}-{}:{})", record.topic(),record.partition(), record.offset());
   }
 
   @Override
   public void afterRecord(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
     MDC.remove("traceId");
-    log.info("END::");
   }
 
   @Override
   public void failure(ConsumerRecord<Object, Object> record, Exception exception, Consumer<Object, Object> consumer) {
-    log.error("ERROR::" + exception + " caused by " + exception.getCause());
+    log.error("::ERROR ({}-{}:{}): {} caused by {}", record.topic(),record.partition(), record.offset(), exception.toString(), exception.getCause().toString());
   }
 }

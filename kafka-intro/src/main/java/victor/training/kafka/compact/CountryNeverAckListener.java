@@ -20,7 +20,9 @@ public class CountryNeverAckListener {
   @KafkaListener(topics = COUNTRY_TOPIC, groupId = "never-ack",
       properties = {
           "auto.offset.reset=earliest",
-          "enable.auto.commit=false"
+          "enable.auto.commit=false",
+          "key.deserializer=org.apache.kafka.common.serialization.StringDeserializer",
+          "value.deserializer=org.apache.kafka.common.serialization.StringDeserializer"
       },
       containerFactory = "manualAckKafkaListenerContainerFactory")
   public void consumeNeverAck(ConsumerRecord<String, String> countryRecord, Acknowledgment ack) {

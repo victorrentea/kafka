@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
-import victor.training.kafka.KafkaTest;
+import victor.training.kafka.IntegrationTest;
 
 import java.util.UUID;
 
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static victor.training.kafka.sim.SimEvent.CreditAdded;
 import static victor.training.kafka.sim.SimEvent.OfferActivated;
 
-public class SimEventListenerTest  extends KafkaTest {
+public class SimEventListenerTest  extends IntegrationTest {
   @Autowired
   protected KafkaTemplate<String, SimEvent> kafkaTemplate;
   @Autowired

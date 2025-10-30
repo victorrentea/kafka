@@ -9,7 +9,7 @@ logging:
     org.apache.kafka.clients.admin.AdminClientConfig: warn
     org.apache.kafka.common.metrics.Metrics: warn
     org.apache.kafka.streams.StreamsConfig: warn
-    ps6py: warn #  disable sql log when ran by schedulers
+    p6spy: warn #  disable sql log when ran by schedulers
     root: info
 server:
   port: 8080

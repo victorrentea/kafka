@@ -24,7 +24,7 @@ public class CountryController {
 
   @DeleteMapping("countries/{iso}")
   public void deleteCountry(@PathVariable String iso) {
-    // TODO
+    kafkaTemplate.send(COUNTRY_TOPIC, iso, null);
   }
 
 }

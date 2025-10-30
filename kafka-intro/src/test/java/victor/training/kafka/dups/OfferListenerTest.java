@@ -4,13 +4,13 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
-import victor.training.kafka.KafkaTest;
+import victor.training.kafka.IntegrationTest;
 
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class OfferListenerTest extends KafkaTest {
+public class OfferListenerTest extends IntegrationTest {
   @Autowired
   private KafkaTemplate<String, String> kafkaTemplate;
   @Autowired

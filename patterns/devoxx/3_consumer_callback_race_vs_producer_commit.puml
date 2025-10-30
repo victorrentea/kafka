@@ -10,6 +10,8 @@ Producer -> DB++#lightgreen : UPDATE
 '⭐️uncomment bellow, in chunks
 'Producer --> Consumer++: UpdatedEvent {id}
 
+'hnote over Producer: slow call
+
 'Consumer->Producer: GET /{id}   **// callback**
 
 'Producer++

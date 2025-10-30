@@ -6,7 +6,7 @@ participant Consumer order 99
 participant DB
 
 -> Producer++:update
-Producer -> DB: UPDATE\nCOMMIT
+Producer -> DB: UPDATE X\nCOMMIT
 Consumer<--Producer--: UpdatedEvent {id}
 Consumer++
 Consumer->Producer++: GET /{id}      **// callback**
@@ -15,7 +15,7 @@ Consumer->Producer++: GET /{id}      **// callback**
 'Producer->DB.replica: SELECT
 
 'Consumer<--Producer--: <font color=red>stale data
-'DB -> DB.replica: **<font color=red>replication**
+'DB -> DB.replica: **<font color=red>replicate X**
 
 Consumer--
 

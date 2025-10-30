@@ -11,8 +11,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.test.annotation.DirtiesContext;
-import victor.training.kafka.KafkaTest;
-import victor.training.kafka.seqno.SeqNoListener.*;
+import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.testutil.ResetKafkaOffsets;
 
 import java.util.Random;
@@ -27,8 +26,8 @@ import static victor.training.kafka.seqno.SeqNoListener.*;
 
 @Slf4j
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
-@ResetKafkaOffsets(TOPIC)
-public class SeqNoListenerTest extends KafkaTest {
+@ResetKafkaOffsets(IN_TOPIC)
+public class SeqNoListenerTest extends IntegrationTest {
   public final int AGG_ID = new Random().nextInt();
   @Autowired
   KafkaTemplate<String, SeqMessage> kafkaTemplate;
@@ -44,11 +43,11 @@ public class SeqNoListenerTest extends KafkaTest {
   @Test
   void resequencesOutOfOrder() throws Exception {
     // send out of order but with seqNo
-    kafkaTemplate.send(TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 2, "B"));
-    kafkaTemplate.send(TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 1, "A"));
-    kafkaTemplate.send(TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 4, "D"));
-    kafkaTemplate.send(TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 4, "D"));
-    kafkaTemplate.send(TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 3, "C"));
+    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 2, "B"));
+    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 1, "A"));
+    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 4, "D"));
+    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 4, "D"));
+    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 3, "C"));
 
     await().atMost(ofSeconds(5)).untilAsserted(() ->
         assertThat(receivedMessages).containsExactly("A", "B", "C", "D")
@@ -58,8 +57,8 @@ public class SeqNoListenerTest extends KafkaTest {
   @Test
   @Disabled
   void emitPendingMessagesAfterTimeout() throws Exception {
-    kafkaTemplate.send(TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 1, "A"));
-    kafkaTemplate.send(TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 3, "B"));
+    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 1, "A"));
+    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 3, "B"));
 
     await()
         .during(ofSeconds(3)) // holds true for ...

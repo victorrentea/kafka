@@ -34,16 +34,17 @@ public @interface ResetKafkaOffsets {
     public void beforeEach(ExtensionContext context) throws InterruptedException {
       var ctx = SpringExtension.getApplicationContext(context);
       var env = ctx.getEnvironment();
-      KafkaListenerEndpointRegistry r = ctx.getBean(KafkaListenerEndpointRegistry.class);
-      r.stop();
+      KafkaListenerEndpointRegistry kafkaListeners = ctx.getBean(KafkaListenerEndpointRegistry.class);
+      kafkaListeners.stop();
       ResetKafkaOffsets annotation = AnnotationUtils.findAnnotation(context.getRequiredTestClass(), ResetKafkaOffsets.class);
 
       var bootstrapServers = env.getProperty("spring.kafka.bootstrap-servers");
 
-      log.info("Sleeping {}ms before reset offsets...", annotation.waitMillis());
+      log.info("Sleeping {}ms before reset offsets to allow any pending publishers to publish...", annotation.waitMillis());
       Thread.sleep(annotation.waitMillis());
       resetOffsetsForAllGroups(bootstrapServers, List.of(annotation.value()));
-      r.start();
+
+      kafkaListeners.start();
     }
 
     private static void resetOffsetsForAllGroups(String bootstrap, List<String> topics) {

@@ -1,2 +1,3 @@
 spring.application.name: app-test
 inbox.time.window.ms: 100
+logging.level.org.springframework.test.context.cache: DEBUG

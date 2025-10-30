@@ -22,7 +22,7 @@ public class Producer {
   @GetMapping("produce")
   public String produceEvent() throws ExecutionException, InterruptedException {
     MDC.put("traceId", "123");
-    kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done")).get();
+    kafkaTemplate.send("myTopic",  new Event.EventOK("Work to be done")).get();
     return "<a href='/produce-many'>Produce many</a> or <a href='/produce'>one</a>";
   }
 
