@@ -37,7 +37,7 @@ public class RaceListener {
   public void consume(Message message) throws InterruptedException {
     RaceEntity entity = raceRepo.findById(message.id()).orElseThrow();
     entity.total(entity.total() + 1);
-    Thread.sleep(3); // ~ network call; larger => higher race chances
+    Thread.sleep(20); // ~ network call; larger => higher race chances
   }
 }
 
