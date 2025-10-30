@@ -18,7 +18,7 @@ public class TestedSender {
   private final BService bService;
 
   @Bean
-  public NewTopic testRaceTopic() {
+  public NewTopic testOutTopic() {
     return TopicBuilder.name(OUT_TOPIC)
         .partitions(2)
         .build();

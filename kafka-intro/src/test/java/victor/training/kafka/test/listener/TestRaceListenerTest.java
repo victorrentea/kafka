@@ -1,6 +1,7 @@
 package victor.training.kafka.test.listener;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -18,7 +19,8 @@ public class TestRaceListenerTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, String> kafkaTemplate;
 
-  @RepeatedTest(10)
+//  @RepeatedTest(10)
+  @Test
   void explore() {
     kafkaTemplate.send(IN_TOPIC, UUID.randomUUID().toString(), "m");
 

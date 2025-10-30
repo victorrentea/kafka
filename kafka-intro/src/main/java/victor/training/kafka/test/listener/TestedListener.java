@@ -18,7 +18,7 @@ public class TestedListener {
   private final AService aService;
 
   @Bean
-  public NewTopic testRaceTopic() {
+  public NewTopic testInTopic() {
     return TopicBuilder.name(IN_TOPIC)
         .partitions(2)
         .build();
