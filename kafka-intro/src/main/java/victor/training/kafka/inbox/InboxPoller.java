@@ -29,7 +29,7 @@ public class InboxPoller {
 
     var task = nextTask.get();
 
-    // TODO UNDO
+    // TODO UNDO delete below
     inboxRepo.save(task.setInProgress()); // prevents other instances starting the same task
 
     try {
