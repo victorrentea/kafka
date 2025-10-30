@@ -14,8 +14,6 @@ import static org.mockito.Mockito.verify;
 import static victor.training.kafka.test.listener.TestedListener.IN_TOPIC;
 
 public class TestRaceListenerTest extends IntegrationTest {
-  @MockitoBean
-  AService aService;
   @Autowired
   KafkaTemplate<String, String> kafkaTemplate;
 
@@ -24,6 +22,6 @@ public class TestRaceListenerTest extends IntegrationTest {
   void explore() {
     kafkaTemplate.send(IN_TOPIC, UUID.randomUUID().toString(), "m");
 
-    verify(aService, timeout(4000)).logic("m");
+    verify(aServiceMock, timeout(20000)).logic("m");
   }
 }

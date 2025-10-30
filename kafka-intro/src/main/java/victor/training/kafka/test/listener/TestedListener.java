@@ -20,7 +20,7 @@ public class TestedListener {
   @Bean
   public NewTopic testInTopic() {
     return TopicBuilder.name(IN_TOPIC)
-        .partitions(2)
+        .partitions(4)
         .build();
   }
 
@@ -31,19 +31,3 @@ public class TestedListener {
   }
 }
 
-@Service
-@RequiredArgsConstructor
-class AService{
-  private final ARepo aRepo;
-
-  public void logic(String message) {
-    aRepo.save(message);
-    // more logic
-  }
-}
-@Repository
-class ARepo {
-  public void save(String message) {
-    // irrelevant
-  }
-}

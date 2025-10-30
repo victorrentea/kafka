@@ -6,9 +6,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import victor.training.kafka.IntegrationTest;
 
 import static org.mockito.Mockito.verify;
-
+// to avoid starting multiple spring boot test context escalate,
+// any mockbean in the parent test class as a spy Bean
 public class AServiceTest extends IntegrationTest {
-  @MockitoBean ARepo aRepo;
   @Autowired AService aService;
 
   @Test
