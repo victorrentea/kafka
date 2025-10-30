@@ -1,6 +1,7 @@
 package victor.training.kafka;
 
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.LongSerializer;
@@ -27,7 +28,6 @@ import java.util.Map;
 
 @Slf4j
 @SpringBootApplication
-//@EnableScheduling
 public class KafkaSpringApp {
   public static void main(String[] args) {
     SpringApplication.run(KafkaSpringApp.class, args);

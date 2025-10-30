@@ -9,11 +9,11 @@ logging:
     org.apache.kafka.clients.admin.AdminClientConfig: warn
     org.apache.kafka.common.metrics.Metrics: warn
     org.apache.kafka.streams.StreamsConfig: warn
+    ps6py: warn #  disable sql log when ran by schedulers
     root: info
 server:
   port: 8080
 management.endpoints.web.exposure.include: "*"
-inbox.time.window.ms: 10000
 
 spring:
   kafka:
@@ -44,8 +44,20 @@ spring:
 
 #      ack-mode: manual #Acknowledgement.acknowledge()
       # WARNING: commiting offset 7 => commit all before that
-
 #      type: batch # bulk-process
+
+  datasource: # external standalone DB instead of embedded one
+    url: jdbc:h2:tcp://localhost:9093/~/test
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  sql:
+    init:
+      mode: always #schema.sql
+  jpa:
+    defer-datasource-initialization: true #runs after hibernate creates DB
+    generate-ddl: true
+
 
 decorator:
   datasource:
@@ -53,3 +65,10 @@ decorator:
       multiline: false
       log-format: "%(executionTime) ms|%(category)|connection %(connectionId)|%(sqlSingleLine)"
       log-filter.pattern: "^(?!.*from inbox i1_0 where i1_0.status='PENDING').*$" # ignore the poller
+
+
+scheduler-workers:
+  core-pool-size: 4
+  max-pool-size: ${scheduler-workers.core-pool-size}
+  queue-capacity: 0
+  thread-name-prefix: schedwork-

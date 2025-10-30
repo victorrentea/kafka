@@ -31,7 +31,7 @@ public class SimEventListener {
   // - same message.key => same partition = consumed in same order, by 1 thread
   // - reorder via INBOX table by message timestamp (observedAt by producer)
 
-//  @KafkaListener(topics = SIM_TOPIC)
+  @KafkaListener(topics = SIM_TOPIC)
   public void consume(ConsumerRecord<String, SimEvent> record) throws InterruptedException {
     SimEvent simEvent = record.value();
     switch (simEvent) {

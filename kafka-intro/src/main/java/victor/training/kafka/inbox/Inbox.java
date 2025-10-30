@@ -7,6 +7,7 @@ import lombok.ToString;
 import java.time.LocalDateTime;
 
 import static jakarta.persistence.EnumType.STRING;
+import static victor.training.kafka.inbox.Inbox.Status.ERROR;
 import static victor.training.kafka.inbox.Inbox.Status.PENDING;
 
 @ToString
@@ -52,30 +53,35 @@ public class Inbox {
     return id;
   }
 
-  public Inbox start() {
-    if(status != PENDING) {
-      throw new IllegalStateException("Can't start if not PENDING");
+  public Inbox setPending() {
+    status = PENDING;
+    return this;
+  }
+  public Inbox setInProgress() {
+    if(status != PENDING && status!=ERROR) {
+      throw new IllegalStateException("Can't start from " + status);
     }
     status = Status.IN_PROGRESS;
-    startedAt = LocalDateTime.now();
+    startedAt = LocalDateTime.now(); // raise alarms for IN_PROGRESS started < 24h ago (eg)
     return this;
   }
 
-  public Inbox done() {
+  public Inbox setDone() {
     if(status != Status.IN_PROGRESS) {
-      throw new IllegalStateException("Can't mark as DONE if not IN_PROGRESS");
+      throw new IllegalStateException("Can't mark as DONE unless IN_PROGRESS");
     }
     status = Status.DONE;
     completedAt = LocalDateTime.now();
     return this;
   }
 
-  public Inbox error(String error) {
+  public Inbox setError(String error) {
     if (status != Status.IN_PROGRESS) {
       throw new IllegalStateException("Can't mark as ERROR if not IN_PROGRESS");
     }
     status = Status.ERROR;
     this.error = error;
+    completedAt = LocalDateTime.now();
     return this;
   }
 

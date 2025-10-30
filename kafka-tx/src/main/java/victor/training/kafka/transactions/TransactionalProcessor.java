@@ -24,8 +24,7 @@ public class TransactionalProcessor {
 
   private final KafkaTemplate<?, String> kafkaTemplate;
 
-  @KafkaListener(topics = IN,
-      containerFactory = "transactedKafkaListenerContainerFactory")
+  @KafkaListener(topics = IN, containerFactory = "transactedKafkaListenerContainerFactory")
   @Transactional(transactionManager = "kafkaTransactionManager")
   public void consume(String message) {
     log.info("START: " + message);
@@ -55,7 +54,9 @@ public class TransactionalProcessor {
 
       var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
       factory.setConsumerFactory(consumerFactory);
-      factory.setCommonErrorHandler(new DefaultErrorHandler(new FixedBackOff(500L, 1)));
+      DefaultErrorHandler errorHandler = new DefaultErrorHandler(new FixedBackOff(500L, 1));
+      // TODO errorHandler#addNotRetryableExceptions
+      factory.setCommonErrorHandler(errorHandler);
       factory.getContainerProperties().setKafkaAwareTransactionManager(kafkaTransactionManager);
       return factory;
     }

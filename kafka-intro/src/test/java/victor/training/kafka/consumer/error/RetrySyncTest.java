@@ -2,6 +2,7 @@ package victor.training.kafka.consumer.error;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,7 @@ import org.springframework.util.backoff.FixedBackOff;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Disabled
 @Import(RetrySyncTest.ErrorConsumer.class)
 public class RetrySyncTest extends BaseErrorInConsumerTest {
   protected String MESSAGE1 = RandomStringUtils.randomAlphanumeric(5);

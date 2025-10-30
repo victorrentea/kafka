@@ -41,7 +41,7 @@ public class RaceListenerTest extends KafkaTest {
     for (int i = 0; i < N; i++) {
       kafkaTemplate.send(TOPIC,  new Message(ID, i));
       // Fix#1: partition key
-      // Fix#2: optimistic locking (WARNING: message is discarded after 10 optimistic locking errors)
+      // Fix#2: JPA optimistic locking (WARNING: message is discarded after 10 optimistic locking errors)
     }
 
     await().atMost(ofSeconds(15)).untilAsserted(()->

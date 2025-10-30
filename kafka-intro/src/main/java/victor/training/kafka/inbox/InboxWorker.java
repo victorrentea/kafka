@@ -18,7 +18,7 @@ public class InboxWorker {
   public void process(String work) {
     // TODO undo
     log.info("::START task: {}", work);
-    Thread.sleep(1000);
+    Thread.sleep(100);
     if (Math.random() < 0.5) {
       throw new RuntimeException("Error during processing (pretend)");
     }

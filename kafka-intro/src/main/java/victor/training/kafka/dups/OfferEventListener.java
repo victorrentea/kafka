@@ -1,4 +1,4 @@
-package victor.training.kafka.offer;
+package victor.training.kafka.dups;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,19 +8,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Service;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import static java.lang.Thread.sleep;
 
 @Slf4j
 @RequiredArgsConstructor
-@Service
+@RestController
 public class OfferEventListener {
   public static final String OFFER_TOPIC = "offer-topic";
   private final OfferRepo offerRepo;
 
   // Fix duplicates:
-  // - client-generated [external] ID => "already created"
-  // - idempotent semantics: "upsert" => "nothing to do"
-  // - message.idempotency key found in DB => "I've seen this message before"
+  // 1. client-generated [external] ID => raise error: "already created"
+  // 2. change event semantics to "upsert" => ignore: "nothing to do"
+  // 3. add message.idempotency key; save it in DB (new @Entity); if found in DB => ignore: "nothing to do"
 
   public record OfferCreatedEvent(String offerName) {
   }
@@ -29,8 +33,8 @@ public class OfferEventListener {
   public void consume(OfferCreatedEvent event) throws InterruptedException {
     var order = new Offer().name(event.offerName());
     offerRepo.save(order);
-    Thread.sleep(1000);
-    randomlyFail();
+    sleep(50);
+//    randomlyFail();
   }
 
   private void randomlyFail() {
@@ -39,6 +43,16 @@ public class OfferEventListener {
       throw new IllegalArgumentException("Boom");
     }
     log.info("Create other entities");
+  }
+
+  private final KafkaTemplate<String, OfferCreatedEvent> kafkaTemplate;
+  @GetMapping("send-offers") // http://localhost:8080/send-offers
+  public String sendOffers() throws InterruptedException {
+    for (int i = 0; i < 100; i++) {
+      sleep(1);
+      kafkaTemplate.send(OFFER_TOPIC, new OfferCreatedEvent("offer-" + System.currentTimeMillis()));
+    }
+    return "Restart the app and check for duplicates in DB";
   }
 }
 

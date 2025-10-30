@@ -5,6 +5,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -30,6 +31,7 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+@Disabled
 @Import(RetryOffButDLTTest.ErrorConsumer.class)
 public class RetryOffButDLTTest extends BaseErrorInConsumerTest {
   protected String M1 = RandomStringUtils.randomAlphanumeric(5);

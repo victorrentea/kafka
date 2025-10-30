@@ -1,4 +1,4 @@
-package victor.training.kafka.offer;
+package victor.training.kafka.dups;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

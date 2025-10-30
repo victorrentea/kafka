@@ -10,9 +10,10 @@ public interface InboxRepo extends JpaRepository<Inbox, Long> {
   @Query("""
       select inbox
       from Inbox inbox
-      where inbox.status = 'PENDING'
+      where inbox.status IN ('PENDING', 'ERROR')
+      And inbox.observedAt <  :threshold
       order by inbox.priority asc
       limit 1
       """)
-  Optional<Inbox> findNext();
+  Optional<Inbox> findNext(LocalDateTime threshold);
 }

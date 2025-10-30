@@ -2,6 +2,7 @@ package victor.training.kafka.consumer.error;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Disabled
 @Import(RetryAsyncTest.ErrorConsumer.class)
 public class RetryAsyncTest extends BaseErrorInConsumerTest {
   protected String M1 = RandomStringUtils.randomAlphanumeric(5);

@@ -15,9 +15,12 @@ public class CompactTopicConfig {
         .partitions(1)
         .replicas(2)
         .compact()
+        // trigger an eager compactation (only for demo purposes)
         .config("segment.ms", "1000")
         .config("min.cleanable.dirty.ratio","0.01")
         .config("min.compaction.lag.ms","0")
+
+//        .config("retention.ms","10000") // auto-delete record after this. default: 7 days
         .build();
   }
   //  ./kafka-configs.sh --bootstrap-server localhost:9092 --alter --topic countries \
