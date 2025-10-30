@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class OfferEventListenerTest extends KafkaTest {
+public class OfferListenerTest extends KafkaTest {
   @Autowired
   private KafkaTemplate<String, String> kafkaTemplate;
   @Autowired
@@ -19,7 +19,7 @@ public class OfferEventListenerTest extends KafkaTest {
   @Test
   @Disabled("TODO")
   void shouldNotInsertDuplicates() throws InterruptedException, ExecutionException {
-    kafkaTemplate.send(OfferEventListener.OFFER_TOPIC, "M1")
+    kafkaTemplate.send(OfferListener.OFFER_TOPIC, "M1")
         .get(); // wait for Kafka Producer IO thread to get the Ack from Broker
 
     Thread.sleep(4000);

@@ -31,8 +31,6 @@ public class RaceListenerTest extends KafkaTest {
   KafkaTemplate<String, Message> kafkaTemplate;
   @Autowired
   RaceRepo raceRepo;
-  @MockitoSpyBean
-  RaceListener listener;
 
   @Test
   @Disabled("TODO")

@@ -26,10 +26,11 @@ public class SimEventListener {
   public static final String SIM_TOPIC = "sim-topic";
   private final SimRepo simRepo;
 
-  // Out of order
-  // - concurrency="1" helps?
-  // - same message.key => same partition = consumed in same order, by 1 thread
-  // - reorder via INBOX table by message timestamp (observedAt by producer)
+  // TODO fix Out of order
+  //  1. concurrency="1" => ?
+  //  2. same message.key => same partition = consumed in same order, by 1 thread
+  //  3. @DelayedRetry
+  //  4. [homework exercise] reorder via INBOX table by message timestamp (observedAt by producer)
 
   @KafkaListener(topics = SIM_TOPIC)
   public void consume(ConsumerRecord<String, SimEvent> record) throws InterruptedException {

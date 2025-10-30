@@ -17,7 +17,7 @@ import static java.lang.Thread.sleep;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-public class OfferEventListener {
+public class OfferListener {
   public static final String OFFER_TOPIC = "offer-topic";
   private final OfferRepo offerRepo;
 

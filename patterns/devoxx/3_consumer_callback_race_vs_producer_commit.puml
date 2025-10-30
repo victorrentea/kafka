@@ -8,15 +8,15 @@ participant DB
 Producer -> DB++#lightgreen : UPDATE
 
 '⭐️uncomment bellow, in chunks
-Producer --> Consumer++: UpdatedEvent {id}
+'Producer --> Consumer++: UpdatedEvent {id}
 
-Consumer->Producer: GET /{id}   **// callback**
+'Consumer->Producer: GET /{id}   **// callback**
 
-Producer++
-Producer->DB++#pink: <font color=red> SELECT
-DB--
-Producer-->Consumer: <font color=red>  old data
-Producer--
+'Producer++
+'Producer->DB++#pink: <font color=red> SELECT
+'DB--
+'Producer-->Consumer: <font color=red>  old data
+'Producer--
 
 Producer -> DB--: COMMIT
 Producer--
