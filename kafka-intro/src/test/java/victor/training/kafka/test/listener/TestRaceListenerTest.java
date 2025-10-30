@@ -17,8 +17,8 @@ public class TestRaceListenerTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, String> kafkaTemplate;
 
-//  @RepeatedTest(10)
-  @Test
+  @RepeatedTest(10)
+//  @Test
   void explore() {
     kafkaTemplate.send(IN_TOPIC, UUID.randomUUID().toString(), "m");
 
