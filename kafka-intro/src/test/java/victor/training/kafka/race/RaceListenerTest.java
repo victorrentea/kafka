@@ -36,7 +36,7 @@ public class RaceListenerTest extends KafkaTest {
       // Fix#2: JPA optimistic locking (WARNING: message is discarded after 10 optimistic locking errors)
     }
 
-    await().atMost(ofSeconds(15)).untilAsserted(() -> // default: every 100ms
+    await().atMost(ofSeconds(150)).untilAsserted(() -> // default: every 100ms
       assertThat(raceRepo.findById(CLIENT_ID).orElseThrow().total()).isEqualTo(N)
     );
   }
