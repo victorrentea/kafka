@@ -31,7 +31,7 @@ public class RaceListenerTest extends KafkaTest {
   void ok() throws InterruptedException {
     raceRepo.save(new RaceEntity().id(CLIENT_ID).total(0));
     for (int i = 0; i < N; i++) {
-      kafkaTemplate.send(TOPIC, CLIENT_ID, new Message(CLIENT_ID, i));
+      kafkaTemplate.send(TOPIC, new Message(CLIENT_ID, i));
       // Fix#1: partition key
       // Fix#2: JPA optimistic locking (WARNING: message is discarded after 10 optimistic locking errors)
     }

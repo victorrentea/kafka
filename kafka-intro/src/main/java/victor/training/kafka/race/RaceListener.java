@@ -2,6 +2,7 @@ package victor.training.kafka.race;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,6 @@ class RaceEntity {
 
   Integer total = 0;
 
-//  @Version
-//  Long version;
+  @Version
+  Long version;
 }
