@@ -2,12 +2,10 @@ package victor.training.kafka.race;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Version;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.aspectj.runtime.CFlow;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,14 +29,14 @@ public class RaceListener {
         .build();
   }
 
-  record Message(String id, int seq){}
+  record Message(String id, int seq) {}
 
   @KafkaListener(topics = TOPIC, concurrency = "3")
   @Transactional // DB
   public void consume(Message message) throws InterruptedException {
     RaceEntity entity = raceRepo.findById(message.id()).orElseThrow();
-    entity.total(entity.total()+1);
-    Thread.sleep(3); // larger => higher race chances
+    entity.total(entity.total() + 1);
+    Thread.sleep(3); // ~ network call; larger => higher race chances
   }
 }
 
