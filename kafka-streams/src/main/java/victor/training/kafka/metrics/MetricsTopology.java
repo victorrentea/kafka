@@ -54,6 +54,7 @@ public class MetricsTopology {
         .filterNot((key, value) -> KafkaUtils.Ticker.isDummy(key)) // HACK: skip the dummy value
         .peek((key, value) -> log.info("Page {} viewed {} times", key, value))
         .to("page-views-count", Produced.with(String(), Long()));
+    // emite la sec {"home",101} view per ultima secunda
 
     streamsBuilder.stream("page-views-count", Consumed.with(String(), Long()))
         .filter((key, value) -> value > 100)
@@ -63,16 +64,29 @@ public class MetricsTopology {
     streamsBuilder.addStateStore(Stores.keyValueStoreBuilder(
         Stores.persistentKeyValueStore("page-views-previous"), String(), Long()));
 
+
+
+
+    // per second
     streamsBuilder.stream("page-views-count", Consumed.with(String(), Long()))
-        .groupByKey()
+        // {"home", 7}, {"home", 5}, {"home", 5}, {"home", 15},
+        .groupByKey() // by page name
         .aggregate(() -> new Tup(-1,0),
             (key, value, aggregate) -> new Tup(value, value - aggregate.previous),
             Materialized.with(String(), new JsonSerde<>(Tup.class)))
         .toStream()
         .peek((key, value) -> log.info("Page {} delta: {}", key, value))
+        // {**initial**}, {"home", -2}, {"home", 0}, {"home", +10},
         .filter((key, tup) -> tup.delta != 0 && tup.previous - tup.delta>0) // avoid the first emission
         .mapValues((key, value) -> value.delta)
+        // {"home", -2}, {"home", +10},
         .to("page-view-delta", Produced.with(String(), Long()));
+
+
+
+
+
+
 
     return streamsBuilder.build();
   }

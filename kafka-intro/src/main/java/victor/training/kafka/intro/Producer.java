@@ -33,7 +33,7 @@ public class Producer {
     MDC.put("traceId", fleetId); // apare automat in log cu %X
 
     for (int i = 0; i < 1000; i++) {
-      kafkaTemplate.send("myTopic", new Event.EventOK("Work to be done"))
+      kafkaTemplate.send("myTopic",  new Event.EventOK("Work to be done"))
           .thenAccept(result -> {
             // in threadul unic al producerului
             log.info("#1 Message ACKed by broker: " + result.getRecordMetadata().offset());

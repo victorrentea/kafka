@@ -40,3 +40,4 @@ spring:
 #        auto.commit.interval.ms: 10
         default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
         internal.leave.group.on.close: true
+        cleanup.on-startup: true

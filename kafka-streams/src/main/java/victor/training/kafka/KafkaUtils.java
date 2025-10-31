@@ -37,7 +37,7 @@ public class KafkaUtils {
     @Override
     public void init(ProcessorContext<String, String> context) {
       context.schedule(interval, PunctuationType.WALL_CLOCK_TIME, timestamp -> {
-        context.forward(new org.apache.kafka.streams.processor.api.Record<>(DUMMY_VALUE, DUMMY_VALUE, timestamp));
+        context.forward(new Record<>(DUMMY_VALUE, DUMMY_VALUE, timestamp));
       });
     }
 

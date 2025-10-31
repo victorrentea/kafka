@@ -18,6 +18,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static org.apache.kafka.common.serialization.Serdes.String;
+
 @Slf4j
 public class NotificationsTopology {
 
@@ -60,27 +62,28 @@ public class NotificationsTopology {
 
     // materialize the stream of user updates into a KTable instead of doing a GET /user/{user-name} later
     // in a
-    KTable<String, UserUpdated> kTable = streamsBuilder.stream("user-updated", Consumed.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)))
-        .toTable(Materialized.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)));
+    KTable<String, UserUpdated> kTable = streamsBuilder.stream("user-updated", Consumed.with(String(), new JsonSerde<>(UserUpdated.class)))
+        .toTable(Materialized.with(String(), new JsonSerde<>(UserUpdated.class)));
 
-    streamsBuilder.stream("broadcast", Consumed.with(Serdes.String(), new JsonSerde<>(Broadcast.class)))
-
+    streamsBuilder.stream("broadcast", Consumed.with(String(), new JsonSerde<>(Broadcast.class)))
+        // {,Broadcast{recipientUsernames:[u1,u2]}}
         .flatMapValues(broadcast -> broadcast.recipientUsernames().stream()
             .map(username -> new Notification(broadcast.message(), username))
             .toList())
+        // {,Notification{,u1}}, {,Notification{,u2}}
+        .to("notification", Produced.with(String(), new JsonSerde<>(Notification.class)));
 
-        .to("notification", Produced.with(Serdes.String(), new JsonSerde<>(Notification.class)));
 
-    KStream<String, SendEmail> kStream = streamsBuilder.stream("notification", Consumed.with(Serdes.String(), new JsonSerde<>(Notification.class)))
+    KStream<String, SendEmail> kStream = streamsBuilder.stream("notification", Consumed.with(String(), new JsonSerde<>(Notification.class)))
 
         .selectKey((k, notification) -> notification.recipientUsername()) // cauzeaza un write/read in remote broker
 
-        .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(Notification.class)))
+        .groupByKey(Grouped.with(String(), new JsonSerde<>(Notification.class)))
         .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofSeconds(1)))
         .aggregate(() -> List.of(),
             (key, value, windowBuffer) -> Stream.concat(windowBuffer.stream(), Stream.of(value)).toList(),
             (aggKey, aggOne, aggTwo) -> Stream.concat(aggOne.stream(), aggTwo.stream()).toList(),
-            Materialized.with(Serdes.String(), new JsonSerde<>(new TypeReference<List<Notification>>() {
+            Materialized.with(String(), new JsonSerde<>(new TypeReference<List<Notification>>() {
             })))
         .suppress(Suppressed.untilWindowCloses(Suppressed.BufferConfig.unbounded()))
         .toStream()
@@ -92,9 +95,7 @@ public class NotificationsTopology {
               .map(notification -> KeyValue.pair(key.key(), notification))
               .toList();
         })
-        .repartition(Repartitioned.with(Serdes.String(), new JsonSerde<>(Notification.class)))
-
-
+        .repartition(Repartitioned.with(String(), new JsonSerde<>(Notification.class)))
 
 
 
@@ -120,10 +121,10 @@ public class NotificationsTopology {
 
     branches.get("branch-error")
         .mapValues((key, value) -> "Unknown user: " + value.recipientEmail())
-        .to("errors", Produced.with(Serdes.String(), Serdes.String()));
+        .to("errors", Produced.with(String(), String()));
 
     branches.get("branch-success")
-        .to("send-email", Produced.with(Serdes.String(), new JsonSerde<>(SendEmail.class)));
+        .to("send-email", Produced.with(String(), new JsonSerde<>(SendEmail.class)));
 
     return streamsBuilder.build();
   }
