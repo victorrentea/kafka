@@ -40,19 +40,7 @@ public class WordsTopology {
   public static final String WORD_COUNT_TABLE = "word-count-table";
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
-    streamsBuilder.<String, String>stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        .flatMapValues((key, value) -> Arrays.asList(value.toLowerCase().split(" ")))
-        .groupBy((key, value) -> value, Grouped.with(String(), String()))
-        .count()
-        .toStream()
-        .peek((k, v) -> log.info("Word '{}' appears {} times", k, v))
-        .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
-
-    streamsBuilder
-        .stream(WORD_COUNT_TOPIC, Consumed.with(Serdes.String(), Serdes.Long()))
-        .toTable(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
-            .withKeySerde(Serdes.String())
-            .withValueSerde(Serdes.Long()));
+//    streamsBuilder. TODO
   }
 
   @Autowired
@@ -73,7 +61,7 @@ public class WordsTopology {
   }
 
   private final ProducerFactory<String, String> producerFactory;
-  @GetMapping("/words")
+  @GetMapping("/words") // http://localhost:8080/words
   public void send(@RequestParam(defaultValue = "Hello world") String m) {
     // the value serializer is special for this topic
     Map<String, Object> configOverrides = Map.of(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");

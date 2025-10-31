@@ -54,12 +54,13 @@ public class NotificationsTopology {
   public static Topology topology() {
     // aici puteai si sa dai GET user-service/user/{username} < nu e event driven
     // e mult mai safe (replicat) si mai rapid (partitionat) asa.
-    // intr-o lume utopica/distopica in care respiram Kafka, REST a murit.
+    // intr-o lume utopica/distopica in care Kafka a castigat razboiul si REST a murit.
     // din DBul user-service iese un paraias (stream) publicat de ei constient sau furat de noi cu Kafka Connect
     StreamsBuilder streamsBuilder = new StreamsBuilder();
 
+    // materialize the stream of user updates into a KTable instead of doing a GET /user/{user-name} later
+    // in a
     KTable<String, UserUpdated> kTable = streamsBuilder.stream("user-updated", Consumed.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)))
-
         .toTable(Materialized.with(Serdes.String(), new JsonSerde<>(UserUpdated.class)));
 
     streamsBuilder.stream("broadcast", Consumed.with(Serdes.String(), new JsonSerde<>(Broadcast.class)))
@@ -73,8 +74,6 @@ public class NotificationsTopology {
     KStream<String, SendEmail> kStream = streamsBuilder.stream("notification", Consumed.with(Serdes.String(), new JsonSerde<>(Notification.class)))
 
         .selectKey((k, notification) -> notification.recipientUsername()) // cauzeaza un write/read in remote broker
-
-
 
         .groupByKey(Grouped.with(Serdes.String(), new JsonSerde<>(Notification.class)))
         .windowedBy(SessionWindows.ofInactivityGapWithNoGrace(Duration.ofSeconds(1)))

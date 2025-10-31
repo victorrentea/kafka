@@ -59,7 +59,7 @@ public class MetricsTopology {
         .filter((key, value) -> value > 100)
         .to("page-view-alarm", Produced.with(String(), Long()));
 
-
+    // so we can query it
     streamsBuilder.addStateStore(Stores.keyValueStoreBuilder(
         Stores.persistentKeyValueStore("page-views-previous"), String(), Long()));
 

@@ -16,7 +16,7 @@ import victor.training.kafka.KafkaUtils;
 @RequiredArgsConstructor
 public class MetricsApi {
   private final KafkaTemplate<String, String> pageViews;
-  @GetMapping("/page")
+  @GetMapping("/view-page")
   public void viewPage() {
     pageViews.send("page-views", "username", "page");
   }
