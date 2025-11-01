@@ -28,6 +28,7 @@ public class Producer {
   @GetMapping("produce-many")
   public String produceEventMany() {
     for (int i = 0; i < 1000; i++) {
+      // w/o a key, messages are sent in batches round-robin to partitions
       kafkaTemplate.send("myTopic",  new Event.EventOK("Work to be done"))
           .thenAccept(result -> {
             // runs in the SINGLE Producer thread
