@@ -1,4 +1,4 @@
-package victor.training.kafka.batch_consume;
+package victor.training.kafka.batch;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -9,15 +9,15 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import victor.training.kafka.IntegrationTest;
-import victor.training.kafka.batch_consume.BatchEnricherConsumer.Product;
+import victor.training.kafka.batch.BatchEnricherConsumer.Product;
 import victor.training.kafka.testutil.ResetKafkaOffsets;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static victor.training.kafka.batch_consume.BatchEnricherConsumer.BATCH_IN_TOPIC;
-import static victor.training.kafka.batch_consume.BatchEnricherConsumer.BATCH_OUT_TOPIC;
+import static victor.training.kafka.batch.BatchEnricherConsumer.BATCH_IN_TOPIC;
+import static victor.training.kafka.batch.BatchEnricherConsumer.BATCH_OUT_TOPIC;
 
 @Slf4j
 @ResetKafkaOffsets({BATCH_IN_TOPIC, BATCH_OUT_TOPIC})

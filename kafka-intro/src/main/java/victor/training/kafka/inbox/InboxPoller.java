@@ -26,14 +26,13 @@ public class InboxPoller {
   private final InboxWorker inboxWorker;
   private final ThreadPoolTaskExecutor schedulerWorkers;
 
-  @Scheduled(fixedRate = 500) // debate
+  @Scheduled(fixedRate = 500) // debate: how frequent
   public void processInbox() throws InterruptedException {
     Optional<Inbox> nextTask = inboxRepo.findNext(LocalDateTime.now().minusSeconds(1));
     if (nextTask.isEmpty()) return;
     var task = nextTask.get();
     inboxRepo.save(task.setInProgress());
-    // A) release shedlock programatic
-    CompletableFuture.runAsync(() -> { // B fire-and-forget/IntegrationFlows..
+    CompletableFuture.runAsync(() -> { // Allows parallel sending, but looses message sequence
       try {
         inboxWorker.process(task.getWork()); // sync apel! POATE DURA MULT!
         inboxRepo.save(task.setDone());

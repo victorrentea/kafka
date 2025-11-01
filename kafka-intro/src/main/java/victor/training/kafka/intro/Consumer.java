@@ -30,10 +30,8 @@ import java.util.stream.StreamSupport;
 @RequiredArgsConstructor
 public class Consumer {
   @KafkaListener(topics = "myTopic")
-  public void consumeOne(ConsumerRecord<String, Event> record,
-                         Acknowledgment ack) throws InterruptedException {
-    log.info("Process: " + record);
-    ack.acknowledge();
+  public void consumeOne(ConsumerRecord<String, Event> record) throws InterruptedException {
+    log.info("Process: {}", record);
   }
 
   @Bean

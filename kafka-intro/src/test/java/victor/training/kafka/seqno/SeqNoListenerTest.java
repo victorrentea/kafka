@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.test.annotation.DirtiesContext;
 import victor.training.kafka.IntegrationTest;
@@ -42,7 +43,6 @@ public class SeqNoListenerTest extends IntegrationTest {
 
   @Test
   void resequencesOutOfOrder() throws Exception {
-    // send out of order but with seqNo
     kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 2, "B"));
     kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 1, "A"));
     kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 4, "D"));
@@ -52,21 +52,6 @@ public class SeqNoListenerTest extends IntegrationTest {
     await().atMost(ofSeconds(5)).untilAsserted(() ->
         assertThat(receivedMessages).containsExactly("A", "B", "C", "D")
     );
-  }
-
-  @Test
-  @Disabled
-  void emitPendingMessagesAfterTimeout() throws Exception {
-    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 1, "A"));
-    kafkaTemplate.send(IN_TOPIC, "" + AGG_ID, new SeqMessage(AGG_ID, 3, "B"));
-
-    await()
-        .during(ofSeconds(3)) // holds true for ...
-        .atMost(ofSeconds(10)) // within a window of ...
-        .untilAsserted(() -> assertThat(receivedMessages).containsExactly("A"));
-    log.info("Waiting to release old messages .... ");
-    await().during(TIME_WINDOW.plus(ofSeconds(1)))
-        .untilAsserted(() -> assertThat(receivedMessages).containsExactly("A", "B"));
   }
 
   @TestConfiguration

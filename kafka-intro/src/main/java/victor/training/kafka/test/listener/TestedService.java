@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AService{
+public class TestedService {
   private final ARepo aRepo;
 
   public void logic(String message) {

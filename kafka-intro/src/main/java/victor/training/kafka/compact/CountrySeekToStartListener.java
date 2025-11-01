@@ -4,14 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ConsumerSeekAware;
-import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -22,15 +16,14 @@ import static victor.training.kafka.compact.CompactTopicConfig.COUNTRY_TOPIC;
 @Slf4j
 @RequiredArgsConstructor
 public class CountrySeekToStartListener implements ConsumerSeekAware {
-  // A) Seek to start at every startuo
   @Override
-  public void onPartitionsAssigned(Map<TopicPartition, Long> assignments,
-                                   ConsumerSeekCallback callback) {
+  public void onPartitionsAssigned(
+      Map<TopicPartition, Long> assignments,
+      ConsumerSeekCallback callback) {
     log.info("Seek to start on: {}", assignments);
     callback.seekToBeginning(assignments.keySet());
   }
 
-  // Use CountryController to create countries
   @KafkaListener(topics = COUNTRY_TOPIC,
       properties = {
           "key.deserializer=org.apache.kafka.common.serialization.StringDeserializer",

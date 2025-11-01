@@ -13,40 +13,28 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@Profile("!test")
 public class Producer {
-
-
   private final KafkaTemplate<String, Event> kafkaTemplate;
 
   @GetMapping("produce")
   public String produceEvent() throws ExecutionException, InterruptedException {
-    MDC.put("traceId", "123");
-    kafkaTemplate.send("myTopic",  new Event.EventOK("Work to be done")).get();
+    String traceId = "123"; // from the incoming request or TenantId from request header/JWT
+    MDC.put("traceId", traceId); // printed in log pattern using %X
+    kafkaTemplate.send("myTopic",  new Event.EventOK("Work to be done"));
+    // returns CompletableFuture
     return "<a href='/produce-many'>Produce many</a> or <a href='/produce'>one</a>";
   }
 
   @GetMapping("produce-many")
   public String produceEventMany() {
-    // http filter
-    String fleetId = "123"; // il iei din JWT/request header/payload/
-    MDC.put("traceId", fleetId); // apare automat in log cu %X
-
     for (int i = 0; i < 1000; i++) {
       kafkaTemplate.send("myTopic",  new Event.EventOK("Work to be done"))
           .thenAccept(result -> {
-            // in threadul unic al producerului
-            log.info("#1 Message ACKed by broker: " + result.getRecordMetadata().offset());
+            // runs in the SINGLE Producer thread
+            log.info("#1 Message ACKed by broker: {}", result.getRecordMetadata().offset());
           });
     }
-    for (int i = 0; i < 1000; i++) {
-      kafkaTemplate.send("words", new Event.EventOK("Work to be done"))
-          .thenAccept(result -> {
-            // in threadul unic al producerului
-            log.info("#2Message ACKed by broker: " + result.getRecordMetadata().offset());
-          });
-    }
-    log.info("All messages sent: can I see any messages acked by broker after this line?");
+    log.info("All messages sent: can I see any 'Message ACKed by broker' after this line?");
     return "<a href='/produce-many'>Produce many</a> or <a href='/produce'>one</a>";
   }
 }

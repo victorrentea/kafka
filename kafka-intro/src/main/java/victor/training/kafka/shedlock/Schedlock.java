@@ -23,7 +23,7 @@ import java.util.Random;
 
 @Slf4j
 @RequiredArgsConstructor
-@Service
+//@Service // enable on demand (pollutes log)
 public class Schedlock {
 
   private final JobEventRepo jobEventRepo;

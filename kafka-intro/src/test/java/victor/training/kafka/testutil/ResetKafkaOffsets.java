@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.annotation.Retention;
@@ -43,7 +44,6 @@ public @interface ResetKafkaOffsets {
       log.info("Sleeping {}ms before reset offsets to allow any pending publishers to publish...", annotation.waitMillis());
       Thread.sleep(annotation.waitMillis());
       resetOffsetsForAllGroups(bootstrapServers, List.of(annotation.value()));
-
       kafkaListeners.start();
     }
 

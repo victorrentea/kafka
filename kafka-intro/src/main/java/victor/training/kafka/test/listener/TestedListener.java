@@ -7,15 +7,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class TestedListener {
   public static final String IN_TOPIC = "tested-in";
-  private final AService aService;
+  private final TestedService aService;
 
   @Bean
   public NewTopic testInTopic() {

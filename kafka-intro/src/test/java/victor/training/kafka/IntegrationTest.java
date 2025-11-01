@@ -4,12 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import victor.training.kafka.test.listener.ARepo;
-import victor.training.kafka.test.listener.AService;
+import victor.training.kafka.test.listener.TestedService;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -22,7 +20,7 @@ public abstract class IntegrationTest {
   @MockitoSpyBean
   protected ARepo aRepo;
   @MockitoSpyBean
-  protected AService aServiceMock;
+  protected TestedService aServiceMock;
   @Autowired
   private ApplicationContext applicationContext;
 

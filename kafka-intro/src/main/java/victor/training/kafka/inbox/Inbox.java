@@ -13,14 +13,11 @@ import static victor.training.kafka.inbox.Inbox.Status.PENDING;
 @ToString
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = "idempotency_key")) // TODO undo
-
 public class Inbox {
   @Id
   @GeneratedValue
   private Long id;
   private String work;
-  // TODO victorrentea 2025-09-18: [JIRA-1245] asdas dasd
-
   private String idempotencyKey;
 
   @Enumerated(STRING)
@@ -53,10 +50,6 @@ public class Inbox {
     return id;
   }
 
-  public Inbox setPending() {
-    status = PENDING;
-    return this;
-  }
   public Inbox setInProgress() {
     if(status != PENDING && status!=ERROR) {
       throw new IllegalStateException("Can't start from " + status);

@@ -20,7 +20,6 @@ import static victor.training.kafka.race.RaceListener.RACE_TOPIC;
 @Slf4j
 @ResetKafkaOffsets(RACE_TOPIC)
 public class RaceListenerTest extends IntegrationTest {
-  public static final int N = 1000;
   public static final String CLIENT_ID = UUID.randomUUID().toString();
   @Autowired
   KafkaTemplate<String, Message> kafkaTemplate;
@@ -30,10 +29,12 @@ public class RaceListenerTest extends IntegrationTest {
   @Test
   void ok() throws InterruptedException {
     raceRepo.save(new RaceEntity().id(CLIENT_ID).total(0));
+    final int N = 1000;
     for (int i = 0; i < N; i++) {
       kafkaTemplate.send(RACE_TOPIC, new Message(CLIENT_ID, i));
       // Fix#1: partition key
-      // Fix#2: JPA optimistic locking (WARNING: message is discarded after 10 optimistic locking errors)
+      // Fix#2: JPA optimistic locking
+      //   >WARNING: message can get lost after 10 optimistic locking errors
     }
 
     await().atMost(ofSeconds(150)).untilAsserted(() -> // default: every 100ms

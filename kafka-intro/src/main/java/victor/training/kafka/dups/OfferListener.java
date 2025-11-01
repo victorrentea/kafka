@@ -13,6 +13,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 import static java.lang.Thread.sleep;
@@ -23,32 +24,35 @@ import static java.lang.Thread.sleep;
 public class OfferListener {
   public static final String OFFER_TOPIC = "offer-topic";
   private final OfferRepo offerRepo;
+  private final KafkaTemplate<String, OfferCreatedEvent> kafkaTemplate;
 
+  // TODO experiment: kill app while consuming; upon restart it inserts duplicates in DB
   // Fix duplicates:
-  // 0. ackMode = record instead of batch = partial solution reduces dup risk to 1 message max/partition
-  // 1. client-generated [external] ID => raise error: "already created"
-  // 2. change event semantics to "upsert" => ignore: "nothing to do"
-  // 3. add message.idempotency key; save it in DB (new @Entity); if found in DB => ignore: "nothing to do"
+  // 1. change ackMode to 'record' instead of 'batch' (default) => max 1 dup message/partition; vs throughput loss
+  // 2. change event semantics to "upsert" + add client-generated UUID => Consumer handles dup create as 'update'
+  // 3. add message.idempotencyKey; save it in DB (in a new @Entity); if found in DB => ignore
 
-  public record OfferCreatedEvent(UUID id, String offerName) {
-//  public record OfferCreatedEvent(String offerName) {
+  public record OfferCreatedEvent(String offerName) {
   }
 
   @KafkaListener(topics = OFFER_TOPIC) // ack_mode = batch (default)
   public void consume(OfferCreatedEvent event) throws InterruptedException {
-    Offer order = new Offer().id(event.id().toString()).name(event.offerName());
-    offerRepo.save(order); // INSERT or UPDATE cu aceleasi date = NOOP
+    Offer order = new Offer().name(event.offerName());
+    offerRepo.save(order);
     sleep(50);
   }
-
-  private final KafkaTemplate<String, OfferCreatedEvent> kafkaTemplate;
   @GetMapping("send-offers") // http://localhost:8080/send-offers
   public String sendOffers() throws InterruptedException {
     for (int i = 0; i < 100; i++) {
       sleep(1);
-      kafkaTemplate.send(OFFER_TOPIC, "k", new OfferCreatedEvent(UUID.randomUUID(), "offer-" + System.currentTimeMillis()));
+      String offerName = "offer-" + System.currentTimeMillis();
+      kafkaTemplate.send(OFFER_TOPIC, "k", new OfferCreatedEvent(offerName));
     }
     return "Kill the app in 2-3 seconds, restart it, and check for duplicates in DB";
+  }
+  @GetMapping("offers") // http://localhost:8080/offers
+  public List<Offer> viewOffers() {
+    return offerRepo.findAll();
   }
 }
 
@@ -59,7 +63,7 @@ interface OfferRepo extends JpaRepository<Offer, Long> {
 @Entity
 class Offer {
   @Id
-//  @GeneratedValue
+  @GeneratedValue
   private String id;
   private String name;
 }

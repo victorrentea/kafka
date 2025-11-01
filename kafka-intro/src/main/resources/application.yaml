@@ -23,7 +23,7 @@ spring:
       value-serializer: victor.training.kafka.intro.Event$Serializer
       properties:
         interceptor.classes: victor.training.kafka.interceptor.ProducerTraceIdInterceptor
-    #      acks: 0 # producer does not wait for broker ack = fire and forget; default =1;
+        #acks: 0 # means don't wait for broker ack = fire and forget (default: 1)
     consumer:
       group-id: app
       properties:
@@ -34,30 +34,29 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: victor.training.kafka.intro.Event$Deserializer
     listener: #spring-kafka
-      concurrency: 2 # number of threads=consumer instances per topic of this machine
-#      ack-mode: batch (default)
-#      ack-mode: record (cel mai sigur, dar intens pe broker)
+      concurrency: 2 # number of threads = consumer instances per topic on this machine
+#      ack-mode: batch # = after all messages (default)
+#      ack-mode: record # = after each => less dups on restart vs but throughput loss
 
-#      ack-mode: time/count/time_count
+#      ack-mode: time # or count, time_count = every N or Time
 #      ack-time: 3s
 #      ack-count: 3s
 
-#      ack-mode: manual #Acknowledgement.acknowledge()
-      # WARNING: commiting offset 7 => commit all before that
-#      type: batch # bulk-process
+#      ack-mode: manual # after batch (or manual_immediate) via Acknowledgement param in @KafkaListener method
+      # !!WARNING!! : commit offset 7 => commit all messages before that
 
   datasource: # external standalone DB instead of embedded one
     url: jdbc:h2:tcp://localhost:9093/~/test
     driver-class-name: org.h2.Driver
     username: sa
     password: sa
+
   sql:
     init:
-      mode: always #schema.sql
+      mode: always #to run schema.sql for Schedlock
   jpa:
-    defer-datasource-initialization: true #runs after hibernate creates DB
+    defer-datasource-initialization: true #runs schema.sql after hibernate DDL
     generate-ddl: true
-
 
 decorator:
   datasource:
@@ -65,7 +64,6 @@ decorator:
       multiline: false
       log-format: "%(executionTime) ms|%(category)|connection %(connectionId)|%(sqlSingleLine)"
       log-filter.pattern: "^(?!.*from inbox i1_0 where i1_0.status='PENDING').*$" # ignore the poller
-
 
 scheduler-workers:
   core-pool-size: 4

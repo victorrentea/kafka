@@ -12,7 +12,7 @@ import static victor.training.kafka.compact.CompactTopicConfig.COUNTRY_TOPIC;
 public class CountryController {
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  @PostMapping("countries/{iso}")
+  @PostMapping("countries/{iso}") // curl -X POST "http://localhost:8080/countries/US?name=United%20States"
   public void createCountry(@PathVariable String iso, @RequestParam String name) {
     kafkaTemplate.send(COUNTRY_TOPIC, iso, name);
   }
@@ -24,7 +24,7 @@ public class CountryController {
 
   @DeleteMapping("countries/{iso}")
   public void deleteCountry(@PathVariable String iso) {
-    kafkaTemplate.send(COUNTRY_TOPIC, iso, null);
+    kafkaTemplate.send(COUNTRY_TOPIC, iso, null); // tombstone
   }
 
 }

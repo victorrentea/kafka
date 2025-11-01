@@ -16,7 +16,6 @@ import static victor.training.kafka.compact.CompactTopicConfig.COUNTRY_TOPIC;
 @Slf4j
 @Component
 public class CountryNeverAckListener {
-  // B) Never ack messages
   @KafkaListener(topics = COUNTRY_TOPIC, groupId = "never-ack",
       properties = {
           "auto.offset.reset=earliest",
@@ -24,7 +23,7 @@ public class CountryNeverAckListener {
           "key.deserializer=org.apache.kafka.common.serialization.StringDeserializer",
           "value.deserializer=org.apache.kafka.common.serialization.StringDeserializer"
       },
-      containerFactory = "manualAckKafkaListenerContainerFactory")
+      containerFactory = "manualAckContainerFactory")
   public void consumeNeverAck(ConsumerRecord<String, String> countryRecord, Acknowledgment ack) {
     log.info("B) Got country: " + countryRecord.value());
     // never ACK
@@ -34,7 +33,7 @@ public class CountryNeverAckListener {
   public static class Config {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String>
-    manualAckKafkaListenerContainerFactory(ConsumerFactory<String, String> consumerFactory) {
+    manualAckContainerFactory(ConsumerFactory<String, String> consumerFactory) {
       var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
       factory.setConsumerFactory(consumerFactory);
       factory.getContainerProperties().setAckMode(MANUAL);

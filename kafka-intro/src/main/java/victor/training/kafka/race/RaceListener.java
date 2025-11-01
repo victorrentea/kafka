@@ -36,21 +36,21 @@ public class RaceListener {
         .build();
   }
 
-  record Message(String id, int seq) {}
+  public record Message(String id, int seq) {}
 
-  @KafkaListener(topics = RACE_TOPIC, concurrency = "3",containerFactory = "multeRetryuri")
-  @Transactional // DB
+  @KafkaListener(topics = RACE_TOPIC, concurrency = "3")
+  @Transactional // SQL
   public void consume(Message message) throws InterruptedException {
     RaceEntity entity = raceRepo.findById(message.id()).orElseThrow();
     entity.total(entity.total() + 1);
-    Thread.sleep(20); // ~ network call; larger => higher race chances
+    Thread.sleep(3); // ~ network call; larger => higher race chances
   }
 
   @Configuration
   static class Config {
-    @Bean
+    @Bean // TODO use me in case of Giveup retry on recurrent Optimistic Locking errors
     public ConcurrentKafkaListenerContainerFactory<String, String>
-    multeRetryuri(ConsumerFactory<String, String> consumerFactory) {
+    lotsOfRetries(ConsumerFactory<String, String> consumerFactory) {
       var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
       factory.setConsumerFactory(consumerFactory);
       DefaultErrorHandler errorHandler = new DefaultErrorHandler(
@@ -61,7 +61,6 @@ public class RaceListener {
     }
   }
 }
-
 
 interface RaceRepo extends JpaRepository<RaceEntity, String> {
 }
@@ -74,6 +73,6 @@ class RaceEntity {
 
   Integer total = 0;
 
-  @Version
-  Long version;
+//  @Version
+//  Long version;
 }

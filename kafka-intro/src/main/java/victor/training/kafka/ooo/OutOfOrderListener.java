@@ -22,28 +22,26 @@ public class OutOfOrderListener {
   public int pendingOpen = 0;
   public int pairs = 0;
 
-  @RetryableTopic//(attempts = "3", backoff = @Backoff(delay = 1000)) // by spring-kafka
+  // @RetryableTopic//(attempts = "3", backoff = @Backoff(delay = 1000)) // then send to xxx-dlt spring-kafka
   @KafkaListener(topics = TOPIC, concurrency = "1")
   public void handle(String message) throws InterruptedException {
-    log.info("::got \""+message+"\" - pending(=" + pendingOpen + ", pairs()=" + pairs);
-    if (message.equals("(")) pendingOpen++;
-    if (message.equals(")")) {
+    log.info("::got \""+message+"\" - pendingOpen=" + pendingOpen + ", pairs()=" + pairs);
+    if ("(".equals(message)) pendingOpen++;
+    if (")".equals(message)) {
       if (pendingOpen == 0) {
         throw new IllegalStateException("Illegal");
+        // ideas to explore:
 
-  //      Thread.sleep(1000); // RAU: blochezi acest consumer instance = 1 thread; paralizezi toate partiile asociate lui
+  //      Thread.sleep(1000); // BAD: blocks all partitions of this consumer instance
 
-//        kafkaTemplate.send(TOPIC, message); // RAU: ramai in while(true) daca nu-s alte message
+//        kafkaTemplate.send(TOPIC, message); // BAD: immediate re-consumer the same  message immediately if no other
 
   //      CompletableFuture.runAsync(() -> kafkaTemplate.send(TOPIC, message),
-  //          delayedExecutor(1, SECONDS));// RISK: App crash, k8s kill -9, re-deploy
-  //          SchedulingTaskExecutor// la kill app termina taskurile
+  //          delayedExecutor(1, SECONDS));// RISK: App crash / k8s kill -9 / re-deploy
 
-        // @andrei: insert intr-o tabela tot ce vine si apoi cu un cron
-        // dau un select pe ce-a venit in ultimele 5min.
-        // Bonus de complexitate: mesajele mai vechi de 5 min => erori
+        // insert in inbox table and process later on a scheduler
 
-        // Rabbit🐰: delayed-send; da' Kafka n-are.
+        // Rabbit🐰: delayed-send
       } else {
         pairs++;
         pendingOpen--;

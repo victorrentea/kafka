@@ -1,4 +1,4 @@
-package victor.training.kafka.batch_consume;
+package victor.training.kafka.batch;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -24,41 +24,40 @@ public class BatchEnricherConsumer {
   private final KafkaTemplate<String, Product> kafkaTemplate;
 
   public record Product(String id, String name, String description){}
+  // Goal: {key:X,value:productId} -> {key:X, value: Product}
 
-
-//   @KafkaListener(topics = BATCH_IN_TOPIC) // Traditional: process one message at a time
+//   @KafkaListener(topics = BATCH_IN_TOPIC) // Traditional: process one message at a time = slow
   public void consume(ConsumerRecord<String, String> record) {
-    Map<String, Product> productsById = fetchManyFromRemote(List.of(record.value()));
-    Product enrichedProduct = productsById.get(record.value());
-    kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), enrichedProduct);
+    Product product = fetchOneFromRemote(record.value());
+    kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), product);
   }
 
   @KafkaListener(topics = BATCH_IN_TOPIC, batch = "true")
   public void consume(List<ConsumerRecord<String, String>> records) {
-    log.info("Process: {} records : {}", records.size(), records);
+    log.info("Received {} records : {}", records.size(), records);
 
     List<String> productIds = records.stream().map(ConsumerRecord::value).toList();
     Map<String, Product> productsById = fetchManyFromRemote(productIds);
+
     for (var record : records) {
       var productId = record.value();
-      Product enrichedProduct = productsById.get(productId);
-      kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), enrichedProduct);
+      Product product = productsById.get(productId);
+      kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), product);
     }
-//    randomError(); // requires transactional (see kafka-tx module)
+//    if (Math.random() < .1) throw new RuntimeException("BUG🐞"); // requires @Transactional
   }
 
-  private void randomError() {
-    if (Math.random()<.5) {
-      log.error("DUMMY ERROR");
-      throw new RuntimeException("BUG🐞");
-    }
+  //region support code
+  @SneakyThrows
+  private Product fetchOneFromRemote(String productId) {
+    return fetchManyFromRemote(List.of(productId)).values().iterator().next();
   }
-
   @SneakyThrows
   private Map<String, Product> fetchManyFromRemote(List<String> productIds) {
     Thread.sleep(100+productIds.size());
     return productIds.stream().collect(toMap(Function.identity(), id ->
         new Product(id, "name-" + id, "desc-" + id)));
   }
+  //endregion
 
 }
