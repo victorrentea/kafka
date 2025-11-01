@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @SpringBootApplication
 @EnableScheduling
-public class StreamsSpringApp {
+public class StreamsApp {
   public static void main(String[] args) {
-      SpringApplication.run(StreamsSpringApp.class, args);
+      SpringApplication.run(StreamsApp.class, args);
   }
 
 }

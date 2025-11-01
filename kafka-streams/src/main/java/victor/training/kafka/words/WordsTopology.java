@@ -1,16 +1,15 @@
 package victor.training.kafka.words;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StoreQueryParameters;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.processor.StateStore;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
@@ -27,7 +26,6 @@ import victor.training.kafka.KafkaUtils;
 
 import java.util.*;
 
-import static org.apache.kafka.common.serialization.Serdes.Long;
 import static org.apache.kafka.common.serialization.Serdes.String;
 
 @Slf4j
@@ -39,7 +37,7 @@ public class WordsTopology {
   public static final String WORD_COUNT_TABLE = "word-count-table";
 
   // to test: http://localhost:8080/words
-  // to test: http://localhost:8080/words?m=Craciun
+  // to test: http://localhost:8080/words?m=Two%20Words
   public static void createTopology(StreamsBuilder streamsBuilder) {
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
         // {,"a"}, {,"b C"}, {,"a"}
@@ -48,62 +46,29 @@ public class WordsTopology {
         .mapValues(v -> v.toLowerCase())
         // {,"a"}, {,"b"}, {,"c"}, {,"a"}
         .groupBy((k, v) -> v, Grouped.with(String(), String()))
-        // topic ascuns creat
+
         //.count()
-//        .aggregate(() -> 0L,(k,v,old)->old+1, Materialized.with(String(),Long()))
-        .aggregate(() -> new Agg(0, 0), (k, v, old) -> {
+        //.aggregate(() -> 0L,(k,v,old)->old+1, Materialized.with(String(),Long()))
+        .aggregate(() -> new Agg(0, 0),
+            (k, v, old) -> {
               System.out.println("AGREG");
               return new Agg(old.count() + 1, old.sum() + k.length());
-            }
-            , Materialized.with(String(), new JsonSerde<>(Agg.class)))
+            },
+            Materialized.<String, Agg, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
+                .withKeySerde(String())
+                .withValueSerde(new JsonSerde<>(Agg.class)))
 
         .toStream()
-        // emite mesaj pt orice modificare in KTable parinte
+        // emits only if KTable changed
 
         // {"a",1}, {"b",1},{"c",1}, {"a",2}
         .peek((k, v) -> log.info("Got " + k + ": " + v))
-        .to(WORD_COUNT_TOPIC, Produced.with(String(), new JsonSerde<>(Agg.class))); // .doOnNext (reactor)
+        .to(WORD_COUNT_TOPIC, Produced.with(String(), new JsonSerde<>(Agg.class)));
+
     System.out.println(streamsBuilder.build().describe());
   }
 
-  @Data
-  static final class Agg {
-    private final int count;
-    private final int sum;
-
-    Agg(int count, int sum) {
-      this.count = count;
-      this.sum = sum;
-    }
-
-    public int count() {
-      return count;
-    }
-
-    public int sum() {
-      return sum;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) return true;
-      if (obj == null || obj.getClass() != this.getClass()) return false;
-      var that = (Agg) obj;
-      return this.count == that.count &&
-             this.sum == that.sum;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(count, sum);
-    }
-
-    @Override
-    public String toString() {
-      return "Agg[" +
-             "count=" + count + ", " +
-             "sum=" + sum + ']';
-    }
+  public record Agg(int count, int sum) {
   }
 
   @Autowired
@@ -117,10 +82,11 @@ public class WordsTopology {
   @GetMapping("/words-count/{word}")
   public Long getWordCounts(@PathVariable String word) {
     KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
-    ReadOnlyKeyValueStore<String, Long> counts = kafkaStreams.store(
+    ReadOnlyKeyValueStore<String, Agg> counts = kafkaStreams.store(
         StoreQueryParameters.fromNameAndType(WORD_COUNT_TABLE, QueryableStoreTypes.keyValueStore())
     );
-    return counts.get(word); // ~Map<Key,Value>
+    Agg agg = counts.get(word);
+    return agg == null ? 0L : (long) agg.count();
   }
 
   private final ProducerFactory<String, String> producerFactory;
