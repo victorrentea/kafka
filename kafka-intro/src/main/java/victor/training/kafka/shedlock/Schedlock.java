@@ -25,7 +25,6 @@ import java.util.Random;
 @RequiredArgsConstructor
 //@Service // enable on demand (pollutes log)
 public class Schedlock {
-
   private final JobEventRepo jobEventRepo;
   private int counter=new Random().nextInt(100);
 

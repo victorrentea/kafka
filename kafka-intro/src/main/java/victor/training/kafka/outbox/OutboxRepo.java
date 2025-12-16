@@ -1,18 +1,29 @@
 package victor.training.kafka.outbox;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.*;
 
-import java.util.Optional;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
 
 public interface OutboxRepo extends JpaRepository<Outbox, Long> {
-  // TODO DELETE
   @Query("""
       select outbox
       from Outbox outbox
-      where outbox.error = null
-      order by outbox.id
-      limit 1
+      where outbox.status = 'PENDING'
       """)
-  Optional<Outbox> findNext();
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")) // SKIP LOCKED
+  List<Outbox> findAllPendingLockingThem();
+
+  @Modifying
+  @Query("""
+        update Outbox
+        set status = 'PENDING',
+            runningSince = null
+        where runningSince < :cutoff
+        """)
+  void resetRunningForMoreThan(Instant cutoff);
 }

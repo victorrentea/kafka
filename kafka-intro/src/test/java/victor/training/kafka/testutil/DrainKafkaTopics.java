@@ -4,12 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.CoordinatorNotAvailableException;
+import org.apache.kafka.common.errors.RebalanceInProgressException;
+import org.apache.kafka.common.errors.UnknownMemberIdException;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.annotation.Retention;
@@ -24,9 +26,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.stream.Collectors.toMap;
 
 @Retention(RUNTIME)
-@ExtendWith(ResetKafkaOffsets.Extension.class)
-public @interface ResetKafkaOffsets {
+@ExtendWith(DrainKafkaTopics.Extension.class)
+public @interface DrainKafkaTopics {
   String[] value();
+
   long waitMillis() default 0;
 
   @Slf4j
@@ -37,7 +40,7 @@ public @interface ResetKafkaOffsets {
       var env = ctx.getEnvironment();
       KafkaListenerEndpointRegistry kafkaListeners = ctx.getBean(KafkaListenerEndpointRegistry.class);
       kafkaListeners.stop();
-      ResetKafkaOffsets annotation = AnnotationUtils.findAnnotation(context.getRequiredTestClass(), ResetKafkaOffsets.class);
+      DrainKafkaTopics annotation = AnnotationUtils.findAnnotation(context.getRequiredTestClass(), DrainKafkaTopics.class);
 
       var bootstrapServers = env.getProperty("spring.kafka.bootstrap-servers");
 
@@ -69,7 +72,8 @@ public @interface ResetKafkaOffsets {
         // List all consumer groups
         List<String> allGroupIds = admin.listConsumerGroups().all()
             .get(1, TimeUnit.SECONDS)
-            .stream().map(ConsumerGroupListing::groupId)
+            .stream()
+            .map(ConsumerGroupListing::groupId)
             .toList();
 
         for (String groupId : allGroupIds) {
@@ -97,9 +101,9 @@ public @interface ResetKafkaOffsets {
             }
           } catch (ExecutionException e) {
             Throwable cause = e.getCause();
-            if (cause instanceof org.apache.kafka.common.errors.UnknownMemberIdException
-                || cause instanceof org.apache.kafka.common.errors.CoordinatorNotAvailableException
-                || cause instanceof org.apache.kafka.common.errors.RebalanceInProgressException) {
+            if (cause instanceof UnknownMemberIdException
+                || cause instanceof CoordinatorNotAvailableException
+                || cause instanceof RebalanceInProgressException) {
               log.warn("Skipping offset reset for group '{}' due to transient coordinator state: {}", groupId, cause.toString());
               continue;
             }

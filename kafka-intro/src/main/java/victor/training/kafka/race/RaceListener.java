@@ -53,8 +53,7 @@ public class RaceListener {
     lotsOfRetries(ConsumerFactory<String, String> consumerFactory) {
       var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
       factory.setConsumerFactory(consumerFactory);
-      DefaultErrorHandler errorHandler = new DefaultErrorHandler(
-          new FixedBackOff(50L, 100));
+      var errorHandler = new DefaultErrorHandler(new FixedBackOff(50L, 100));
       errorHandler.addRetryableExceptions(ObjectOptimisticLockingFailureException.class);
       factory.setCommonErrorHandler(errorHandler);
       return factory;

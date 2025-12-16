@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.race.RaceListener.Message;
-import victor.training.kafka.testutil.ResetKafkaOffsets;
+import victor.training.kafka.testutil.DrainKafkaTopics;
 
 import java.util.UUID;
 
@@ -18,7 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static victor.training.kafka.race.RaceListener.RACE_TOPIC;
 
 @Slf4j
-@ResetKafkaOffsets(RACE_TOPIC)
+@DrainKafkaTopics(RACE_TOPIC)
 public class RaceListenerTest extends IntegrationTest {
   public static final String CLIENT_ID = UUID.randomUUID().toString();
   @Autowired
@@ -27,18 +27,17 @@ public class RaceListenerTest extends IntegrationTest {
   RaceRepo raceRepo;
 
   @Test
-  void ok() throws InterruptedException {
+  void ok() {
     raceRepo.save(new RaceEntity().id(CLIENT_ID).total(0));
-    final int N = 1000;
-    for (int i = 0; i < N; i++) {
+    final int N_MESSAGES = 1000;
+    for (int i = 0; i < N_MESSAGES; i++) {
       kafkaTemplate.send(RACE_TOPIC, new Message(CLIENT_ID, i));
       // Fix#1: partition key
-      // Fix#2: JPA optimistic locking
-      //   >WARNING: message can get lost after 10 optimistic locking errors
+      // Fix#2: JPA optimistic locking - ⚠️ message is ignored after 10 errors
     }
 
-    await().atMost(ofSeconds(150)).untilAsserted(() -> // default: every 100ms
-      assertThat(raceRepo.findById(CLIENT_ID).orElseThrow().total()).isEqualTo(N)
+    await().atMost(ofSeconds(150)).untilAsserted(() ->
+      assertThat(raceRepo.findById(CLIENT_ID).orElseThrow().total()).isEqualTo(N_MESSAGES)
     );
   }
 

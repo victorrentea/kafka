@@ -11,11 +11,13 @@ import static jakarta.persistence.EnumType.STRING;
 
 @Entity
 @Data
-public class Outbox {
+class Outbox {
   @Id
   @GeneratedValue
   private Long id;
   private String messageToSend;
-  private String error;
-
+  enum Status {PENDING, RUNNING}
+  @Enumerated(STRING)
+  private Status status = Status.PENDING;
+  private LocalDateTime runningSince;
 }

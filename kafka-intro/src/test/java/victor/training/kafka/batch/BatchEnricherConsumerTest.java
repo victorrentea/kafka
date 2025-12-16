@@ -10,7 +10,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.batch.BatchEnricherConsumer.Product;
-import victor.training.kafka.testutil.ResetKafkaOffsets;
+import victor.training.kafka.testutil.DrainKafkaTopics;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,7 +20,7 @@ import static victor.training.kafka.batch.BatchEnricherConsumer.BATCH_IN_TOPIC;
 import static victor.training.kafka.batch.BatchEnricherConsumer.BATCH_OUT_TOPIC;
 
 @Slf4j
-@ResetKafkaOffsets({BATCH_IN_TOPIC, BATCH_OUT_TOPIC})
+@DrainKafkaTopics({BATCH_IN_TOPIC, BATCH_OUT_TOPIC})
 class BatchEnricherConsumerTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, String> kafkaTemplate;

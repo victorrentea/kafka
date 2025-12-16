@@ -3,17 +3,15 @@ package victor.training.kafka.seqno;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.test.annotation.DirtiesContext;
 import victor.training.kafka.IntegrationTest;
-import victor.training.kafka.testutil.ResetKafkaOffsets;
+import victor.training.kafka.testutil.DrainKafkaTopics;
 
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
@@ -27,7 +25,7 @@ import static victor.training.kafka.seqno.SeqNoListener.*;
 
 @Slf4j
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
-@ResetKafkaOffsets(IN_TOPIC)
+@DrainKafkaTopics(IN_TOPIC)
 public class SeqNoListenerTest extends IntegrationTest {
   public final int AGG_ID = new Random().nextInt();
   @Autowired

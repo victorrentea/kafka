@@ -1,6 +1,7 @@
 package victor.training.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -15,7 +16,6 @@ import java.util.concurrent.ExecutionException;
 
 public class KafkaRawMain {
   public static void main(String[] args) throws ExecutionException, InterruptedException {
-    // TODO redo
     var producer = createProducer();
     var consumer = createConsumer();
 
@@ -27,9 +27,9 @@ public class KafkaRawMain {
     System.out.println("Start polling for messages");
     long t0 = System.currentTimeMillis();
     while (System.currentTimeMillis() - t0 < 2000) {
-      ConsumerRecords<String, String> receivedRecords = consumer.poll(Duration.ofMillis(100));
-      for (var r : receivedRecords) {
-        System.out.println(r.key() + " -> " + r.value());
+      var records = consumer.poll(Duration.ofMillis(100));
+      for (ConsumerRecord<String, String> record : records) {
+        System.out.println(record.key() + " -> " + record.value());
       }
     }
   }

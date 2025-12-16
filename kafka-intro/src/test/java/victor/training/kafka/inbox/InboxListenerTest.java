@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.inbox.InboxListener.Message;
-import victor.training.kafka.testutil.ResetKafkaOffsets;
+import victor.training.kafka.testutil.DrainKafkaTopics;
 
 import java.util.UUID;
 
@@ -16,7 +16,7 @@ import static org.awaitility.Awaitility.await;
 import static victor.training.kafka.inbox.InboxListener.TOPIC;
 
 @Slf4j
-@ResetKafkaOffsets(TOPIC)
+@DrainKafkaTopics(TOPIC)
 public class InboxListenerTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, Message> kafkaTemplate;
