@@ -25,6 +25,7 @@ public class TestedSender {
   }
 
   public void send(String message) {
+    log.info("Got param " + message);
     bService.logic(message);
     kafkaTemplate.send(OUT_TOPIC, message);
   }

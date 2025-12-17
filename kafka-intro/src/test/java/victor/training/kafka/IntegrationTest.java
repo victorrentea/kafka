@@ -51,7 +51,7 @@ public abstract class IntegrationTest {
 
   @SneakyThrows
   private void waitForPartitionsToBeAssigned() {
-    // TODO there should be a smarter way
+    // TODO there should be a smarter way ...
     log.info("Waiting for partitions assignment...");
     while (true) {
       var started= kafkaListenerEndpointRegistry.getAllListenerContainers().stream()
