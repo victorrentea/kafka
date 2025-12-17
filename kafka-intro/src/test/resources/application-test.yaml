@@ -1,8 +1,0 @@
-spring.application.name: app-test
-inbox.time.window.ms: 100
-logging.level.org.springframework.test.context.cache: DEBUG
-#spring:
-#  kafka:
-#    consumer:
-#      group-id: test-${random.uuid}
-

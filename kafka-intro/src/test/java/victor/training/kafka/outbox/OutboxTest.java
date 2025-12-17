@@ -6,18 +6,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import victor.training.kafka.IntegrationTest;
 import victor.training.kafka.testutil.TimeExtension;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-class OutboxPollerTest extends IntegrationTest {
+class OutboxTest extends IntegrationTest {
   @RegisterExtension
   TimeExtension timeExtension = new TimeExtension();
   @MockitoBean
@@ -71,16 +73,15 @@ class OutboxPollerTest extends IntegrationTest {
       });
     }
     final int N_MESSAGES = 100;
-    for (int i = 0; i < N_MESSAGES; i++) {
-      outboxService.addToOutbox("M"+i);
+    List<String> messages = IntStream.range(0, N_MESSAGES).mapToObj(i -> "M" + i).toList();
+    for (String message : messages) {
+      outboxService.addToOutbox(message);
     }
 
     TimeServices.sleepMsecs(2000);
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(senderMock,times(N_MESSAGES)).send(captor.capture());
-    assertThat(captor.getAllValues()).containsExactlyInAnyOrderElementsOf(
-        IntStream.range(0,1000).mapToObj(i->"M"+i).toList()
-    );
+    assertThat(captor.getAllValues()).containsExactlyInAnyOrderElementsOf(messages);
   }
 }

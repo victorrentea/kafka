@@ -9,13 +9,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OutboxRepo extends JpaRepository<Outbox, Long> {
+  String NO_WAIT = "-2";// = just SKIP LOCKED rows
+  @Lock(LockModeType.PESSIMISTIC_WRITE) // select ... FOR UPDATE vs racing instances
+  @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = NO_WAIT))
   @Query("""
       select outbox
       from Outbox outbox
       where outbox.status = 'PENDING'
       """)
-  @Lock(LockModeType.PESSIMISTIC_WRITE)
-  @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")) // i.e. SKIP LOCKED rows
   List<Outbox> findAllPendingAndLockThem();
 
   @Transactional
@@ -24,7 +25,8 @@ public interface OutboxRepo extends JpaRepository<Outbox, Long> {
         update Outbox
         set status = 'PENDING',
             runningSince = null
-        where runningSince < :cutoff
+        where status = 'RUNNING'
+        and runningSince < :cutoff
         """)
   void resetRunningForMoreThan(LocalDateTime cutoff);
 }

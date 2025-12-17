@@ -1,0 +1,119 @@
+###
+GET http://localhost:8080/leak7/mutableKey
+
+###
+GET http://localhost:8080/leak7/mutableKey
+
+###
+GET http://localhost:8080/leak7/mutableKey
+
+###
+GET http://localhost:8080/leak15
+
+###
+GET http://localhost:8080/tracing
+
+###
+GET http://localhost:8080/tracing
+
+###
+GET http://localhost:8080/tracing
+
+###
+GET http://localhost:8080/api/drink
+
+###
+POST http://localhost:8080/api/send
+Content-Type: application/json
+
+{
+  "exchange": "",
+  "routingKey": "",
+  "xml": ""
+}
+
+###
+POST http://localhost:8080/api/send
+Content-Type: application/json
+
+{
+  "exchange": "",
+  "routingKey": "",
+  "xml": ""
+}
+
+###
+POST http://localhost:8080/api/send
+Content-Type: application/json
+
+{
+  "exchange": "",
+  "routingKey": "",
+  "xml": ""
+}
+
+###
+GET http://localhost:8080/api/trainings
+Content-Type: application/json
+
+{
+  "name": "JA"
+}
+
+###
+GET http://localhost:8080/send-offers
+
+###
+GET http://localhost:8080/send-offers
+
+###
+GET http://localhost/send-inbox
+
+###
+GET http://localhost/hello/{{name}}
+
+###
+GET http://localhost:8080/hello/tx
+
+<> 2025-11-04T005104.404.html
+
+###
+GET http://localhost:8080/client-credential
+
+###
+GET http://localhost:8080/api/user/current
+x-user: elon
+x-user-roles: ADMIN
+#x-api-key: secret
+
+<> 2025-11-25T103317.200.json
+<> 2025-11-25T102925.200.json
+<> 2025-11-25T102840.200.json
+<> 2025-11-25T102016.200.json
+<> 2025-11-25T101958.200.json
+
+###
+GET http://localhost:8080/api/trainings/search/query?name=J
+
+<> 2025-12-03T112856.200.json
+<> 2025-12-03T111618.200.json
+<> 2025-12-03T111549.500.txt
+<> 2025-12-03T111533.500.txt
+<> 2025-12-03T111200.200.json
+<> 2025-12-03T111153.200.json
+
+###
+GET http://localhost:8080/message/stream?
+    topic={{$random.alphanumeric(8)}}
+
+###
+GET http://localhost:8080/lazy
+
+###
+GET http://localhost:8080/lazy
+
+###
+GET http://localhost:8080/interrupt
+
+###
+GET http://localhost:8080/interrupt

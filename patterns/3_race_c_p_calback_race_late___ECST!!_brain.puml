@@ -1,0 +1,12 @@
+@startuml
+'title Consumer Callback Race
+hide footbox
+
+-> Producer:update
+hnote over Consumer: 0E
+Consumer<--Producer: CreditUpdatedEvent {simId,<back:yellow>credit</back>}
+hnote over Consumer: 5E
+Consumer<--Producer: CreditUpdatedEvent {simId,<back:yellow>credit</back>}
+hnote over Consumer: 7E
+Consumer<--Producer: PhoneNumberUpdatedEvent {simId,<back:yellow>phone</back>}
+@enduml
