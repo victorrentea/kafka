@@ -1,70 +1,80 @@
 package victor.training.kafka.ooo;
 
 import lombok.extern.slf4j.Slf4j;
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import victor.training.kafka.IntegrationTest;
-import victor.training.kafka.testutil.DrainKafkaTopics;
 
+import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static victor.training.kafka.ooo.OutOfOrderListener.TOPIC;
+import static victor.training.kafka.ooo.OutOfOrder.TOPIC;
 
 @Slf4j
-@DrainKafkaTopics({TOPIC, TOPIC + "-retry", TOPIC + "-dlt"})
-public class OutOfOrderListenerTest extends IntegrationTest {
+//@DrainKafkaTopics({TOPIC, TOPIC + "-retry", TOPIC + "-dlt"})
+public class OutOfOrderTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, String> kafkaTemplate;
   @Autowired
-  OutOfOrderListener outOfOrderListener;
+  OutOfOrder outOfOrder;
 
   @BeforeEach
   final void before() {
-    outOfOrderListener.pairs = 0;
-    outOfOrderListener.pendingOpen = 0;
+    outOfOrder.pairs = 0;
+    outOfOrder.pendingOpen = 0;
   }
 
   @Test
-  void ok() throws InterruptedException {
+  void one_set() throws InterruptedException {
+    kafkaTemplate.send(TOPIC, "(");
+    kafkaTemplate.send(TOPIC, ")");
+
+    await().atMost(ofSeconds(5)).untilAsserted(() ->
+        assertThat(outOfOrder.pairs).isEqualTo(1));
+  }
+
+  @Test
+  void two_sets() {
+    kafkaTemplate.send(TOPIC, "(");
+    kafkaTemplate.send(TOPIC, ")");
     kafkaTemplate.send(TOPIC, "(");
     kafkaTemplate.send(TOPIC, ")");
 
     await().atMost(ofSeconds(10)).untilAsserted(() ->
-        assertThat(outOfOrderListener.pairs).isEqualTo(1));
+        assertThat(outOfOrder.pairs).isEqualTo(2));
   }
 
-  @Test
-  void ok2() throws InterruptedException {
-    kafkaTemplate.send(TOPIC, "(");
-    kafkaTemplate.send(TOPIC, ")");
-    kafkaTemplate.send(TOPIC, "(");
-    kafkaTemplate.send(TOPIC, ")");
-
-    await().atMost(ofSeconds(10)).untilAsserted(() ->
-        assertThat(outOfOrderListener.pairs).isEqualTo(2));
-  }
 
   @Test
-  void scrambled() throws InterruptedException {
+  void one_set_scrambled() {
     kafkaTemplate.send(TOPIC, ")");
     kafkaTemplate.send(TOPIC, "(");
 
     await().atMost(ofSeconds(10)).untilAsserted(() ->
-        assertThat(outOfOrderListener.pairs).isEqualTo(1));
+        assertThat(outOfOrder.pairs).isEqualTo(1));
   }
 
   @Test
-  void scrambled2() throws InterruptedException {
+  void two_sets_scrambled2() throws InterruptedException {
     kafkaTemplate.send(TOPIC, ")");
     kafkaTemplate.send(TOPIC, ")");
     kafkaTemplate.send(TOPIC, "(");
     kafkaTemplate.send(TOPIC, "(");
 
     await().atMost(ofSeconds(10)).untilAsserted(() ->
-        assertThat(outOfOrderListener.pairs).isEqualTo(2));
+        assertThat(outOfOrder.pairs).isEqualTo(2));
+  }
+
+  @Test
+  void one_closed_may_trigger_infinite_loop_if_resending() throws InterruptedException {
+    kafkaTemplate.send(TOPIC, ")");
+
+    Thread.sleep(1000); // just look in the log
   }
 
 }

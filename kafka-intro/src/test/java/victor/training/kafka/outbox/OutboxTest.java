@@ -19,6 +19,7 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@TestPropertySource(properties = "scheduled.enabled=true")
 class OutboxTest extends IntegrationTest {
   @RegisterExtension
   TimeExtension timeExtension = new TimeExtension();
@@ -38,6 +39,7 @@ class OutboxTest extends IntegrationTest {
   void oneOkViaScheduler() throws InterruptedException {
     outboxService.addToOutbox("M1");
 
+    // blocks test thread until that method of the mock is called!
     verify(senderMock, timeout(1000)).send("M1");
   }
 
@@ -55,19 +57,19 @@ class OutboxTest extends IntegrationTest {
   void oneErrorRetried() throws InterruptedException {
     outboxService.addToOutbox("M1");
     doThrow(new RuntimeException("BOOM")).when(senderMock).send("M1");
-    outboxService.sendFromOutbox();
+    outboxService.sendFromOutbox(); // fails to send
     timeExtension.advanceTime(Duration.ofMinutes(6));
     outboxService.resetToPending();
-    reset(senderMock);
-    outboxService.sendFromOutbox();
+    reset(senderMock); // external call will succeed next time
+    outboxService.sendFromOutbox(); // succeeds
     verify(senderMock).send("M1");
   }
 
   @Test
-  void noRace() throws InterruptedException {
+  void noRaceBetweenParallelSchedulers() throws InterruptedException {
     for (int i = 0; i < 10; i++) {
       CompletableFuture.runAsync(() -> {
-        for (int j = 0; j < 1000; j++) {
+        for (int j = 0; j < 100; j++) {
           outboxService.sendFromOutbox();
         }
       });

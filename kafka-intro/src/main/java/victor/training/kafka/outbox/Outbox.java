@@ -15,9 +15,12 @@ class Outbox {
   @Id
   @GeneratedValue
   private Long id;
+
   private String messageToSend;
+
   enum Status {PENDING, RUNNING}
   @Enumerated(STRING)
   private Status status = Status.PENDING;
+
   private LocalDateTime runningSince;
 }

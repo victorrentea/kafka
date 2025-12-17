@@ -26,7 +26,7 @@ public class ConsumerInterceptor implements RecordInterceptor<Object, Object> {
 
   @Override
   public void success(ConsumerRecord<Object, Object> record, Consumer<Object, Object> consumer) {
-    log.info("::SUCCESS ({}-{}:{})", record.topic(),record.partition(), record.offset());
+    log.info("::END::OK ({}-{}:{})", record.topic(),record.partition(), record.offset());
   }
 
   @Override
@@ -36,6 +36,6 @@ public class ConsumerInterceptor implements RecordInterceptor<Object, Object> {
 
   @Override
   public void failure(ConsumerRecord<Object, Object> record, Exception exception, Consumer<Object, Object> consumer) {
-    log.error("::ERROR ({}-{}:{}): {} caused by {}", record.topic(),record.partition(), record.offset(), exception.toString(), exception.getCause().toString());
+    log.error("::END::ERROR ({}-{}:{}): {} caused by {}", record.topic(),record.partition(), record.offset(), exception.toString(), exception.getCause().toString());
   }
 }

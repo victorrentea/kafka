@@ -25,7 +25,7 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class RaceListener {
+public class Race {
   private final RaceRepo raceRepo;
   public static final String RACE_TOPIC = "race-topic";
 
@@ -39,7 +39,7 @@ public class RaceListener {
   public record Message(String id, int seq) {}
 
   @KafkaListener(topics = RACE_TOPIC, concurrency = "3")
-  @Transactional // SQL
+  @Transactional
   public void consume(Message message) throws InterruptedException {
     RaceEntity entity = raceRepo.findById(message.id()).orElseThrow();
     entity.total(entity.total() + 1);

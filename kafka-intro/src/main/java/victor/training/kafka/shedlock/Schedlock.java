@@ -37,17 +37,6 @@ public class Schedlock {
     Thread.sleep(1000);
     jobEventRepo.save(new JobEvent("End   JOB-"+counter));
   }
-
-  @Configuration
-  @EnableScheduling
-  @EnableSchedulerLock(defaultLockAtMostFor = "P1D")
-  public static class SchedlockConfig  {
-    @Bean
-    public LockProvider lockProvider(DataSource dataSource) {
-      // also see schema.sql
-      return new JdbcTemplateLockProvider(dataSource);
-    }
-  }
 }
 
 interface JobEventRepo extends JpaRepository<JobEvent, Long> {

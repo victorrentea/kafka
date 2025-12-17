@@ -13,8 +13,7 @@ public interface OutboxRepo extends JpaRepository<Outbox, Long> {
   @Lock(LockModeType.PESSIMISTIC_WRITE) // select ... FOR UPDATE vs racing instances
   @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = NO_WAIT))
   @Query("""
-      select outbox
-      from Outbox outbox
+      select outbox from Outbox outbox
       where outbox.status = 'PENDING'
       """)
   List<Outbox> findAllPendingAndLockThem();

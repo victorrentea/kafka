@@ -51,9 +51,9 @@ public class OutboxService {
       }
     }
   }
-  @Scheduled(fixedRate = 1000)
+  @Scheduled(fixedRate = 60000)
   void resetToPending() {
-    log.info("Reset pending for too long");
+    log.info("Reset PENDING for too long");
     var cutoff = now().minus(ofMinutes(5));
     outboxRepo.resetRunningForMoreThan(cutoff);
   }

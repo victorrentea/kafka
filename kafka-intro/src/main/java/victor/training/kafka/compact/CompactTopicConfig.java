@@ -39,7 +39,7 @@ public class CompactTopicConfig {
         .build();
   }
 
-  @EventListener(ApplicationStartedEvent.class)
+  //@EventListener(ApplicationStartedEvent.class)
   public void initial() {
     kafkaTemplate.send(COUNTRY_TOPIC, "RO", "Kingdom of Romania");
     kafkaTemplate.send(COUNTRY_TOPIC, "RO", "People’s Republic of Romania");
