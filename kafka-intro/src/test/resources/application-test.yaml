@@ -5,3 +5,4 @@ logging.level.org.springframework.test.context.cache: DEBUG
 #  kafka:
 #    consumer:
 #      group-id: test-${random.uuid}
+

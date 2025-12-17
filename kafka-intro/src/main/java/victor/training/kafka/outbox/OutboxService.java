@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,7 +15,7 @@ import static victor.training.kafka.outbox.Outbox.Status.RUNNING;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class OutboxPoller {
+public class OutboxService {
   private final OutboxRepo outboxRepo;
   private final Sender sender;
   private final InTransaction inTransaction;
@@ -28,7 +27,7 @@ public class OutboxPoller {
 
     @Transactional
     List<Outbox> selectPendingAndMarkRunning() {
-      List<Outbox> pendingList = outboxRepo.findAllPendingLockingThem();
+      List<Outbox> pendingList = outboxRepo.findAllPendingAndLockThem();
       for (Outbox outbox : pendingList) {
         outbox.status(RUNNING);
         outbox.runningSince(LocalDateTime.now());
@@ -42,19 +41,18 @@ public class OutboxPoller {
     var toSend = inTransaction.selectPendingAndMarkRunning();
     for (Outbox outbox : toSend) {
       log.debug("Start outbox {}", outbox);
-      // TODO UNDO
       try {
         sender.send(outbox.messageToSend());
         outboxRepo.delete(outbox);
-        log.debug("Completed outbox {}", outbox);
+        log.debug("Completed✅ outbox {}", outbox);
       } catch (Exception e) {
-        log.error("Failed outbox: {}", outbox, e);
+        log.error("Failed❌ outbox: {}", outbox, e);
       }
     }
   }
   @Scheduled(fixedRate = 1000)
   void resetToPending() {
-    Instant cutoff = Instant.now().minus(Duration.ofMinutes(5));
+    var cutoff = LocalDateTime.now().minus(Duration.ofMinutes(5));
     outboxRepo.resetRunningForMoreThan(cutoff);
   }
 

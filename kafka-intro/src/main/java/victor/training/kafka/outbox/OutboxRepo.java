@@ -3,9 +3,9 @@ package victor.training.kafka.outbox;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.*;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OutboxRepo extends JpaRepository<Outbox, Long> {
@@ -15,9 +15,10 @@ public interface OutboxRepo extends JpaRepository<Outbox, Long> {
       where outbox.status = 'PENDING'
       """)
   @Lock(LockModeType.PESSIMISTIC_WRITE)
-  @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")) // SKIP LOCKED
-  List<Outbox> findAllPendingLockingThem();
+  @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2")) // i.e. SKIP LOCKED rows
+  List<Outbox> findAllPendingAndLockThem();
 
+  @Transactional
   @Modifying
   @Query("""
         update Outbox
@@ -25,5 +26,5 @@ public interface OutboxRepo extends JpaRepository<Outbox, Long> {
             runningSince = null
         where runningSince < :cutoff
         """)
-  void resetRunningForMoreThan(Instant cutoff);
+  void resetRunningForMoreThan(LocalDateTime cutoff);
 }

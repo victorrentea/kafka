@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class Sender {
-  public void send(String messageToSend) throws InterruptedException {
+class Sender {
+  void send(String messageToSend) throws InterruptedException {
     log.info("Sending: {}", messageToSend);
     Thread.sleep(1000);
     if (Math.random() < 0.1) {

@@ -75,5 +75,5 @@ class PastIdempotencyKey {
   @Id
   @GeneratedValue
   private String id;
-  private String value;
+  private String idempotencyKey;
 }
