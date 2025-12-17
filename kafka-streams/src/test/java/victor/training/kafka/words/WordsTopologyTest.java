@@ -6,6 +6,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 import java.util.Properties;
@@ -48,6 +50,22 @@ public class WordsTopologyTest {
 
     assertThat(outputTopic.readKeyValuesToMap())
         .containsEntry("hello", 1L);
+  }
+
+  static List<TestCase> data() {
+    return List.of(
+        new TestCase(List.of("Hello"),List.of(new KeyValue<>("hello", 1L)))
+    );
+  }
+  record TestCase(List<String> inputValues, List<KeyValue<String, Long>> expectedRecords) {}
+  @ParameterizedTest
+  @MethodSource("data")
+  void genericTest(TestCase testCase) {
+    for (String value : testCase.inputValues) {
+      inputTopic.pipeInput("key", value);
+    }
+    assertThat(outputTopic.readKeyValuesToList())
+        .containsExactlyElementsOf(testCase.expectedRecords());
   }
 
   @Test
