@@ -1,7 +1,6 @@
 package victor.training.kafka.words;
 
 import lombok.ToString;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +15,12 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
+import static org.apache.kafka.common.serialization.Serdes.Long;
+import static org.apache.kafka.common.serialization.Serdes.String;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class WordsTopologyTest {
-  private TopologyTestDriver testDriver;
+  private TopologyTestDriver driver;
   private TestInputTopic<String, String> inputTopic;
   private TestInputTopic<String, String> dictionaryTopic;
   private TestOutputTopic<String, Long> outputTopic;
@@ -29,33 +30,36 @@ public class WordsTopologyTest {
     Properties props = new Properties();
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test-" + UUID.randomUUID());
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
-    props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-    props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+    props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, String().getClass());
+    props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, String().getClass());
     StreamsBuilder streams = new StreamsBuilder();
     WordsTopology.createTopology(streams);
     Topology topology = streams.build();
     System.out.println(topology.describe());
-    testDriver = new TopologyTestDriver(topology, props);
-    inputTopic = testDriver.createInputTopic(WordsTopology.WORDS_TOPIC, Serdes.String().serializer(), Serdes.String().serializer());
-    dictionaryTopic = testDriver.createInputTopic("dictionary", Serdes.String().serializer(), Serdes.String().serializer());
-    outputTopic = testDriver.createOutputTopic(
-        WordsTopology.WORD_COUNT_TOPIC,
-        Serdes.String().deserializer(),
-        Serdes.Long().deserializer());
+    driver = new TopologyTestDriver(topology, props);
+    inputTopic = driver.createInputTopic(WordsTopology.WORDS_TOPIC, String().serializer(), String().serializer());
+    outputTopic = driver.createOutputTopic(WordsTopology.WORD_COUNT_TOPIC, String().deserializer(), Long().deserializer());
 
+    dictionaryTopic = driver.createInputTopic("dictionary", String().serializer(), String().serializer());
     dictionaryTopic.pipeInput("halo", "hell");
     dictionaryTopic.pipeInput("halo", "hello");
   }
 
   @AfterEach
   final void after() {
-    testDriver.close();
+    driver.close();
   }
 
   @Test
   void empty() {
-    List<KeyValue<String, Long>> records = outputTopic.readKeyValuesToList();
-    assertThat(records).isEmpty();
+    // no input =>
+    assertThat(outputTopic.readKeyValuesToList()).isEmpty();
+  }
+  @Test
+  void one_word() {
+    inputTopic.pipeInput("key", "word");
+
+    assertThat(outputTopic.readKeyValuesToList()).containsExactly(new KeyValue<>("word", 1L));
   }
 
   static List<TestCase> data() {
