@@ -1,13 +1,11 @@
 package victor.training.kafka.words;
 
 import lombok.RequiredArgsConstructor;
+import lombok.With;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
-import org.apache.kafka.streams.processor.StateStore;
-import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +14,14 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerde;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import victor.training.kafka.KafkaUtils;
 
 import java.util.*;
+import java.util.stream.StreamSupport;
 
+import static java.util.stream.Collectors.toMap;
 import static org.apache.kafka.common.serialization.Serdes.Long;
 import static org.apache.kafka.common.serialization.Serdes.String;
 
@@ -36,19 +35,37 @@ public class WordsTopology {
   public static final String DICTIONARY_TOPIC = "dictionary"; // word -> canonical form
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
+    KTable<String, String> dictTable =
+        streamsBuilder.table(DICTIONARY_TOPIC, Consumed.with(String(), String()));
+    // ă->a
+
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        // ?->a c, ?->A
+        // ?->ă c, ?->A
         .flatMapValues(v-> Arrays.stream(v.split(" ")).toList())
-        // ?->a, ?->c, ?->a
+        // ?->ă, ?->c, ?->a
         .mapValues(v->v.toLowerCase())
-        // ?->a, ?->c, ?->a
+        // ?->ă, ?->c, ?->a
+        .selectKey((k,v)->v)
+        // ă->ă, c->c, a->a
+        .leftJoin(dictTable /*by key*/, (streamValue, dictValue) ->
+            dictValue!=null?dictValue:streamValue)
+        // ă->a, c->c, a->a
+
         .groupBy((k, v) -> v, Grouped.with(String(), String()))
 
-        .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE) // QUERY+UPDATE ~SQL
-            .withKeySerde(String())
-            .withValueSerde(Long()))
+//        .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE) // QUERY+UPDATE ~SQL
+//            .withKeySerde(String())
+//            .withValueSerde(Long()))
+        .aggregate(() -> new Agg(0L, 0),
+            (key, value, aggregate) -> aggregate
+                .withTotal(aggregate.total+1)
+                .withTotalChars(aggregate.totalChars() + value.length()),
+            Named.as(WORD_COUNT_TABLE),
+            Materialized.with(String(), new JsonSerde<>(Agg.class)))
+
         // KTable retine per key doar ultima valoare primita
         .toStream()
+        .mapValues(agg->agg.total)
         // .. emite mai departe event doar la MODIFICARI
 
         // a->1, c->1, a->2
@@ -58,40 +75,51 @@ public class WordsTopology {
     System.out.println(streamsBuilder.build().describe());
   }
 
-
-
-
-
-
-
+  @With
+  record Agg(Long total, int totalChars) {}
 
   // ---- below, support code ----
   @Autowired
   void configureTopology(StreamsBuilder streamsBuilder) {
+    log.info("Creating topology");
     KafkaUtils.createTopic(WORDS_TOPIC);
     KafkaUtils.createTopic(WORD_COUNT_TOPIC);
-    KafkaUtils.createTopic(DICTIONARY_TOPIC);
+//    KafkaUtils.createTopic(DICTIONARY_TOPIC);
     createTopology(streamsBuilder);
+    log.info("Created topology");
   }
 
   private final StreamsBuilderFactoryBean factoryBean;
-  @GetMapping("/words-count/{word}")
-  public Long getWordCounts(@PathVariable String word) {
+  @GetMapping("words/count")
+  public Map<String, Long> getWordCounts(@RequestParam(required = false) String word) {
     KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
-    ReadOnlyKeyValueStore<String, Long> counts = kafkaStreams.store(
-        StoreQueryParameters.fromNameAndType(WORD_COUNT_TABLE, QueryableStoreTypes.keyValueStore())
+    ReadOnlyKeyValueStore<String, Long> kTable = kafkaStreams.store(
+        StoreQueryParameters.fromNameAndType(WORD_COUNT_TABLE,
+            QueryableStoreTypes.keyValueStore())
     );
-    Long value = counts.get(word);
-    return value == null ? 0L : value;
+    if (word != null) {
+      Long count = kTable.get(word);
+      if (count == null) {
+        return Map.of();
+      } else {
+        return Map.of(word, count);
+      }
+    } else {
+      try (var it = kTable.all()) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false)
+            .collect(toMap(kv -> kv.key, kv -> kv.value));
+      }
+    }
   }
 
   private final ProducerFactory<String, String> producerFactory;
-  @GetMapping("/words") // http://localhost:8080/words
-  public void send(@RequestParam(defaultValue = "Hello\t world") String m) {
+  @GetMapping("words/send") // http://localhost:8080/words
+  public String send(@RequestParam(defaultValue = "Hello\t world") String m) {
     // the value serializer is special for this topic
     Map<String, Object> configOverrides = Map.of(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
     KafkaTemplate<String, String> kafkaTemplate2 = new KafkaTemplate<>(producerFactory, configOverrides);
     kafkaTemplate2.send(WORDS_TOPIC, m);
+    return "✅";
   }
 
   // also runnable standalone
