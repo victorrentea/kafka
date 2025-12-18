@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.StoreQueryParameters;
-import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.processor.StateStore;
 import org.apache.kafka.streams.state.KeyValueStore;
@@ -76,9 +73,7 @@ public class WordsTopology {
     System.out.println(streamsBuilder.build().describe());
   }
 
-  public record Agg(int count, int sum) {
-  }
-
+  // ---- below, support code ----
   @Autowired
   void configureTopology(StreamsBuilder streamsBuilder) {
     KafkaUtils.createTopic(WORDS_TOPIC);
@@ -105,5 +100,24 @@ public class WordsTopology {
     Map<String, Object> configOverrides = Map.of(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
     KafkaTemplate<String, String> kafkaTemplate2 = new KafkaTemplate<>(producerFactory, configOverrides);
     kafkaTemplate2.send(WORDS_TOPIC, m);
+  }
+
+  // also runnable standalone
+  public static void main(String[] args) {
+    Properties props = new Properties();
+    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "app");
+    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+    props.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, "0"); // disable caching for faster outcome
+    props.put("internal.leave.group.on.close", "true"); // faster restart as per https://dzone.com/articles/kafka-streams-tips-on-how-to-decrease-rebalancing
+
+    KafkaUtils.createTopic(WordsTopology.WORDS_TOPIC);
+    KafkaUtils.createTopic(WordsTopology.WORD_COUNT_TOPIC);
+    StreamsBuilder streams = new StreamsBuilder();
+    WordsTopology.createTopology(streams);
+    KafkaStreams kafkaStreams = new KafkaStreams(streams.build(), props);
+
+    kafkaStreams.start();
+
+    Runtime.getRuntime().addShutdownHook(new Thread(kafkaStreams::close)); // Runs on control-c
   }
 }
