@@ -14,29 +14,37 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class WordsTopologyTest {
   private TopologyTestDriver testDriver;
   private TestInputTopic<String, String> inputTopic;
+  private TestInputTopic<String, String> dictionaryTopic;
   private TestOutputTopic<String, Long> outputTopic;
 
   @BeforeEach
   final void before() {
     Properties props = new Properties();
-    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test");
+    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "test-" + UUID.randomUUID());
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
+    props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+    props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
     StreamsBuilder streams = new StreamsBuilder();
     WordsTopology.createTopology(streams);
     Topology topology = streams.build();
     System.out.println(topology.describe());
     testDriver = new TopologyTestDriver(topology, props);
     inputTopic = testDriver.createInputTopic(WordsTopology.WORDS_TOPIC, Serdes.String().serializer(), Serdes.String().serializer());
+    dictionaryTopic = testDriver.createInputTopic("dictionary", Serdes.String().serializer(), Serdes.String().serializer());
     outputTopic = testDriver.createOutputTopic(
         WordsTopology.WORD_COUNT_TOPIC,
         Serdes.String().deserializer(),
         Serdes.Long().deserializer());
+
+    dictionaryTopic.pipeInput("halo", "hell");
+    dictionaryTopic.pipeInput("halo", "hello");
   }
 
   @AfterEach
@@ -54,8 +62,14 @@ public class WordsTopologyTest {
     return List.of(
         new TestCase("hello").expect("hello", 1),
         new TestCase("Hello").expect("hello", 1),
-        new TestCase("Hello world").expect("hello", 1).expect("world", 1),
-        new TestCase("Hello World", "Hello").expect("hello", 1).expect("world", 1).expect("hello", 2)
+        new TestCase("Halo").expect("hello", 1),
+        new TestCase("Hello world")
+            .expect("hello", 1)
+            .expect("world", 1),
+        new TestCase("Hello World", "Hello")
+            .expect("hello", 1)
+            .expect("world", 1)
+            .expect("hello", 2)
     );
   }
 
@@ -67,8 +81,8 @@ public class WordsTopologyTest {
     TestCase(String... inputValues) {
       this.inputValues = Arrays.asList(inputValues);
     }
-    TestCase expect(String key, int count) {
-      expectedRecords.add(new KeyValue<>(key, (long)count));
+    TestCase expect(String key, int value) {
+      expectedRecords.add(new KeyValue<>(key, (long)value));
       return this;
     }
   }
@@ -81,7 +95,7 @@ public class WordsTopologyTest {
     }
     List<KeyValue<String, Long>> counts = outputTopic.readKeyValuesToList();
     assertThat(counts)
-        .containsExactlyElementsOf(testCase.expectedRecords());
+        .containsExactlyElementsOf(testCase.expectedRecords);
   }
 
   @Test
