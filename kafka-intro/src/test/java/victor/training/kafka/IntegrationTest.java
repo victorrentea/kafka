@@ -42,7 +42,7 @@ public abstract class IntegrationTest {
   }
 
   @AfterEach
-  final void cleanup() {
+  final void verifyNoMessageIsRemainsUnconsumed() {
     consumerLagAsserter.assertNoUnconsumedMessagesInListenerTopics();
   }
 

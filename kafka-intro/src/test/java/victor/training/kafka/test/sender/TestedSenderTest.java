@@ -1,6 +1,5 @@
 package victor.training.kafka.test.sender;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -15,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import victor.training.kafka.testutil.ReceivedKafkaRecord;
+import victor.training.kafka.testutil.SentKafkaRecord;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 
@@ -36,7 +35,7 @@ public class TestedSenderTest extends IntegrationTest {
   }
 
   @Test
-  void sends(@ReceivedKafkaRecord(TestedSender.OUT_TOPIC)
+  void sends(@SentKafkaRecord(TestedSender.OUT_TOPIC)
              CompletableFuture<ConsumerRecord<String, String>> future) throws Exception {
     testedSender.send(message);
     var record = future.get(10, TimeUnit.SECONDS);
@@ -48,7 +47,6 @@ public class TestedSenderTest extends IntegrationTest {
     var groupId = "test-" + UUID.randomUUID();
     try (var consumer = consumerFactory.createConsumer(groupId, null, null)) {
       consumer.subscribe(List.of(TestedSender.OUT_TOPIC));
-      // asigură asignarea
       consumer.poll(Duration.ofMillis(100));
 
       testedSender.send(message);

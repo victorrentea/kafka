@@ -26,8 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(ReceivedKafkaRecord.Extension.class)
-public @interface ReceivedKafkaRecord {
+@ExtendWith(SentKafkaRecord.Extension.class)
+public @interface SentKafkaRecord {
   /**
    * The topic to read the message from.
    * Aliased with {@link #topic()} to allow the concise syntax: {@code @ReceivedKafkaRecord("topic")}.
@@ -71,7 +71,7 @@ public @interface ReceivedKafkaRecord {
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-      boolean annotated = parameterContext.isAnnotated(ReceivedKafkaRecord.class);
+      boolean annotated = parameterContext.isAnnotated(SentKafkaRecord.class);
       if (!annotated) return false;
       var type = parameterContext.getParameter().getType();
       return CompletableFuture.class.isAssignableFrom(type);
@@ -80,7 +80,7 @@ public @interface ReceivedKafkaRecord {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext context) {
-      ReceivedKafkaRecord ann = parameterContext.findAnnotation(ReceivedKafkaRecord.class).orElseThrow();
+      SentKafkaRecord ann = parameterContext.findAnnotation(SentKafkaRecord.class).orElseThrow();
       String topic = Optional.ofNullable(ann.value()).filter(s -> !s.isBlank()).orElse(ann.topic());
 
       var appCtx = SpringExtension.getApplicationContext(context);
