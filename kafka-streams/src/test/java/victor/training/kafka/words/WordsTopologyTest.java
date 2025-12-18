@@ -30,7 +30,10 @@ public class WordsTopologyTest {
     System.out.println(topology.describe());
     testDriver = new TopologyTestDriver(topology, props);
     inputTopic = testDriver.createInputTopic(WordsTopology.WORDS_TOPIC, Serdes.String().serializer(), Serdes.String().serializer());
-    outputTopic = testDriver.createOutputTopic(WordsTopology.WORD_COUNT_TOPIC, Serdes.String().deserializer(), Serdes.Long().deserializer());
+    outputTopic = testDriver.createOutputTopic(
+        WordsTopology.WORD_COUNT_TOPIC,
+        Serdes.String().deserializer(),
+        Serdes.Long().deserializer());
   }
 
   @AfterEach
@@ -40,21 +43,23 @@ public class WordsTopologyTest {
 
   @Test
   void empty() {
-    List<KeyValue<String, Long>> strings = outputTopic.readKeyValuesToList();
-    assertThat(strings).isEmpty();
+    List<KeyValue<String, Long>> records = outputTopic.readKeyValuesToList();
+    assertThat(records).isEmpty();
   }
 
   @Test
   void oneWord() {
     inputTopic.pipeInput("key", "hello");
 
-    assertThat(outputTopic.readKeyValuesToMap())
+    var counts = outputTopic.readKeyValuesToMap();
+    assertThat(counts)
         .containsEntry("hello", 1L);
   }
 
   static List<TestCase> data() {
     return List.of(
         new TestCase(List.of("Hello"),List.of(new KeyValue<>("hello", 1L)))
+        // TODO ...
     );
   }
   record TestCase(List<String> inputValues, List<KeyValue<String, Long>> expectedRecords) {}
@@ -64,7 +69,8 @@ public class WordsTopologyTest {
     for (String value : testCase.inputValues) {
       inputTopic.pipeInput("key", value);
     }
-    assertThat(outputTopic.readKeyValuesToList())
+    List<KeyValue<String, Long>> counts = outputTopic.readKeyValuesToList();
+    assertThat(counts)
         .containsExactlyElementsOf(testCase.expectedRecords());
   }
 
@@ -72,7 +78,8 @@ public class WordsTopologyTest {
   void oneWordLower() {
     inputTopic.pipeInput("key", "Hello");
 
-    assertThat(outputTopic.readKeyValuesToMap())
+    var counts = outputTopic.readKeyValuesToMap();
+    assertThat(counts)
         .containsEntry("hello", 1L);
   }
 
@@ -80,7 +87,8 @@ public class WordsTopologyTest {
   void twoWords() {
     inputTopic.pipeInput("key", "Hello world");
 
-    assertThat(outputTopic.readKeyValuesToMap())
+    var counts = outputTopic.readKeyValuesToMap();
+    assertThat(counts)
         .containsEntry("hello", 1L)
         .containsEntry("world", 1L);
   }
@@ -90,7 +98,8 @@ public class WordsTopologyTest {
     inputTopic.pipeInput("key", "Hello World");
     inputTopic.pipeInput("key", "Hello");
 
-    assertThat(outputTopic.readKeyValuesToMap())
+    var counts = outputTopic.readKeyValuesToMap();
+    assertThat(counts)
         .containsEntry("hello", 2L)
         .containsEntry("world", 1L);
   }
