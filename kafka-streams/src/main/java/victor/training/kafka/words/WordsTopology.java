@@ -47,8 +47,6 @@ public class WordsTopology {
         // {,"a"}, {,"b"}, {,"C"}, {,"a"}
         .mapValues(v -> v.toLowerCase())
 
-//        .join
-
         // {,"a"}, {,"b"}, {,"c"}, {,"a"}
         .groupBy((k, v) -> v, Grouped.with(String(), String()))
 

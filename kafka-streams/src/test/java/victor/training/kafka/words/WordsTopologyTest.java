@@ -1,5 +1,6 @@
 package victor.training.kafka.words;
 
+import lombok.ToString;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.junit.jupiter.api.AfterEach;
@@ -9,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -49,16 +52,25 @@ public class WordsTopologyTest {
 
   static List<TestCase> data() {
     return List.of(
-        new TestCase(List.of("hello"), List.of(new KeyValue<>("hello", 1L))),
-        new TestCase(List.of("Hello"), List.of(new KeyValue<>("hello", 1L))),
-        new TestCase(List.of("Hello world"), List.of(new KeyValue<>("hello", 1L), new KeyValue<>("world", 1L))),
-        new TestCase(List.of("Hello World", "Hello"), List.of(new KeyValue<>("hello", 1L), new KeyValue<>("world", 1L), new KeyValue<>("hello", 2L)))
+        new TestCase("hello").expect("hello", 1),
+        new TestCase("Hello").expect("hello", 1),
+        new TestCase("Hello world").expect("hello", 1).expect("world", 1),
+        new TestCase("Hello World", "Hello").expect("hello", 1).expect("world", 1).expect("hello", 2)
     );
   }
-  record TestCase(List<String> inputValues, List<KeyValue<String, Long>> expectedRecords) {
-//    TestCase out(String key, String value) {
-//      ex
-//    }
+
+  @ToString
+  static final class TestCase {
+    final List<String> inputValues;
+    final List<KeyValue<String, Long>> expectedRecords = new ArrayList<>();
+
+    TestCase(String... inputValues) {
+      this.inputValues = Arrays.asList(inputValues);
+    }
+    TestCase expect(String key, int count) {
+      expectedRecords.add(new KeyValue<>(key, (long)count));
+      return this;
+    }
   }
 
   @ParameterizedTest
