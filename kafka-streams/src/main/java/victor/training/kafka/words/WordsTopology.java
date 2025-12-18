@@ -46,6 +46,9 @@ public class WordsTopology {
         .flatMapValues(phrase -> List.of(phrase.split("\\s+"))) // Kafka e mai rapid daca NU schimbi cheia
         // {,"a"}, {,"b"}, {,"C"}, {,"a"}
         .mapValues(v -> v.toLowerCase())
+
+//        .join
+
         // {,"a"}, {,"b"}, {,"c"}, {,"a"}
         .groupBy((k, v) -> v, Grouped.with(String(), String()))
 

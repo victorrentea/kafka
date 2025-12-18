@@ -47,22 +47,20 @@ public class WordsTopologyTest {
     assertThat(records).isEmpty();
   }
 
-  @Test
-  void oneWord() {
-    inputTopic.pipeInput("key", "hello");
-
-    var counts = outputTopic.readKeyValuesToMap();
-    assertThat(counts)
-        .containsEntry("hello", 1L);
-  }
-
   static List<TestCase> data() {
     return List.of(
-        new TestCase(List.of("Hello"),List.of(new KeyValue<>("hello", 1L)))
-        // TODO ...
+        new TestCase(List.of("hello"), List.of(new KeyValue<>("hello", 1L))),
+        new TestCase(List.of("Hello"), List.of(new KeyValue<>("hello", 1L))),
+        new TestCase(List.of("Hello world"), List.of(new KeyValue<>("hello", 1L), new KeyValue<>("world", 1L))),
+        new TestCase(List.of("Hello World", "Hello"), List.of(new KeyValue<>("hello", 1L), new KeyValue<>("world", 1L), new KeyValue<>("hello", 2L)))
     );
   }
-  record TestCase(List<String> inputValues, List<KeyValue<String, Long>> expectedRecords) {}
+  record TestCase(List<String> inputValues, List<KeyValue<String, Long>> expectedRecords) {
+//    TestCase out(String key, String value) {
+//      ex
+//    }
+  }
+
   @ParameterizedTest
   @MethodSource("data")
   void genericTest(TestCase testCase) {
@@ -72,36 +70,6 @@ public class WordsTopologyTest {
     List<KeyValue<String, Long>> counts = outputTopic.readKeyValuesToList();
     assertThat(counts)
         .containsExactlyElementsOf(testCase.expectedRecords());
-  }
-
-  @Test
-  void oneWordLower() {
-    inputTopic.pipeInput("key", "Hello");
-
-    var counts = outputTopic.readKeyValuesToMap();
-    assertThat(counts)
-        .containsEntry("hello", 1L);
-  }
-
-  @Test
-  void twoWords() {
-    inputTopic.pipeInput("key", "Hello world");
-
-    var counts = outputTopic.readKeyValuesToMap();
-    assertThat(counts)
-        .containsEntry("hello", 1L)
-        .containsEntry("world", 1L);
-  }
-
-  @Test
-  void twoMessages() {
-    inputTopic.pipeInput("key", "Hello World");
-    inputTopic.pipeInput("key", "Hello");
-
-    var counts = outputTopic.readKeyValuesToMap();
-    assertThat(counts)
-        .containsEntry("hello", 2L)
-        .containsEntry("world", 1L);
   }
 
   @Test
