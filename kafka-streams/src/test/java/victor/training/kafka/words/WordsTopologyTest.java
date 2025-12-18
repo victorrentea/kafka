@@ -2,10 +2,7 @@ package victor.training.kafka.words;
 
 import lombok.ToString;
 import org.apache.kafka.streams.*;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -19,6 +16,7 @@ import static org.apache.kafka.common.serialization.Serdes.Long;
 import static org.apache.kafka.common.serialization.Serdes.String;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class WordsTopologyTest {
   private TopologyTestDriver driver;
   private TestInputTopic<String, String> inputTopic;
@@ -40,9 +38,9 @@ public class WordsTopologyTest {
     inputTopic = driver.createInputTopic(WordsTopology.WORDS_TOPIC, String().serializer(), String().serializer());
     outputTopic = driver.createOutputTopic(WordsTopology.WORD_COUNT_TOPIC, String().deserializer(), Long().deserializer());
 
-    dictionaryTopic = driver.createInputTopic("dictionary", String().serializer(), String().serializer());
-    dictionaryTopic.pipeInput("halo", "hell");
-    dictionaryTopic.pipeInput("halo", "hello");
+//    dictionaryTopic = driver.createInputTopic("dictionary", String().serializer(), String().serializer());
+//    dictionaryTopic.pipeInput("halo", "hell");
+//    dictionaryTopic.pipeInput("halo", "hello");
   }
 
   @AfterEach
@@ -51,12 +49,12 @@ public class WordsTopologyTest {
   }
 
   @Test
-  void empty() {
+  void t1_empty() {
     // no input =>
     assertThat(outputTopic.readKeyValuesToList()).isEmpty();
   }
   @Test
-  void one_word() {
+  void t2_one_word() {
     inputTopic.pipeInput("key", "word");
 
     assertThat(outputTopic.readKeyValuesToList()).containsExactly(new KeyValue<>("word", 1L));
@@ -93,7 +91,7 @@ public class WordsTopologyTest {
 
   @ParameterizedTest
   @MethodSource("data")
-  void genericTest(TestCase testCase) {
+  void t3_genericTest(TestCase testCase) {
     for (String value : testCase.inputValues) {
       inputTopic.pipeInput("key", value);
     }

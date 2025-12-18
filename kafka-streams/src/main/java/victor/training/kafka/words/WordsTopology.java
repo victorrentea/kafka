@@ -39,36 +39,12 @@ public class WordsTopology {
   // http://localhost:8080/words
   // http://localhost:8080/words?m=Two%20Words
   public static void createTopology(StreamsBuilder streamsBuilder) {
-    // Dictionary as a KTable: key = original/variant word (lowercased), value = canonical form
-    KTable<String, String> dictionary = streamsBuilder.table(
-        DICTIONARY_TOPIC,
-        Consumed.with(String(), String())
-    );
-
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        // {,"a"}, {,"b C"}, {,"a"}
-        .flatMapValues(phrase -> List.of(phrase.split("\\s+"))) // Kafka e mai rapid daca NU schimbi cheia
-        // {,"a"}, {,"b"}, {,"C"}, {,"a"}
-        .mapValues(v -> v.toLowerCase())
-        // left-join with dictionary to translate variants into canonical form
-        // we need the key to match the KTable key for the join
-        .selectKey((k, v) -> v)
-        .leftJoin(dictionary, (word, canonical) -> canonical != null ? canonical : word)
-
-        // group by the (possibly canonical) word value
-        .groupBy((k, v) -> v, Grouped.with(String(), String()))
-
-        // Count occurrences per word into a KTable<String, Long>
-        .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
-            .withKeySerde(String())
-            .withValueSerde(Long()))
-
-        .toStream()
-        // emits only if KTable changed
-
-        // {"a",1}, {"b",1},{"c",1}, {"a",2}
+        // ?->a, ?->b
+        .map((k,v)->new KeyValue<>(v,1L))
         .peek((k, v) -> log.info("Got " + k + ": " + v))
         .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
+        // a->1, b->1
 
     System.out.println(streamsBuilder.build().describe());
   }
