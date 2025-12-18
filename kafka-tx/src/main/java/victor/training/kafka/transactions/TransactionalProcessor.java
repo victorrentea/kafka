@@ -26,21 +26,14 @@ public class TransactionalProcessor {
 
   @KafkaListener(topics = IN, containerFactory = "transactedKafkaListenerContainerFactory")
   @Transactional(transactionManager = "kafkaTransactionManager")
-  public void consume(String message) {
+  public void atomicConsumeAndSendN(String message) {
     log.info("START: " + message);
-
     if(message.equals("fail-at-step-1")) throw new IllegalArgumentException("1");
-
     kafkaTemplate.send(OUT_A, "A1"); // A
-
     if(message.equals("fail-at-step-2")) throw new IllegalArgumentException("2");
-
     kafkaTemplate.send(OUT_A, "A2"); // 2 x A
-
     if(message.equals("fail-at-step-3")) throw new IllegalArgumentException("3");
-
     kafkaTemplate.send(OUT_B, "B"); // 2 x A + B
-
     if(message.equals("fail-at-step-4")) throw new IllegalArgumentException("4");
   }
 

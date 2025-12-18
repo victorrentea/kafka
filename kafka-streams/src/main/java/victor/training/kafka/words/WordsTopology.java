@@ -35,9 +35,6 @@ public class WordsTopology {
   public static final String WORD_COUNT_TABLE = "word-count-table";
   public static final String DICTIONARY_TOPIC = "dictionary"; // word -> canonical form
 
-  // to test from browser:
-  // http://localhost:8080/words
-  // http://localhost:8080/words?m=Two%20Words
   public static void createTopology(StreamsBuilder streamsBuilder) {
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
         // ?->a, ?->b
@@ -48,6 +45,13 @@ public class WordsTopology {
 
     System.out.println(streamsBuilder.build().describe());
   }
+
+
+
+
+
+
+
 
   // ---- below, support code ----
   @Autowired
