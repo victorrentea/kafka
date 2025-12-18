@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.With;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,47 +31,44 @@ import static org.apache.kafka.common.serialization.Serdes.String;
 @RestController
 @RequiredArgsConstructor
 public class WordsTopology {
-  public static final String WORDS_TOPIC = "words"; // <- "a", "b", "a"
-  public static final String WORD_COUNT_TOPIC = "word-count"; // ->...
-  public static final String WORD_COUNT_TABLE = "word-count-table";
-  public static final String DICTIONARY_TOPIC = "dictionary"; // word -> canonical form
+  public static final String WORDS_TOPIC = "words"; // -><word>
+  public static final String WORD_COUNT_TOPIC = "word-count"; // <word>-><occurences>
+  public static final String WORD_COUNT_TABLE = "word-count-table"; // state store name
+  public static final String DICTIONARY_TOPIC = "dictionary"; // <word0>-><word1>
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
-    KTable<String, String> dictTable =
+    KTable<String, String> dictionaryTable =
         streamsBuilder.table(DICTIONARY_TOPIC, Consumed.with(String(), String()));
     // ă->a
 
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
         // ?->ă c, ?->A
-        .flatMapValues(v-> Arrays.stream(v.split(" ")).toList())
+        .flatMapValues(v-> Arrays.stream(v.split("\\s+")).toList())
         // ?->ă, ?->c, ?->a
         .mapValues(v->v.toLowerCase())
         // ?->ă, ?->c, ?->a
         .selectKey((k,v)->v)
         // ă->ă, c->c, a->a
-        .leftJoin(dictTable /*by key*/, (streamValue, dictValue) ->
+        // KTable stores only the last value for any received key
+        .leftJoin(dictionaryTable /*by key*/, (streamValue, dictValue) ->
             dictValue!=null?dictValue:streamValue)
         // ă->a, c->c, a->a
 
         .groupBy((k, v) -> v, Grouped.with(String(), String()))
-
-//        .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE) // QUERY+UPDATE ~SQL
-//            .withKeySerde(String())
-//            .withValueSerde(Long()))
         .aggregate(() -> new Agg(0L, 0),
-            (key, value, aggregate) -> aggregate
-                .withTotal(aggregate.total+1)
-                .withTotalChars(aggregate.totalChars() + value.length()),
-            Named.as(WORD_COUNT_TABLE),
-            Materialized.with(String(), new JsonSerde<>(Agg.class)))
-
-        // KTable retine per key doar ultima valoare primita
+            (key, value, agg) -> agg
+                .withTotal(agg.total+1)
+                .withTotalChars(agg.totalChars() + value.length()),
+//          Materialized.with(String(),new JsonSerde<>(Agg.class))) // anonymous KTable
+            Materialized.<String, Agg, KeyValueStore<Bytes,byte[]>>as(WORD_COUNT_TABLE) // named KTable for debugging
+                .withKeySerde(String())
+                .withValueSerde(new JsonSerde<>(Agg.class)))
+        // KTable.toStream emits only on value change
         .toStream()
         .mapValues(agg->agg.total)
-        // .. emite mai departe event doar la MODIFICARI
 
         // a->1, c->1, a->2
-        .peek((k, v) -> log.info("Got " + k + ": " + v))
+        .peek((k, v) -> log.info("🟢 Output " + k + "->" + v))
         .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
 
     System.out.println(streamsBuilder.build().describe());
@@ -78,13 +77,13 @@ public class WordsTopology {
   @With
   record Agg(Long total, int totalChars) {}
 
-  // ---- below, support code ----
+  // ---- support code ----
   @Autowired
   void configureTopology(StreamsBuilder streamsBuilder) {
     log.info("Creating topology");
     KafkaUtils.createTopic(WORDS_TOPIC);
     KafkaUtils.createTopic(WORD_COUNT_TOPIC);
-//    KafkaUtils.createTopic(DICTIONARY_TOPIC);
+    KafkaUtils.createTopic(DICTIONARY_TOPIC);
     createTopology(streamsBuilder);
     log.info("Created topology");
   }
@@ -93,12 +92,12 @@ public class WordsTopology {
   @GetMapping("words/count")
   public Map<String, Long> getWordCounts(@RequestParam(required = false) String word) {
     KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
-    ReadOnlyKeyValueStore<String, Long> kTable = kafkaStreams.store(
+    ReadOnlyKeyValueStore<String, Agg> kTable = kafkaStreams.store(
         StoreQueryParameters.fromNameAndType(WORD_COUNT_TABLE,
             QueryableStoreTypes.keyValueStore())
     );
     if (word != null) {
-      Long count = kTable.get(word);
+      Long count = kTable.get(word).total;
       if (count == null) {
         return Map.of();
       } else {
@@ -107,7 +106,7 @@ public class WordsTopology {
     } else {
       try (var it = kTable.all()) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false)
-            .collect(toMap(kv -> kv.key, kv -> kv.value));
+            .collect(toMap(kv -> kv.key, kv -> kv.value.total));
       }
     }
   }
@@ -119,7 +118,7 @@ public class WordsTopology {
     Map<String, Object> configOverrides = Map.of(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
     KafkaTemplate<String, String> kafkaTemplate2 = new KafkaTemplate<>(producerFactory, configOverrides);
     kafkaTemplate2.send(WORDS_TOPIC, m);
-    return "✅";
+    return "✅ sent. see <a href='http://localhost:8080/words/count'>counts</a>";
   }
 
   // also runnable standalone
