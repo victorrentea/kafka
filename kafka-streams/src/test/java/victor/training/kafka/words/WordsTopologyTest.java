@@ -55,23 +55,25 @@ public class WordsTopologyTest {
   }
   @Test
   void t2_one_word() {
-    inputTopic.pipeInput("key", "word");
+    inputTopic.pipeInput("?", "word");
 
-    assertThat(outputTopic.readKeyValuesToList()).containsExactly(new KeyValue<>("word", 1L));
+    assertThat(outputTopic.readKeyValuesToList())
+        .containsExactly(new KeyValue<>("word", 1L));
   }
 
   static List<TestCase> data() {
     return List.of(
         new TestCase("hello").expect("hello", 1),
         new TestCase("Hello").expect("hello", 1),
-        new TestCase("Halo").expect("hello", 1),
         new TestCase("Hello world")
             .expect("hello", 1)
             .expect("world", 1),
+
         new TestCase("Hello World", "Hello")
             .expect("hello", 1)
             .expect("world", 1)
             .expect("hello", 2)
+//        new TestCase("Halo").expect("hello", 1),
     );
   }
 

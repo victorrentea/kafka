@@ -37,11 +37,23 @@ public class WordsTopology {
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        // ?->a, ?->b
-        .map((k,v)->new KeyValue<>(v,1L))
+        // ?->a c, ?->A
+        .flatMapValues(v-> Arrays.stream(v.split(" ")).toList())
+        // ?->a, ?->c, ?->a
+        .mapValues(v->v.toLowerCase())
+        // ?->a, ?->c, ?->a
+        .groupBy((k, v) -> v, Grouped.with(String(), String()))
+
+        .count(Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE) // QUERY+UPDATE ~SQL
+            .withKeySerde(String())
+            .withValueSerde(Long()))
+        // KTable retine per key doar ultima valoare primita
+        .toStream()
+        // .. emite mai departe event doar la MODIFICARI
+
+        // a->1, c->1, a->2
         .peek((k, v) -> log.info("Got " + k + ": " + v))
         .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
-        // a->1, b->1
 
     System.out.println(streamsBuilder.build().describe());
   }
