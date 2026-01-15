@@ -5,7 +5,10 @@ import lombok.With;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StoreQueryParameters;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import victor.training.kafka.KafkaUtils;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
@@ -39,43 +43,57 @@ public class WordsTopology {
   public static void createTopology(StreamsBuilder streamsBuilder) {
     KTable<String, String> dictionaryTable =
         streamsBuilder.table(DICTIONARY_TOPIC, Consumed.with(String(), String()));
-    // ă->a
+    // ă->a  stored in the KTable
 
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
         // ?->ă c, ?->A
-        .flatMapValues(v-> Arrays.stream(v.split("\\s+")).toList())
+        // TODO split messages into words
+        .flatMapValues(v -> Arrays.stream(v.split("\\s+")).toList())
         // ?->ă, ?->c, ?->a
-        .mapValues(v->v.toLowerCase())
+
+        // TODO lowercase
+        .mapValues(v -> v.toLowerCase())
         // ?->ă, ?->c, ?->a
-        .selectKey((k,v)->v)
+
+        // TODO (last) normalize via dictionary
+        .selectKey((k, v) -> v)
         // ă->ă, c->c, a->a
         // KTable stores only the last value for any received key
-        .leftJoin(dictionaryTable /*by key*/, (streamValue, dictValue) ->
-            dictValue!=null?dictValue:streamValue)
+        .leftJoin(/*by key with */ dictionaryTable, (streamValue, dictValue) ->
+            dictValue != null ? dictValue : streamValue)
         // ă->a, c->c, a->a
 
-        .groupBy((k, v) -> v, Grouped.with(String(), String()))
-        .aggregate(() -> new Agg(0L, 0),
+        // TODO count occurrences
+        .groupBy((k, v) -> v)
+        // TODO 1 .count
+        // TODO 2 .aggregate (generic)
+        .aggregate(() -> new Agg(0L, null),
             (key, value, agg) -> agg
-                .withTotal(agg.total+1)
-                .withTotalChars(agg.totalChars() + value.length()),
-//          Materialized.with(String(),new JsonSerde<>(Agg.class))) // anonymous KTable
-            Materialized.<String, Agg, KeyValueStore<Bytes,byte[]>>as(WORD_COUNT_TABLE) // named KTable for debugging
+                .withTotal(agg.total + 1)
+                .withTimeReceived(LocalDateTime.now()),
+            // a) anonymous KTable
+            // Materialized.with(String(),new JsonSerde<>(Agg.class)))
+
+            // TODO b) via a KTable named WORD_COUNT_TABLE for later access as read store
+            Materialized.<String, Agg, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
                 .withKeySerde(String())
                 .withValueSerde(new JsonSerde<>(Agg.class)))
-        // KTable.toStream emits only on value change
+        // KTable.toStream emits only on value change for a key
         .toStream()
-        .mapValues(agg->agg.total)
 
+        // extract interesting data from aggregate
+        .mapValues(agg -> agg.total)
         // a->1, c->1, a->2
-        .peek((k, v) -> log.info("🟢 Output " + k + "->" + v))
+
+        .peek((k, v) -> log.info("🟢 Output: {}->{}", k, v))
         .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
 
     System.out.println(streamsBuilder.build().describe());
   }
 
   @With
-  record Agg(Long total, int totalChars) {}
+  record Agg(Long total, LocalDateTime timeReceived) {
+  }
 
   // ---- support code ----
   @Autowired
@@ -89,6 +107,7 @@ public class WordsTopology {
   }
 
   private final StreamsBuilderFactoryBean factoryBean;
+
   @GetMapping("words/count")
   public Map<String, Long> getWordCounts(@RequestParam(required = false) String word) {
     KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
@@ -112,6 +131,7 @@ public class WordsTopology {
   }
 
   private final ProducerFactory<String, String> producerFactory;
+
   @GetMapping("words/send") // http://localhost:8080/words
   public String send(@RequestParam(defaultValue = "Hello\t world") String m) {
     // the value serializer is special for this topic
