@@ -42,34 +42,7 @@ public class WordsTopology {
     // ă->a
 
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        // ?->ă c, ?->A
-        .flatMapValues(v-> Arrays.stream(v.split("\\s+")).toList())
-        // ?->ă, ?->c, ?->a
-        .mapValues(v->v.toLowerCase())
-        // ?->ă, ?->c, ?->a
-        .selectKey((k,v)->v)
-        // ă->ă, c->c, a->a
-        // KTable stores only the last value for any received key
-        .leftJoin(dictionaryTable /*by key*/, (streamValue, dictValue) ->
-            dictValue!=null?dictValue:streamValue)
-        // ă->a, c->c, a->a
-
-        .groupBy((k, v) -> v, Grouped.with(String(), String()))
-        .aggregate(() -> new Agg(0L, 0),
-            (key, value, agg) -> agg
-                .withTotal(agg.total+1)
-                .withTotalChars(agg.totalChars() + value.length()),
-//          Materialized.with(String(),new JsonSerde<>(Agg.class))) // anonymous KTable
-            Materialized.<String, Agg, KeyValueStore<Bytes,byte[]>>as(WORD_COUNT_TABLE) // named KTable for debugging
-                .withKeySerde(String())
-                .withValueSerde(new JsonSerde<>(Agg.class)))
-        // KTable.toStream emits only on value change
-        .toStream()
-        .mapValues(agg->agg.total)
-
-        // a->1, c->1, a->2
-        .peek((k, v) -> log.info("🟢 Output " + k + "->" + v))
-        .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
+        ;
 
     System.out.println(streamsBuilder.build().describe());
   }
