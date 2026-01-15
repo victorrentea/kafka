@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OutboxRepo extends JpaRepository<Outbox, Long> {
-  String NO_WAIT = "-2";// = just SKIP LOCKED rows
-  @Lock(LockModeType.PESSIMISTIC_WRITE) // select ... FOR UPDATE vs racing instances
-  @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = NO_WAIT))
+  String SKIP_LOCKED_ROWS = "-2"; // i.e. don't wait
+  @Lock(LockModeType.PESSIMISTIC_WRITE) // SELECT ... FOR UPDATE vs racing instances
+  @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = SKIP_LOCKED_ROWS))
   @Query("""
       select outbox from Outbox outbox
       where outbox.status = 'PENDING'

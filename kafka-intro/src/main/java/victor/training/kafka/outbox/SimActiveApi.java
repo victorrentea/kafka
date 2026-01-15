@@ -21,6 +21,6 @@ public class SimActiveApi {
   public void setActive(@PathVariable Long id, @RequestBody Boolean active) throws InterruptedException {
     var sim = simRepo.findById(id).orElseThrow();
     sim.active(active);
-    sender.send("Event");
+    sender.send("Event"); // FIXME: make robust (at-least-once)
   }
 }

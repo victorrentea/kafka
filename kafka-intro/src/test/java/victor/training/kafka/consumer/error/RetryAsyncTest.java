@@ -55,7 +55,7 @@ public class RetryAsyncTest extends BaseErrorInConsumerTest {
           throw new RuntimeException("Boom");
         }
       } catch (Exception e) {
-        log.info("Freezing consumer thread on error for event {}", event);
+        log.info("Stopping consumer thread for event {} due to", event);
         ack.nack(Duration.ofSeconds(1));
       }
       log.info("Exit consumer");

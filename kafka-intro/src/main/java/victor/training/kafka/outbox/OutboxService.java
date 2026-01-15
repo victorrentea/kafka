@@ -22,22 +22,13 @@ public class OutboxService {
   private final Sender sender;
   private final InTransaction inTransaction;
 
-  @Service
-  @RequiredArgsConstructor
-  private static class InTransaction {
-    private final OutboxRepo outboxRepo;
-    @Transactional
-    List<Outbox> selectPendingAndMarkRunning() {
-      List<Outbox> pendingList = outboxRepo.findAllPendingAndLockThem();
-      for (Outbox outbox : pendingList) {
-        outbox.status(RUNNING);
-        outbox.runningSince(now());
-      }
-      return pendingList;
-    } // JPA auto-UPDATEs dirty @Entity at @Transaction end
+  // potentially wrapped in caller @Transactional with other changes
+  void addToOutbox(String messageToSend) {
+    outboxRepo.save(new Outbox().messageToSend(messageToSend));
   }
 
-  @Scheduled(fixedRate = 500)
+//  @SchedulerLock// shedlock prevents racing schedulers in multiple app instances via some shared DB lock
+  @Scheduled(fixedRate = 500) // 🤔 adds up to 500 ms latency to sending the message
   void sendFromOutbox() {
     var toSend = inTransaction.selectPendingAndMarkRunning();
     for (Outbox outbox : toSend) {
@@ -45,21 +36,33 @@ public class OutboxService {
       try {
         sender.send(outbox.messageToSend());
         outboxRepo.delete(outbox);
-        log.debug("OK");
+        log.debug("Sent");
       } catch (Exception e) {
         log.error("Failed to send", e);
       }
     }
   }
-  @Scheduled(fixedRate = 60000)
-  void resetToPending() {
-    log.info("Reset PENDING for too long");
-    var cutoff = now().minus(ofMinutes(5));
-    outboxRepo.resetRunningForMoreThan(cutoff);
+
+  @Service
+  @RequiredArgsConstructor
+  // prevents race conditions when multiple instances of your app are running
+  private static class InTransaction {
+    private final OutboxRepo outboxRepo;
+    @Transactional
+    List<Outbox> selectPendingAndMarkRunning() {
+      List<Outbox> pendingList = outboxRepo.findAllPendingAndLockThem(); // for the duration of this tx
+      for (Outbox outbox : pendingList) {
+        outbox.status(RUNNING);
+        outbox.runningSince(now()); // to track hung messages
+      }
+      return pendingList;
+    } // JPA auto-UPDATEs dirty @Entity at @Transaction end
   }
 
-  // potentially wrapped in caller @Transactional with other changes
-  void addToOutbox(String messageToSend) {
-    outboxRepo.save(new Outbox().messageToSend(messageToSend));
+  @Scheduled(fixedRate = 60000)
+  void resetToPending() {
+    log.info("Reset RUNNING messages for too long back to PENDING > reprocess them");
+    var cutoff = now().minus(ofMinutes(5));
+    outboxRepo.resetRunningForMoreThan(cutoff);
   }
 }

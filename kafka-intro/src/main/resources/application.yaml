@@ -35,10 +35,10 @@ spring:
       value-deserializer: victor.training.kafka.intro.Event$Deserializer
     listener: #spring-kafka
       concurrency: 2 # number of threads = consumer instances per topic on this machine
-#      ack-mode: batch # = after all messages (default)
+#      ack-mode: batch # = after all messages (default) 😱risky: on consumer crash during a batch, you are redelivered all messages in that batch
 #      ack-mode: record # = after each => less dups on restart vs but throughput loss
 
-#      ack-mode: time # or count, time_count = every N or Time
+#      ack-mode: time # or count, time_count: poll a batch of 500 but ack after every 10 and/or 2 seconds
 #      ack-time: 3s
 #      ack-count: 3s
 
