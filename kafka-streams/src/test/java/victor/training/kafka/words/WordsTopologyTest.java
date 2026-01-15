@@ -1,11 +1,13 @@
 package victor.training.kafka.words;
 
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import victor.training.kafka.words.WordsTopology.Agg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +20,7 @@ import static org.apache.kafka.common.serialization.Serdes.String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static victor.training.kafka.words.WordsTopology.WORD_COUNT_TABLE;
 
+@Slf4j
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class WordsTopologyTest {
   private TopologyTestDriver driver;
@@ -65,20 +68,23 @@ public class WordsTopologyTest {
 
   static List<TestCase> data() {
     return List.of(
-        new TestCase("hello").expect("hello", 1),
+        new TestCase("hello")
+            .expectedOutput("hello", 1),
 
-        new TestCase("Hello").expect("hello", 1),
+        new TestCase("Hello")
+            .expectedOutput("hello", 1),
 
         new TestCase("Hello world")
-            .expect("hello", 1)
-            .expect("world", 1),
+            .expectedOutput("hello", 1)
+            .expectedOutput("world", 1),
 
         new TestCase("Hello World", "Hello")
-            .expect("hello", 1)
-            .expect("world", 1)
-            .expect("hello", 2),
+            .expectedOutput("hello", 1)
+            .expectedOutput("world", 1)
+            .expectedOutput("hello", 2),
 
-        new TestCase("Halo").expect("hello", 1)
+        new TestCase("Halo")
+            .expectedOutput("hello", 1)
     );
   }
 
@@ -90,7 +96,7 @@ public class WordsTopologyTest {
     TestCase(String... inputValues) {
       this.inputValues = Arrays.asList(inputValues);
     }
-    TestCase expect(String key, int value) {
+    TestCase expectedOutput(String key, int value) {
       expectedRecords.add(new KeyValue<>(key, (long)value));
       return this;
     }
@@ -108,13 +114,12 @@ public class WordsTopologyTest {
   }
 
   @Test
-  @Disabled("only for the strong of heart")
-  void realMessages() {
+  void getLatestFromReadProjection() {
     inputTopic.pipeInput("key", "Hello World");
     inputTopic.pipeInput("key", "Hello");
 
-    assertThat(outputTopic.readKeyValuesToList()).containsExactly(
-        // TODO observe and explain the actual value
-    );
+    KeyValueStore<String, Agg> keyValueStore = driver.getKeyValueStore(WORD_COUNT_TABLE);
+    assertThat(keyValueStore.get("hello").total()).isEqualTo(2);
+    assertThat(keyValueStore.get("world").total()).isEqualTo(1);
   }
 }

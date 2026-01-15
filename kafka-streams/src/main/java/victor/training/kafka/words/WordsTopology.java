@@ -6,7 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.*;
-import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
@@ -42,13 +45,60 @@ public class WordsTopology {
     // ă->a
 
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        ;
+        // ?->ă ?->B a
+        .mapValues(s -> s.toLowerCase())
+        // ?->ă ?->⭐️b a
+        .flatMapValues(s -> Arrays.asList(s.split("\\s"))) // split message
+        // ?->ă ?->b ?->a⭐️
+
+        .map((k,v)->new KeyValue<>(v,v))
+        // ⭐️ă->ă ⭐️b->b ⭐️a->a
+        // JOIN with latest data from another source
+        .leftJoin(dictionaryTable, (streamValue, tableValue) -> tableValue != null ? tableValue : streamValue)
+        // ă->a⭐️ b->b a->a
+
+        .groupBy((k,v)->v)
+        // split the events in "logical stream" by what you selected that are then aggregated within that group
+
+//        .count(Materialized.<String, Long, KeyValueStore<Bytes,byte[]>>as(WORD_COUNT_TABLE)
+//                .withKeySerde(String())
+//                .withValueSerde(Long()))
+        // you might need a sum, max, average,
+//        new MyAggVal(sum, max, distinct)
+        .aggregate(() -> new Agg(0L, 0L),
+            (key, value, old) -> new Agg(old.total + 1, old.lengthSum+key.length()),
+            Materialized.<String, Agg, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
+                .withKeySerde(String())
+                .withValueSerde(new JsonSerde<>(Agg.class)))
+
+//        .aggregate(() -> 0L, (key, value, old) -> old + 1,
+//            Materialized.<String, Long, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
+//                .withKeySerde(String())
+//                .withValueSerde(Long()))
+        // KTable is a storage in Kafka ~ compact topic, but that promises to only store latest value for any key
+        .toStream()
+        .mapValues(agg->agg.total)
+        // will emit an event in the "KStream of changes" any time there's a change in the KTable
+        // a->1 b->1 a->2
+
+        .peek(((key, value) -> log.info("Output={}->{}", key, value)))
+        .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()))
+    ;
+
+    // KStream 1->a 1->b 2->c
+    // KStream -> KTable
+    // KStream
+//    streamsBuilder.stream("topic-a") // r1 r2 r3
+//            .toTable() // saved as they arrive, overwritting if matching key
+//        .toStream(); // you get the unique changes
+    // read project (ktable).get(key)
+
 
     System.out.println(streamsBuilder.build().describe());
   }
 
-  @With
-  record Agg(Long total, int totalChars) {}
+  record Agg(Long total, Long lengthSum) {}
+
 
   // ---- support code ----
   @Autowired
@@ -62,6 +112,7 @@ public class WordsTopology {
   }
 
   private final StreamsBuilderFactoryBean factoryBean;
+
   @GetMapping("words/count")
   public Map<String, Long> getWordCounts(@RequestParam(required = false) String word) {
     KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
@@ -70,7 +121,7 @@ public class WordsTopology {
             QueryableStoreTypes.keyValueStore())
     );
     if (word != null) {
-      Long count = kTable.get(word).total;
+      Long count = kTable.get(word).total; // ~ read projection
       if (count == null) {
         return Map.of();
       } else {
@@ -85,6 +136,7 @@ public class WordsTopology {
   }
 
   private final ProducerFactory<String, String> producerFactory;
+
   @GetMapping("words/send") // http://localhost:8080/words
   public String send(@RequestParam(defaultValue = "Hello\t world") String m) {
     // the value serializer is special for this topic

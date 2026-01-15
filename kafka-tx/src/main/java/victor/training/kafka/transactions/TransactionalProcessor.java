@@ -25,7 +25,7 @@ public class TransactionalProcessor {
   private final KafkaTemplate<?, String> kafkaTemplate;
 
   @KafkaListener(topics = IN_TOPIC, containerFactory = "transactedKafkaListenerContainerFactory")
-  @Transactional(transactionManager = "kafkaTransactionManager")
+    @Transactional(transactionManager = "kafkaTransactionManager")
   public void atomicConsumeAndSendN(String message) {
     log.info("START consuming: {}", message);
     if(message.equals("fail-at-step-1")) throw new IllegalArgumentException("1");
