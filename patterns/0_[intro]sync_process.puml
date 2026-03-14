@@ -3,7 +3,7 @@ hide footbox
 participant Broker
 Consumer->Broker: M = poll()
 Consumer++
-Consumer->Worker.Thread++: process(M)
+Consumer->Consumer++: process(M)
+Consumer--
 Broker<-Consumer--: Ack(M)
-hnote over Worker.Thread: long\nwork
 @enduml
