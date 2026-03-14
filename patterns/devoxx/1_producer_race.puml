@@ -8,7 +8,8 @@ participant P2
 
 Client->P1: <font color=green>Request1
 activate P1 #lightgreen
-P1->Network: call (<font color=red>20,000ms</font>)
+P1->Network: call
+'(<font color=red>20,000ms</font>)
 activate Network #lightgreen
 '<- place here
 P1<--Network--
