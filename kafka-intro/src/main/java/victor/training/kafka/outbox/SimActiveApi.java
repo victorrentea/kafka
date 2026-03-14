@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import victor.training.kafka.sim.SimRepo;
 
+import java.util.UUID;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -21,6 +23,6 @@ public class SimActiveApi {
   public void setActive(@PathVariable Long id, @RequestBody Boolean active) throws InterruptedException {
     var sim = simRepo.findById(id).orElseThrow();
     sim.active(active);
-    sender.send("Event"); // FIXME: make robust (at-least-once)
+    sender.send("Event", UUID.randomUUID()); // FIXME: make robust (at-least-once)
   }
 }

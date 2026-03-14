@@ -1,0 +1,24 @@
+@startuml
+== intended ==
+UI -> SK++: POST command
+SK -> A++: POST command
+A->A.bkg.thread++: POST background work
+A -->SK: 202 Accepted
+A--
+SK -> cmd.topic: E1
+SK--
+A.bkg.thread->cmd.topic: E2
+A.bkg.thread--
+
+== faulty ==
+UI -> SK++: POST command
+SK -> A++: POST command
+A->A.bkg.thread++: POST background work
+A.bkg.thread->cmd.topic: E2
+A-->A.bkg.thread: block for
+A.bkg.thread--
+A -->SK: 202 Accepted <font color=red>but \nactually DONE sync
+A--
+SK -> cmd.topic: E1
+SK--
+@enduml

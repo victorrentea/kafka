@@ -3,7 +3,9 @@ package victor.training.kafka.ooo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,7 +21,7 @@ public class OutOfOrder {
   public int pairs = 0;
 
   // after 2 attempts 1 sec delayed spring-kafka sends message to xxx-dlt
-//  @RetryableTopic(attempts = "3", backoff = @Backoff(delay = 1000))
+  @RetryableTopic(attempts = "3", backoff = @Backoff(delay = 1000))
 
   @KafkaListener(topics = TOPIC, concurrency = "1")
   public void handle(String message) throws InterruptedException {

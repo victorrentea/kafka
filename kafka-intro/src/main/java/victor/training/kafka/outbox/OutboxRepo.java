@@ -15,8 +15,11 @@ public interface OutboxRepo extends JpaRepository<Outbox, Long> {
   @Query("""
       select outbox from Outbox outbox
       where outbox.status = 'PENDING'
+      /*  and outbox.expiration < :now */
+      order by /*priority*/ id desc 
+      limit 50
       """)
-  List<Outbox> findAllPendingAndLockThem();
+  List<Outbox> findPageOfPendingAndLockThemDuringThisTx();
 
   @Transactional
   @Modifying

@@ -32,7 +32,7 @@ public class SimEventListenerTest  extends IntegrationTest {
     kafkaTemplate.send(SimEventListener.SIM_TOPIC, UUID.randomUUID().toString(), new OfferActivated(simId, "National10", 10));
 
     Awaitility.await()
-        .pollInterval(ofMillis(500))
+        .pollInterval(ofMillis(200))
         .timeout(ofSeconds(1))
         .untilAsserted(() ->
             assertThat(simRepo.findById(simId).orElseThrow())
@@ -48,7 +48,7 @@ public class SimEventListenerTest  extends IntegrationTest {
     kafkaTemplate.send(SimEventListener.SIM_TOPIC,1, ts1, simId + "", new CreditAdded(simId, 10));
 
     Awaitility.await()
-        .pollInterval(ofMillis(500))
+        .pollInterval(ofMillis(50))
         .timeout(ofSeconds(1))
         .untilAsserted(() ->
             assertThat(simRepo.findById(simId).orElseThrow())

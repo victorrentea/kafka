@@ -23,4 +23,6 @@ class Outbox {
   private Status status = Status.PENDING;
 
   private LocalDateTime runningSince;
+
+  private UUID ik = UUID.randomUUID();
 }

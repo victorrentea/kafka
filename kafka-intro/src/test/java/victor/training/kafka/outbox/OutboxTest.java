@@ -13,6 +13,7 @@ import victor.training.kafka.testutil.TimeExtension;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
 
@@ -40,7 +41,7 @@ class OutboxTest extends IntegrationTest {
     outboxService.addToOutbox("M1");
 
     // blocks test thread until that method of the mock is called!
-    verify(senderMock, timeout(1000)).send("M1");
+    verify(senderMock, timeout(1000)).send("M1", UUID.randomUUID());
   }
 
   @Test
@@ -50,19 +51,19 @@ class OutboxTest extends IntegrationTest {
     outboxService.sendFromOutbox();
     outboxService.sendFromOutbox(); // should do nothing
 
-    verify(senderMock).send("M1");
-    verify(senderMock).send("M2");
+    verify(senderMock).send("M1", UUID.randomUUID());
+    verify(senderMock).send("M2", UUID.randomUUID());
   }
   @Test
   void oneErrorRetried() throws InterruptedException {
     outboxService.addToOutbox("M1");
-    doThrow(new RuntimeException("BOOM")).when(senderMock).send("M1");
+    doThrow(new RuntimeException("BOOM")).when(senderMock).send("M1", UUID.randomUUID());
     outboxService.sendFromOutbox(); // fails to send
     timeExtension.advanceTime(Duration.ofMinutes(6));
     outboxService.resetToPending();
     reset(senderMock); // external call will succeed next time
     outboxService.sendFromOutbox(); // succeeds
-    verify(senderMock).send("M1");
+    verify(senderMock).send("M1", UUID.randomUUID());
   }
 
   @Test
@@ -83,7 +84,7 @@ class OutboxTest extends IntegrationTest {
     TimeServices.sleepMsecs(2000);
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(senderMock,times(N_MESSAGES)).send(captor.capture());
+    verify(senderMock,times(N_MESSAGES)).send(captor.capture(), UUID.randomUUID());
     assertThat(captor.getAllValues()).containsExactlyInAnyOrderElementsOf(messages);
   }
 }

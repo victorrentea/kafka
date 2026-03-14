@@ -6,8 +6,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.time.Duration.ofMinutes;
@@ -27,18 +25,18 @@ public class OutboxService {
     outboxRepo.save(new Outbox().messageToSend(messageToSend));
   }
 
-//  @SchedulerLock// shedlock prevents racing schedulers in multiple app instances via some shared DB lock
-  @Scheduled(fixedRate = 500) // 🤔 adds up to 500 ms latency to sending the message
+//  @SchedulerLock// alternative to pod-race protection = multiple app instances via some shared DB lock
+  @Scheduled(fixedRateString = "${outbox.poll.rate.ms:500}") // 🤔 adds up to 500 ms latency to sending the message
   void sendFromOutbox() {
-    var toSend = inTransaction.selectPendingAndMarkRunning();
+    var toSend = inTransaction.selectPendingAndMarkRunning(); // pod-race protection
     for (Outbox outbox : toSend) {
       log.debug("Start outbox {}", outbox);
       try {
-        sender.send(outbox.messageToSend());
+        sender.send(outbox.messageToSend(), outbox.ik());
         outboxRepo.delete(outbox);
         log.debug("Sent");
       } catch (Exception e) {
-        log.error("Failed to send", e);
+        log.error("Failed to send", e); // leave .status=RUNNING
       }
     }
   }
@@ -50,18 +48,18 @@ public class OutboxService {
     private final OutboxRepo outboxRepo;
     @Transactional
     List<Outbox> selectPendingAndMarkRunning() {
-      List<Outbox> pendingList = outboxRepo.findAllPendingAndLockThem(); // for the duration of this tx
+      List<Outbox> pendingList = outboxRepo.findPageOfPendingAndLockThemDuringThisTx(); // for the duration of this tx
       for (Outbox outbox : pendingList) {
         outbox.status(RUNNING);
         outbox.runningSince(now()); // to track hung messages
       }
       return pendingList;
-    } // JPA auto-UPDATEs dirty @Entity at @Transaction end
+    } // repo.save not needed as JPA auto-UPDATEs dirty @Entity before @Transaction commit
   }
 
   @Scheduled(fixedRate = 60000)
-  void resetToPending() {
-    log.info("Reset RUNNING messages for too long back to PENDING > reprocess them");
+  void resetToPending() { // watchdog
+    log.info("Reset messages RUNNING since more than Δt => sets their .status=PENDING > reprocess them");
     var cutoff = now().minus(ofMinutes(5));
     outboxRepo.resetRunningForMoreThan(cutoff);
   }

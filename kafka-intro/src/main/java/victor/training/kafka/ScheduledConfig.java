@@ -17,7 +17,7 @@ import javax.sql.DataSource;
 @Configuration
 @EnableScheduling
 @EnableSchedulerLock(defaultLockAtMostFor = "PT1H")
-  // if a run didn't finish in 1 hour, allow re-starting it
+  // watchdog: if a run didn't finish in 1 hour, allow re-starting it
 @ConditionalOnProperty(name = "scheduled.enabled", havingValue = "true", matchIfMissing = true)
 public class ScheduledConfig {
   @PostConstruct
