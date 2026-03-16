@@ -21,7 +21,7 @@ public class OutOfOrder {
   public int pairs = 0;
 
   // after 2 attempts 1 sec delayed spring-kafka sends message to xxx-dlt
-  @RetryableTopic(attempts = "3", backoff = @Backoff(delay = 1000))
+//  @RetryableTopic(attempts = "3", backoff = @Backoff(delay = 1000))
 
   @KafkaListener(topics = TOPIC, concurrency = "1")
   public void handle(String message) throws InterruptedException {

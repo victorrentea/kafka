@@ -1,22 +1,23 @@
 package victor.training.kafka.ooo;
 
 import lombok.extern.slf4j.Slf4j;
-import org.awaitility.Awaitility;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import victor.training.kafka.IntegrationTest;
+import victor.training.kafka.testutil.DrainKafkaTopics;
 
-import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static victor.training.kafka.ooo.OutOfOrder.TOPIC;
 
 @Slf4j
-//@DrainKafkaTopics({TOPIC, TOPIC + "-retry", TOPIC + "-dlt"})
+@TestMethodOrder(MethodOrderer.MethodName.class)
+@DrainKafkaTopics({TOPIC, TOPIC + "-retry", TOPIC + "-dlt"})
 public class OutOfOrderTest extends IntegrationTest {
   @Autowired
   KafkaTemplate<String, String> kafkaTemplate;
@@ -30,7 +31,7 @@ public class OutOfOrderTest extends IntegrationTest {
   }
 
   @Test
-  void one_set() throws InterruptedException {
+  void t1_one_set_ok() throws InterruptedException {
     kafkaTemplate.send(TOPIC, "(");
     kafkaTemplate.send(TOPIC, ")");
 
@@ -39,7 +40,7 @@ public class OutOfOrderTest extends IntegrationTest {
   }
 
   @Test
-  void two_sets() {
+  void t2_two_sets_ok() {
     kafkaTemplate.send(TOPIC, "(");
     kafkaTemplate.send(TOPIC, ")");
     kafkaTemplate.send(TOPIC, "(");
@@ -51,7 +52,7 @@ public class OutOfOrderTest extends IntegrationTest {
 
 
   @Test
-  void one_set_scrambled() {
+  void t3_one_set_scrambled_ok() {
     kafkaTemplate.send(TOPIC, ")");
     kafkaTemplate.send(TOPIC, "(");
 
@@ -60,7 +61,7 @@ public class OutOfOrderTest extends IntegrationTest {
   }
 
   @Test
-  void two_sets_scrambled2() throws InterruptedException {
+  void t4_two_sets_scrambled_ok() throws InterruptedException {
     kafkaTemplate.send(TOPIC, ")");
     kafkaTemplate.send(TOPIC, ")");
     kafkaTemplate.send(TOPIC, "(");
@@ -71,7 +72,7 @@ public class OutOfOrderTest extends IntegrationTest {
   }
 
   @Test
-  void one_closed_may_trigger_infinite_loop_if_resending() throws InterruptedException {
+  void t5_one_closed_may_trigger_infinite_loop_if_resending() throws InterruptedException {
     kafkaTemplate.send(TOPIC, ")");
 
     Thread.sleep(1000); // just look in the log
