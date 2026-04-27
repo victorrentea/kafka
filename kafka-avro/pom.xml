@@ -64,11 +64,20 @@
                         <param>http://localhost:8081</param>
                     </schemaRegistryUrls>
                     <subjects>
-                        <employee-value>src/main/avro/Employee.avsc</employee-value>
+                        <employee-value>src/main/avro/employee.avsc</employee-value>
                     </subjects>
-                    <!-- to register a change to .asvc: mvn schema-registry:register -->
+                    <!-- to register a change to .avsc: mvn schema-registry:register -->
                     <!-- to change compatibility to FORWARD: curl -X PUT http://localhost:8081/config/employee-value -H "Content-Type: application/json" -d '{"compatibility": "FORWARD"}' -->
                 </configuration>
+                <executions>
+                    <execution>
+                        <!-- Fails build if local schema is incompatible with what's registered -->
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>test-compatibility</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

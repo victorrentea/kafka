@@ -59,6 +59,8 @@ class Order {
 record OrderCreatedEvent(String orderContents) {
 }
 
+// --- support code for manual testing ---
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
