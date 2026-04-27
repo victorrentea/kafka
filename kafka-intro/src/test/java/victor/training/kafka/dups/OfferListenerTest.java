@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import victor.training.kafka.IntegrationTest;
+import victor.training.kafka.dups.OfferCreatedEvent;
 
 import java.util.concurrent.ExecutionException;
 
@@ -12,15 +13,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class OfferListenerTest extends IntegrationTest {
   @Autowired
-  private KafkaTemplate<String, String> kafkaTemplate;
+  private KafkaTemplate<String, OfferCreatedEvent> kafkaTemplate;
   @Autowired
   private OfferRepo offerRepo;
 
   @Test
-  @Disabled("TODO")
+//  @Disabled("FIME")
   void shouldNotInsertDuplicates() throws InterruptedException, ExecutionException {
-    kafkaTemplate.send(OfferListener.OFFER_TOPIC, "M1")
-        .get(); // wait for Kafka Producer IO thread to get the Ack from Broker
+    kafkaTemplate.send(OfferListener.OFFER_TOPIC, new OfferCreatedEvent("M1")).get();
+    kafkaTemplate.send(OfferListener.OFFER_TOPIC, new OfferCreatedEvent("M1")).get();
 
     Thread.sleep(4000);
 

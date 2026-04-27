@@ -76,7 +76,7 @@ public class ConsumerLagAsserter {
       var props = c.getContainerProperties();
       String[] t = props.getTopics();
       if (t != null && t.length > 0) {
-        topics.addAll(Arrays.asList(t));
+        Arrays.stream(t).filter(allTopics::contains).forEach(topics::add);
       }
       Pattern pat = props.getTopicPattern();
       if (pat != null) {
