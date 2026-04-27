@@ -55,6 +55,36 @@
             </plugin>
 
             <plugin>
+                <!--
+                DEMO: Breaking Avro Schema Change Detection
+                ============================================
+                1. Start infra:
+                     docker compose up -d                                 (Kafka + Kafdrop from root)
+                     docker compose -f kafka-avro/docker-compose.yml up -d  (Schema Registry)
+
+                2. Register the current schema (once):
+                     mvn schema-registry:register -pl kafka-avro
+
+                3. Introduce a BREAKING CHANGE in employee.avsc — add a required field with no default:
+                     { "name": "Email", "type": "string" }
+
+                4. Run:
+                     mvn verify -pl kafka-avro
+                   → BUILD FAILURE: READER_FIELD_MISSING_DEFAULT_VALUE
+                     (new consumers can't read old messages that have no 'Email')
+
+                5. Fix: add a default to make it BACKWARD-compatible:
+                     { "name": "Email", "type": "string", "default": "N/A" }
+
+                6. Run mvn verify again → BUILD SUCCESS, then register the new version:
+                     mvn schema-registry:register -pl kafka-avro
+
+                Default compatibility mode is BACKWARD (new readers can read old messages).
+                To switch to FORWARD (old readers can read new messages):
+                  curl -X PUT http://localhost:8081/config/employee-value \
+                       -H "Content-Type: application/json" \
+                       -d '{"compatibility": "FORWARD"}'
+                -->
                 <!-- Tutorial: https://jdriven.com/blog/2021/04/Register-Avro-Schemas -->
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-schema-registry-maven-plugin</artifactId>

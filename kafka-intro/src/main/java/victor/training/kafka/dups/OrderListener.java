@@ -30,9 +30,9 @@ class OrderListener {
   private final OrderRepo orderRepo;
 
   // TODO experiment: restart the app while consuming; upon restart it inserts duplicate orders in DB
-  // Fix duplicates:
-  // 1. change event semantics to "upsert" + add client-generated UUID => Consumer handles a dup create as noop-update
-  // 2. adds idempotencyKey to message; consumers saves it in DB (in a separate @Entity); if found in DB => ignore message
+  // ☢️ Duplicates:
+  // Fix#1: change event semantics to "upsert" + add client-generated UUID => Consumer handles a dup create as noop-update
+  // Fix#2: adds idempotencyKey to message; consumers saves it in DB (see PastIdempotencyKey @Entity); if found in DB => ignore message
   @KafkaListener(topics = ORDER_TOPIC)
   // in yaml: ack_mode = batch (default) // =⇒ max 1 duplicate / restart vs throughput🔽
   void consume(OrderCreatedEvent event) throws InterruptedException {
