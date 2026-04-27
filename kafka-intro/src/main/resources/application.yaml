@@ -46,7 +46,7 @@ spring:
       # !!WARNING!! : commit offset 7 => commit all messages before that
 
   datasource: # external standalone DB instead of embedded one
-    url: jdbc:h2:tcp://localhost:9093/~/test
+    url: jdbc:h2:tcp://localhost:9099/~/test
     driver-class-name: org.h2.Driver
     username: sa
     password: sa
