@@ -25,7 +25,7 @@ public class OutboxService {
     outboxRepo.save(new Outbox().messageToSend(messageToSend));
   }
 
-//  @SchedulerLock// alternative to pod-race protection = multiple app instances via some shared DB lock
+//  @SchedulerLock// alternative pod-race protection = multiple app instances via some shared DB lock
   @Scheduled(fixedRateString = "${outbox.poll.rate.ms:500}") // 🤔 adds up to 500 ms latency to sending the message
   void sendFromOutbox() {
     var toSend = inTransaction.selectPendingAndMarkRunning(); // pod-race protection
