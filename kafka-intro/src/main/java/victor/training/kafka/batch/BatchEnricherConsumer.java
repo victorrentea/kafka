@@ -32,7 +32,7 @@ public class BatchEnricherConsumer {
     kafkaTemplate.send(BATCH_OUT_TOPIC, record.key(), product);
   }
 
-  @KafkaListener(topics = BATCH_IN_TOPIC, batch = "true")
+//  @KafkaListener(topics = BATCH_IN_TOPIC, batch = "true")
   public void consume(List<ConsumerRecord<String, String>> records) {
     log.info("Received {} records : {}", records.size(), records);
 

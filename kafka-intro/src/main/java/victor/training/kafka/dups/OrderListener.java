@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +23,7 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static java.lang.Thread.sleep;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 class OrderListener {
   static final String ORDER_TOPIC = "order-topic";
@@ -31,8 +33,8 @@ class OrderListener {
   // Fix duplicates:
   // 1. change event semantics to "upsert" + add client-generated UUID => Consumer handles a dup create as noop-update
   // 2. adds idempotencyKey to message; consumers saves it in DB (in a separate @Entity); if found in DB => ignore message
-  @KafkaListener(topics = ORDER_TOPIC, batch = "false")
-  // ack_mode = batch (default) // =⇒ max 1 duplicate / restart vs throughput🔽
+  @KafkaListener(topics = ORDER_TOPIC)
+  // in yaml: ack_mode = batch (default) // =⇒ max 1 duplicate / restart vs throughput🔽
   void consume(OrderCreatedEvent event) throws InterruptedException {
     Order order = new Order().contents(event.orderContents());
     log.info("Saving order " + order);
@@ -64,8 +66,8 @@ class OrderController {
   private final OrderRepo orderRepo;
   private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
 
+  // http://localhost:8080/send-orders
   @GetMapping(value = "send-orders", produces = "text/html")
-    // http://localhost:8080/send-orders
   String sendOrders() throws InterruptedException {
     for (int i = 0; i < 100; i++) {
       sleep(1);
@@ -75,8 +77,8 @@ class OrderController {
     return "Restart the app within 2-3 seconds and <a href='/orders'>check for duplicates in DB</a>";
   }
 
+  // http://localhost:8080/orders
   @GetMapping("orders")
-    // http://localhost:8080/orders
   List<Order> viewOrdersInDB() {
     return orderRepo.findAll();
   }
