@@ -19,6 +19,7 @@
         <module>kafka-intro</module>
         <module>kafka-tx</module>
         <module>kafka-streams</module>
+        <module>library</module>
     </modules>
 
     <properties>
