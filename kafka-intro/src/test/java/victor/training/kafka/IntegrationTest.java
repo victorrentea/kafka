@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import victor.training.kafka.test.listener.ARepo;
@@ -17,9 +18,8 @@ import victor.training.kafka.testutil.ConsumerLagAsserter;
 
 @SpringBootTest
 @ActiveProfiles("test")
-//@EmbeddedKafka //A) fiecare spring primeste instanta lui de emulator de kafka #nuoface
-// or via Kafka from docker-compose.yaml
-// B)
+@EmbeddedKafka //A) every spring gets its own kafka emulator
+// B) single Kafka in a docker (docker-compose.yaml) or started on this machine (start-kafka-standalone.sh)
 // C) SF porneste cate un Kafka testcontainer/instanta de spring in teste https://github.com/PlaytikaOSS/testcontainers-spring-boot
 // la modu Purist ori integrezi ori te prefaci cu @MockBean - @silvia
 public abstract class IntegrationTest {
@@ -56,7 +56,7 @@ public abstract class IntegrationTest {
     while (true) {
       var started= kafkaListenerEndpointRegistry.getAllListenerContainers().stream()
           .flatMap(container -> container.getAssignedPartitions().stream())
-          .anyMatch(tp-> tp.topic().equals("myTopic") && tp.partition() == 0);
+          .anyMatch(tp -> !tp.topic().isEmpty()); // any partition assigned = rebalance settled
 
       if (started) {
          log.info("Resuming Test");

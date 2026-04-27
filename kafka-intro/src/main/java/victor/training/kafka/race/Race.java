@@ -38,12 +38,12 @@ public class Race {
 
   public record Message(String id, int seq) {}
 
-  @KafkaListener(topics = RACE_TOPIC, concurrency = "3")
+  @KafkaListener(topics = RACE_TOPIC, concurrency = "3", containerFactory = "lotsOfRetries")
   @Transactional
   public void consume(Message message) throws InterruptedException {
     RaceEntity entity = raceRepo.findById(message.id()).orElseThrow();
     entity.total(entity.total() + 1);
-    Thread.sleep(3); // ~ network call; larger => higher race chances
+    Thread.sleep(1); // ~ network call; larger => higher race chances
   }
 
   @Configuration
@@ -53,7 +53,7 @@ public class Race {
     lotsOfRetries(ConsumerFactory<String, String> consumerFactory) {
       var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
       factory.setConsumerFactory(consumerFactory);
-      var errorHandler = new DefaultErrorHandler(new FixedBackOff(50L, 100));
+      var errorHandler = new DefaultErrorHandler(new FixedBackOff(5L, 500));
       errorHandler.addRetryableExceptions(ObjectOptimisticLockingFailureException.class);
       factory.setCommonErrorHandler(errorHandler);
       return factory;
@@ -72,6 +72,6 @@ class RaceEntity {
 
   Integer total = 0;
 
-//  @Version
-//  Long version;
+  @Version
+  Long version;
 }
