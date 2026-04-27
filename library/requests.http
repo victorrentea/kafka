@@ -1,0 +1,32 @@
+### Happy path — checkout 2 books for user 1
+POST http://localhost:8080/checkout
+Content-Type: application/json
+
+{"userId": 1, "bookIds": [1, 6]}
+
+###
+
+### Check member account via H2 console
+### Open http://localhost:8082/h2-console
+### JDBC URL: jdbc:h2:mem:member   User: sa   Password: (empty)
+
+###
+
+### Make teleport FAIL on next call
+POST http://localhost:8083/teleport/toggle-fail
+
+###
+
+### Checkout again — teleport fails, compensation removes books from member account
+POST http://localhost:8080/checkout
+Content-Type: application/json
+
+{"userId": 1, "bookIds": [2, 3]}
+
+###
+
+### Try to exceed 5-book limit (expects 409 Conflict)
+POST http://localhost:8080/checkout
+Content-Type: application/json
+
+{"userId": 1, "bookIds": [10, 11, 12, 13, 14, 15]}
