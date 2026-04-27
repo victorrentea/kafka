@@ -17,6 +17,7 @@ public class OrderListenerTest extends IntegrationTest {
 
   @Test
   void shouldNotInsertDuplicates() throws InterruptedException, ExecutionException {
+    orderRepo.deleteAll();
     kafkaTemplate.send(OrderListener.ORDER_TOPIC, new OrderCreatedEvent("M1")).get();
     kafkaTemplate.send(OrderListener.ORDER_TOPIC, new OrderCreatedEvent("M1")).get();
 
