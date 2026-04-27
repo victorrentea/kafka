@@ -3,7 +3,7 @@ package victor.training.library.reminder;
 import java.util.List;
 
 public class Events {
-    // TODO: Connect Reminder to Kafka to schedule return reminders
+    // TODO: When converting to Kafka, consume BookCheckedOut to schedule return reminders
 
     record BookCheckedOut(String checkoutId, long userId, List<Long> bookIds) {}
 
