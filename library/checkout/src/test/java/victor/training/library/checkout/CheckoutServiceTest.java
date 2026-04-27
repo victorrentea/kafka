@@ -33,7 +33,8 @@ class CheckoutServiceTest {
                 .when(teleportClient).teleport(anyLong(), anyList());
 
         assertThatThrownBy(() -> checkoutService.checkout(new CheckoutRequest(1L, List.of(1L, 6L))))
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("teleporter malfunction");
 
         verify(memberClient).addBooks(eq(1L), any(String.class), eq(List.of(1L, 6L)));
         verify(memberClient).removeBooks(eq(1L), any(String.class));
