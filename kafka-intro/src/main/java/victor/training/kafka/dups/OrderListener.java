@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,64 +20,65 @@ import java.util.UUID;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static java.lang.Thread.sleep;
-import static victor.training.kafka.dups.OfferListener.OFFER_TOPIC;
 
 @Slf4j
 @RequiredArgsConstructor
-class OfferListener {
-  static final String OFFER_TOPIC = "offer-topic";
-  private final OfferRepo offerRepo;
+class OrderListener {
+  static final String ORDER_TOPIC = "order-topic";
+  private final OrderRepo orderRepo;
 
-  // TODO experiment: restart the app while consuming; upon restart it inserts duplicate offers in DB
+  // TODO experiment: restart the app while consuming; upon restart it inserts duplicate orders in DB
   // Fix duplicates:
   // 1. change event semantics to "upsert" + add client-generated UUID => Consumer handles a dup create as noop-update
   // 2. adds idempotencyKey to message; consumers saves it in DB (in a separate @Entity); if found in DB => ignore message
-  @KafkaListener(topics = OFFER_TOPIC) // ack_mode = batch (default) // =⇒ max 1 duplicate / restart vs throughput🔽
-  void consume(OfferCreatedEvent event) throws InterruptedException {
-    Offer order = new Offer().name(event.offerName());
-    log.info("Saving offer " + order);
-    offerRepo.save(order);
+  @KafkaListener(topics = ORDER_TOPIC, batch = "false")
+  // ack_mode = batch (default) // =⇒ max 1 duplicate / restart vs throughput🔽
+  void consume(OrderCreatedEvent event) throws InterruptedException {
+    Order order = new Order().contents(event.orderContents());
+    log.info("Saving order " + order);
+    orderRepo.save(order);
     sleep(50);
   }
 }
 
-interface OfferRepo extends JpaRepository<Offer, String> {
+interface OrderRepo extends JpaRepository<Order, String> {
 }
 
 @Data
 @Entity
+@Table(name = "orders")
 @JsonAutoDetect(fieldVisibility = ANY)
-class Offer {
+class Order {
   @Id
   private String id = UUID.randomUUID().toString();
-  private String name;
+  private String contents;
 }
 
-record OfferCreatedEvent(String offerName) {
+record OrderCreatedEvent(String orderContents) {
 }
 
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-class OfferController {
-  private final OfferRepo offerRepo;
-  private final KafkaTemplate<String, OfferCreatedEvent> kafkaTemplate;
+class OrderController {
+  private final OrderRepo orderRepo;
+  private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
 
-  @GetMapping(value = "send-offers", produces = "text/html")
-    // http://localhost:8080/send-offers
-  String sendOffers() throws InterruptedException {
+  @GetMapping(value = "send-orders", produces = "text/html")
+    // http://localhost:8080/send-orders
+  String sendOrders() throws InterruptedException {
     for (int i = 0; i < 100; i++) {
       sleep(1);
-      String offerName = "offer-" + LocalDateTime.now();
-      kafkaTemplate.send(OFFER_TOPIC, "k", new OfferCreatedEvent(offerName));
+      String orderName = "order-" + LocalDateTime.now();
+      kafkaTemplate.send(OrderListener.ORDER_TOPIC, "k", new OrderCreatedEvent(orderName));
     }
-    return "Restart the app within 2-3 seconds, restart it, and <a href='/offers'>check for duplicates in DB</a>";
+    return "Restart the app within 2-3 seconds and <a href='/orders'>check for duplicates in DB</a>";
   }
 
-  @GetMapping("offers")
-    // http://localhost:8080/offers
-  List<Offer> viewOffersInDB() {
-    return offerRepo.findAll();
+  @GetMapping("orders")
+    // http://localhost:8080/orders
+  List<Order> viewOrdersInDB() {
+    return orderRepo.findAll();
   }
 }
 
