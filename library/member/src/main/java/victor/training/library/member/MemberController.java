@@ -18,7 +18,7 @@ public class MemberController {
     @PostMapping("/members/{userId}/books")
     @Transactional
     public void addBooks(@PathVariable long userId, @RequestBody AddBooksRequest request) {
-        long existing = repo.countByUserId(userId);
+        long existing = repo.countByUserIdAndCheckoutIdNot(userId, request.checkoutId());
         if (existing + request.bookIds().size() > 5) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Member %d already has %d books (max 5)".formatted(userId, existing));
