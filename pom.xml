@@ -20,6 +20,7 @@
         <module>kafka-tx</module>
         <module>kafka-streams</module>
         <module>library</module>
+        <module>kafka-debezium</module>
     </modules>
 
     <properties>

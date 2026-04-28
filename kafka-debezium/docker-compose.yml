@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16
+    hostname: postgres
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: inventory
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    command: postgres -c wal_level=logical
+
+  connect:
+    image: debezium/connect:2.7.3.Final
+    hostname: connect
+    container_name: debezium-connect
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: broker:29092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: debezium_connect_configs
+      OFFSET_STORAGE_TOPIC: debezium_connect_offsets
+      STATUS_STORAGE_TOPIC: debezium_connect_statuses
+    depends_on:
+      - postgres
+
+# Join the root docker-compose network so `broker` hostname is reachable
+networks:
+  default:
+    name: kafka_default
+    external: true
