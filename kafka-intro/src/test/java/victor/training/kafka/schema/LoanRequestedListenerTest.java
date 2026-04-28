@@ -40,9 +40,9 @@ public class LoanRequestedListenerTest extends IntegrationTest {
 
     static Stream<Arguments> versions() {
         return Stream.of(
-                Arguments.of("schema/loan-approved-v1.json", new LoanRequestedEvent("John", "Doe", 10000, null)),
-                Arguments.of("schema/loan-approved-v2.json", new LoanRequestedEvent("John", "Doe", 10000, "0700123456")),
-                Arguments.of("schema/loan-approved-v3.json", new LoanRequestedEvent("John", "Doe", 10000, "0700123456"))
+                Arguments.of("sample-messages/loan-approved-v1.json", new LoanRequestedEvent("John", "Doe", 10000, null)),
+                Arguments.of("sample-messages/loan-approved-v2.json", new LoanRequestedEvent("John", "Doe", 10000, "0700123456")),
+                Arguments.of("sample-messages/loan-approved-v3.json", new LoanRequestedEvent("John", "Doe", 10000, "0700123456"))
         );
     }
 
