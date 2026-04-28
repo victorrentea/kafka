@@ -20,7 +20,7 @@ import static victor.training.kafka.race.Race.RACE_TOPIC;
 @Slf4j
 @DrainKafkaTopics(RACE_TOPIC)
 public class RaceTest extends IntegrationTest {
-  public static final String CLIENT_ID = UUID.randomUUID().toString();
+  public static final String SIM_ID = UUID.randomUUID().toString();
   @Autowired
   KafkaTemplate<String, Message> kafkaTemplate;
   @Autowired
@@ -28,16 +28,16 @@ public class RaceTest extends IntegrationTest {
 
   @Test
   void ok() {
-    raceRepo.save(new RaceEntity().id(CLIENT_ID).total(0));
+    raceRepo.save(new RaceEntity().id(SIM_ID).total(0));
     final int N_MESSAGES = 1000; // a lower number get on the same partition due to sticky parition in recent Kafka producer
     for (int i = 0; i < N_MESSAGES; i++) {
-      kafkaTemplate.send(RACE_TOPIC, new Message(CLIENT_ID, i));
+      kafkaTemplate.send(RACE_TOPIC, SIM_ID, new Message(SIM_ID, i));
       // Fix#1: same message key -> same partition
       // Fix#2: JPA optimistic locking - ⚠️ message is ignored after 10 errors
     }
 
     await().atMost(ofSeconds(15)).untilAsserted(() ->
-      assertThat(raceRepo.findById(CLIENT_ID).orElseThrow().total()).isEqualTo(N_MESSAGES)
+      assertThat(raceRepo.findById(SIM_ID).orElseThrow().total()).isEqualTo(N_MESSAGES)
     );
   }
 

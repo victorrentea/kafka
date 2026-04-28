@@ -1,10 +1,7 @@
 package victor.training.kafka.dups;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,29 +31,33 @@ class OrderListener {
   // Fix#1: change event semantics to "upsert" + add client-generated UUID => Consumer handles a dup create as noop-update
   // Fix#2: adds idempotencyKey to message; consumers saves it in DB (see PastIdempotencyKey @Entity); if found in DB => ignore message
   @KafkaListener(topics = ORDER_TOPIC)
-  // in yaml: ack_mode = batch (default) // =⇒ max 1 duplicate / restart vs throughput🔽
   void consume(OrderCreatedEvent event) throws InterruptedException {
-    Order order = new Order().contents(event.orderContents());
+    Order order = new Order().contents(event.orderContents()).id(event.clientGeneratedId());
     log.info("Saving order " + order);
-    orderRepo.save(order);
+    orderRepo.save(order); // Receiving the same message again will translate into an upsert
     sleep(50);
   }
 }
 
 interface OrderRepo extends JpaRepository<Order, String> {
+  boolean findByContents(String contents);
 }
 
 @Data
 @Entity
+// UQ on the clientGeneratedId LGTM🫩
 @Table(name = "orders")
+//@Table(name = "orders", uniqueConstraints = @UniqueConstraint(columnNames = "clientGeneratedId"))
 @JsonAutoDetect(fieldVisibility = ANY)
 class Order {
   @Id
-  private String id = UUID.randomUUID().toString();
+  private UUID id;
   private String contents;
+  @Lob // CLOB
+  private String a,b,c,d,e,f;
 }
 
-record OrderCreatedEvent(String orderContents) {
+record OrderCreatedEvent(String orderContents, UUID clientGeneratedId) {
 }
 
 // --- support code for manual testing ---
@@ -74,7 +75,7 @@ class OrderController {
     for (int i = 0; i < 100; i++) {
       sleep(1);
       String orderName = "order-" + LocalDateTime.now();
-      kafkaTemplate.send(OrderListener.ORDER_TOPIC, "k", new OrderCreatedEvent(orderName));
+      kafkaTemplate.send(OrderListener.ORDER_TOPIC, "k", new OrderCreatedEvent(orderName, UUID.randomUUID()));
     }
     return "Restart the app within 2-3 seconds and <a href='/orders'>check for duplicates in DB</a>";
   }
