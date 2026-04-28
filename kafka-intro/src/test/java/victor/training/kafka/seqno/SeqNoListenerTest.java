@@ -5,8 +5,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.test.annotation.DirtiesContext;
@@ -55,7 +58,12 @@ public class SeqNoListenerTest extends IntegrationTest {
   @TestConfiguration
   @EnableScheduling
   public static class Listener {
-    @KafkaListener(topics = OUT_TOPIC, groupId = "test", properties = "auto.offset.reset=latest")
+    @Bean
+    NewTopic seqnoOutTopic() {
+      return TopicBuilder.name(OUT_TOPIC).partitions(1).build(); // 1 partition: single consumer, ordered delivery
+    }
+
+    @KafkaListener(topics = OUT_TOPIC, groupId = "test", properties = "auto.offset.reset=earliest")
     public void listen(String message) {
       log.info("Received OUT: " + message);
       receivedMessages.add(message);

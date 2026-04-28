@@ -18,6 +18,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @TestPropertySource(properties = "scheduled.enabled=true")
@@ -41,7 +43,7 @@ class OutboxTest extends IntegrationTest {
     outboxService.addToOutbox("M1");
 
     // blocks test thread until that method of the mock is called!
-    verify(senderMock, timeout(1000)).send("M1", UUID.randomUUID());
+    verify(senderMock, timeout(1000)).send(eq("M1"), any(UUID.class));
   }
 
   @Test
@@ -51,19 +53,19 @@ class OutboxTest extends IntegrationTest {
     outboxService.sendFromOutbox();
     outboxService.sendFromOutbox(); // should do nothing
 
-    verify(senderMock).send("M1", UUID.randomUUID());
-    verify(senderMock).send("M2", UUID.randomUUID());
+    verify(senderMock).send(eq("M1"), any(UUID.class));
+    verify(senderMock).send(eq("M2"), any(UUID.class));
   }
   @Test
   void oneErrorRetried() throws InterruptedException {
     outboxService.addToOutbox("M1");
-    doThrow(new RuntimeException("BOOM")).when(senderMock).send("M1", UUID.randomUUID());
+    doThrow(new RuntimeException("BOOM")).when(senderMock).send(eq("M1"), any(UUID.class));
     outboxService.sendFromOutbox(); // fails to send
     timeExtension.advanceTime(Duration.ofMinutes(6));
     outboxService.resetToPending();
     reset(senderMock); // external call will succeed next time
     outboxService.sendFromOutbox(); // succeeds
-    verify(senderMock).send("M1", UUID.randomUUID());
+    verify(senderMock).send(eq("M1"), any(UUID.class));
   }
 
   @Test
@@ -84,7 +86,7 @@ class OutboxTest extends IntegrationTest {
     TimeServices.sleepMsecs(2000);
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(senderMock,times(N_MESSAGES)).send(captor.capture(), UUID.randomUUID());
+    verify(senderMock, times(N_MESSAGES)).send(captor.capture(), any(UUID.class));
     assertThat(captor.getAllValues()).containsExactlyInAnyOrderElementsOf(messages);
   }
 }

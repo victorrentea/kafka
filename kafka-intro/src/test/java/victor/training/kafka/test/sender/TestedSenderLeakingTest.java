@@ -1,6 +1,7 @@
 package victor.training.kafka.test.sender;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestComponent;
@@ -33,6 +34,11 @@ public class TestedSenderLeakingTest extends IntegrationTest {
   @Autowired
   TestListener testListener;
   String message = UUID.randomUUID().toString();
+
+  @BeforeEach
+  void clearQueue() {
+    testListener.receivedMessages.clear();
+  }
 
   static class TestListener {
     private LinkedBlockingQueue<String> receivedMessages = new LinkedBlockingQueue<>();

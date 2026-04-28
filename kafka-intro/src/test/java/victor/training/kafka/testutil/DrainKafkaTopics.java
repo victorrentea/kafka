@@ -7,6 +7,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.CoordinatorNotAvailableException;
 import org.apache.kafka.common.errors.RebalanceInProgressException;
 import org.apache.kafka.common.errors.UnknownMemberIdException;
+import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -15,6 +16,7 @@ import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.annotation.Retention;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -52,9 +54,20 @@ public @interface DrainKafkaTopics {
 
     private static void resetOffsetsForAllGroups(String bootstrap, List<String> topics) {
       try (Admin admin = AdminClient.create(Map.of("bootstrap.servers", bootstrap))) {
-        // Describe topics and partitions
-        Map<String, TopicDescription> descriptions = admin.describeTopics(topics).allTopicNames()
-            .get(1, TimeUnit.SECONDS);
+        // Describe topics per-topic so missing ones are skipped instead of failing the whole batch
+        Map<String, TopicDescription> descriptions = new HashMap<>();
+        var futures = admin.describeTopics(topics).topicNameValues();
+        for (var entry : futures.entrySet()) {
+          try {
+            descriptions.put(entry.getKey(), entry.getValue().get(1, TimeUnit.SECONDS));
+          } catch (ExecutionException e) {
+            if (e.getCause() instanceof UnknownTopicOrPartitionException) {
+              log.info("Topic {} does not exist yet, skipping drain.", entry.getKey());
+            } else {
+              throw new RuntimeException(e);
+            }
+          }
+        }
         List<TopicPartition> partitions = descriptions.values().stream()
             .flatMap(d -> d.partitions().stream()
                 .map(tpi -> new TopicPartition(d.name(), tpi.partition())))
@@ -66,8 +79,16 @@ public @interface DrainKafkaTopics {
         // Get latest offsets for all partitions
         Map<TopicPartition, OffsetSpec> offsetRequest = partitions.stream()
             .collect(toMap(Function.identity(), tp -> OffsetSpec.latest()));
-        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> endOffsets = admin.listOffsets(offsetRequest).all()
-            .get(1, TimeUnit.SECONDS);
+        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> endOffsets;
+        try {
+          endOffsets = admin.listOffsets(offsetRequest).all().get(1, TimeUnit.SECONDS);
+        } catch (ExecutionException e) {
+          if (e.getCause() instanceof UnknownTopicOrPartitionException) {
+            log.warn("Could not list offsets (partition not yet hosted), skipping drain for topics {}.", topics);
+            return;
+          }
+          throw new RuntimeException(e);
+        }
 
         // List all consumer groups
         List<String> allGroupIds = admin.listConsumerGroups().all()

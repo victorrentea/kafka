@@ -72,6 +72,6 @@ class RaceEntity {
 
   Integer total = 0;
 
-  @Version
-  Long version;
+//  @Version
+//  Long version;
 }
