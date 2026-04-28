@@ -1,0 +1,8 @@
+{
+  "fullName": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "middleName": null
+  },
+  "loanAmount": 10000
+}
