@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.LocalDateTime.now;
@@ -23,6 +24,7 @@ public class OutboxService {
   // potentially wrapped in caller @Transactional with other changes
   void addToOutbox(String messageToSend) {
     outboxRepo.save(new Outbox().messageToSend(messageToSend));
+//    sender.send(messageToSend, new UUID());
   }
 
 //  @SchedulerLock// alternative pod-race protection = multiple app instances via some shared DB lock

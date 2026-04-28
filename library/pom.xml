@@ -15,5 +15,6 @@
         <module>member</module>
         <module>teleport</module>
         <module>reminder</module>
+        <module>e2e</module>
     </modules>
 </project>

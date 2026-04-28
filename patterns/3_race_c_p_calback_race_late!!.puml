@@ -4,12 +4,18 @@ hide footbox
 
 -> Producer++: <font color=green>add(5€)
 Broker<-Producer--: <font color=green>1.CreditAdded {id}
+hnote over Consumer: 0€
+hnote over Consumer #FFAAAA: Grant 1€ for any\nrecharge of ≥ 5€
 
 ->Producer++:<font color=blue>add(7€)
 Broker<-Producer--: <font color=blue>2.CreditAdded {id}
 Broker->Consumer++: <font color=green>1
 Consumer->Producer++: <font color=green>GET credit/{id}   **//callback**
 Consumer<--Producer--: <font color=blue>12€
+hnote over Consumer: 0€->12€: bonus
+Consumer->Producer++: <font color=blue>GET credit/{id}   **//callback**
+Consumer<--Producer--: <font color=blue>12€
+hnote over Consumer: 12€->12€: bonus
 hnote over Consumer #FFAAAA: huh?!
 
 @enduml
