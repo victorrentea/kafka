@@ -26,6 +26,7 @@ hs_err_pid*
 .settings
 .idea
 .classpath
+.factorypath
 *.iml
 
 prod/

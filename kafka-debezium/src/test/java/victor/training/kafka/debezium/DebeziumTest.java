@@ -11,10 +11,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,53 +39,7 @@ class DebeziumTest {
 
     @BeforeAll
     static void registerConnector() throws Exception {
-        var http = HttpClient.newHttpClient();
-
-        // Delete and recreate to ensure table.include.list is up to date
-        http.send(HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8083/connectors/inventory-connector"))
-                        .DELETE().build(),
-                HttpResponse.BodyHandlers.discarding());
-        Thread.sleep(2_000);
-
-        String config = """
-                {
-                  "name": "inventory-connector",
-                  "config": {
-                    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-                    "database.hostname": "postgres",
-                    "database.port": "5432",
-                    "database.user": "postgres",
-                    "database.password": "postgres",
-                    "database.dbname": "inventory",
-                    "topic.prefix": "dbserver1",
-                    "table.include.list": "public.customers,public.shipping_address",
-                    "plugin.name": "pgoutput",
-                    "snapshot.mode": "never"
-                  }
-                }
-                """;
-
-        var response = http.send(
-                HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8083/connectors"))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(config))
-                        .build(),
-                HttpResponse.BodyHandlers.ofString());
-        assertThat(response.statusCode()).as("register connector").isEqualTo(201);
-
-        long deadline = System.currentTimeMillis() + 30_000;
-        while (System.currentTimeMillis() < deadline) {
-            var status = http.send(
-                    HttpRequest.newBuilder()
-                            .uri(URI.create("http://localhost:8083/connectors/inventory-connector/status"))
-                            .GET().build(),
-                    HttpResponse.BodyHandlers.ofString());
-            if (status.body().contains("\"RUNNING\"")) return;
-            Thread.sleep(1_000);
-        }
-        throw new IllegalStateException("Debezium connector did not reach RUNNING state within 30s");
+        SetupDebezium.registerConnector();
     }
 
     @Autowired
@@ -99,8 +49,11 @@ class DebeziumTest {
         long deadline = System.currentTimeMillis() + 30_000;
         while (System.currentTimeMillis() < deadline) {
             String msg = queue.poll(1, SECONDS);
-            if (msg != null && msg.contains(containingText))
-                return mapper.readTree(msg).path("payload");
+            if (msg != null && msg.contains(containingText)) {
+                JsonNode payload = mapper.readTree(msg).path("payload");
+                System.out.println("Received payload:\n" + payload.toPrettyString());
+                return payload;
+            }
         }
         return null;
     }
@@ -114,9 +67,9 @@ class DebeziumTest {
 
         assertThat(payload).isNotNull();
         assertThat(payload.path("op").asText()).isEqualTo("c");
-        assertThat(payload.path("before").isNull()).isTrue();
-        assertThat(payload.path("after").path("first_name").asText()).isEqualTo("Joe");
-        assertThat(payload.path("after").path("email").asText()).isEqualTo(email);
+        assertThat(payload.path("before")).isNull();
+        assertThat(payload.at("/after/first_name").asText()).isEqualTo("Joe");
+        assertThat(payload.at("/after/email").asText()).isEqualTo(email);
     }
 
     @Test
@@ -132,8 +85,8 @@ class DebeziumTest {
 
         assertThat(payload).isNotNull();
         assertThat(payload.path("op").asText()).isEqualTo("u");
-        assertThat(payload.path("before").path("last_name").asText()).isEqualTo("Old");
-        assertThat(payload.path("after").path("last_name").asText()).isEqualTo("New");
+        assertThat(payload.at("/before/last_name").asText()).isEqualTo("Old");
+        assertThat(payload.at("/after/last_name").asText()).isEqualTo("New");
     }
 
     @Test
@@ -150,7 +103,7 @@ class DebeziumTest {
         assertThat(payload).isNotNull();
         assertThat(payload.path("op").asText()).isEqualTo("d");
         assertThat(payload.path("after").isNull()).isTrue();
-        assertThat(payload.path("before").path("first_name").asText()).isEqualTo("Del");
+        assertThat(payload.at("/before/first_name").asText()).isEqualTo("Del");
     }
 
     @Test
@@ -168,12 +121,12 @@ class DebeziumTest {
         JsonNode customerPayload = waitForPayload(customerMessages, email);
         assertThat(customerPayload).isNotNull();
         assertThat(customerPayload.path("op").asText()).isEqualTo("c");
-        assertThat(customerPayload.path("after").path("first_name").asText()).isEqualTo("Alice");
+        assertThat(customerPayload.at("/after/first_name").asText()).isEqualTo("Alice");
 
         JsonNode addressPayload = waitForPayload(addressMessages, String.valueOf(customerId));
         assertThat(addressPayload).isNotNull();
         assertThat(addressPayload.path("op").asText()).isEqualTo("c");
-        assertThat(addressPayload.path("after").path("street").asText()).isEqualTo("123 Main St");
-        assertThat(addressPayload.path("after").path("customer_id").asInt()).isEqualTo(customerId);
+        assertThat(addressPayload.at("/after/street").asText()).isEqualTo("123 Main St");
+        assertThat(addressPayload.at("/after/customer_id").asInt()).isEqualTo(customerId);
     }
 }
