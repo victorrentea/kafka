@@ -9,6 +9,7 @@ import victor.training.kafka.race.Race.Message;
 import victor.training.kafka.testutil.DrainKafkaTopics;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.anyOf;
@@ -27,11 +28,13 @@ public class RaceTest extends IntegrationTest {
   RaceRepo raceRepo;
 
   @Test
-  void ok() {
+  void ok() throws ExecutionException, InterruptedException {
     raceRepo.save(new RaceEntity().id(CLIENT_ID).total(0));
     final int N_MESSAGES = 1000; // a lower number get on the same partition due to sticky parition in recent Kafka producer
     for (int i = 0; i < N_MESSAGES; i++) {
-      kafkaTemplate.send(RACE_TOPIC, new Message(CLIENT_ID, i));
+      Message messagePayload = new Message(CLIENT_ID, i);
+      String messageKey = CLIENT_ID;
+      kafkaTemplate.send(RACE_TOPIC,CLIENT_ID, messagePayload).get();
       // Fix#1: same message key -> same partition
       // Fix#2: JPA optimistic locking - ⚠️ message is ignored after 10 errors
     }

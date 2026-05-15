@@ -7,6 +7,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import victor.training.kafka.IntegrationTest;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.anyOf;
@@ -24,8 +25,9 @@ public class OrderListenerTest extends IntegrationTest {
   @Test
   void shouldNotInsertDuplicates() throws InterruptedException, ExecutionException {
     orderRepo.deleteAll();
-    kafkaTemplate.send(OrderListener.ORDER_TOPIC, new OrderCreatedEvent("M1")).get();
-    kafkaTemplate.send(OrderListener.ORDER_TOPIC, new OrderCreatedEvent("M1")).get();
+    var id= UUID.randomUUID().toString();
+    kafkaTemplate.send(OrderListener.ORDER_TOPIC, new OrderCreatedEvent("M1",id)).get();
+    kafkaTemplate.send(OrderListener.ORDER_TOPIC, new OrderCreatedEvent("M1",id)).get();
 
     Thread.sleep(4000); // CI crime☠️
 //    Mockito.verify(orderListener,Mockito.timeout(4000).times(2)).consume(any()); // smart, no sleep

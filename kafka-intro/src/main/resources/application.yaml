@@ -24,10 +24,14 @@ spring:
       properties:
         interceptor.classes: victor.training.kafka.interceptor.ProducerTraceIdInterceptor
         #acks: 0 # means don't wait for broker ack = fire and forget (default: 1)
+#      compression-type: lz4
     consumer:
       group-id: app
       properties:
         spring.json.trusted.packages: victor.*
+        #set poll size to 300
+#        max.poll.records: 300
+
         session.timeout.ms: 15000 # default: 45s - no heartbeats from consumer => considered dead. see also heartbeat.interval.ms=3s default
         max.poll.interval.ms: 15000 # =15s (default=5m) = max time between polls. Affects long processing time of a message
         interceptor.classes: victor.training.kafka.interceptor.ConsumerPollAckInterceptor
@@ -40,7 +44,7 @@ spring:
 
 #      ack-mode: time # or count, time_count: poll a batch of 500 but ack after every 10 and/or 2 seconds
 #      ack-time: 3s
-#      ack-count: 3s
+#      ack-count: 3
 
 #      ack-mode: manual # after batch (or manual_immediate) via Acknowledgement param in @KafkaListener method
       # !!WARNING!! : commit offset 7 => commit all messages before that

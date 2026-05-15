@@ -18,7 +18,9 @@ import static victor.training.kafka.compact.CompactTopicConfig.COUNTRY_TOPIC;
 public class CountryNeverAckListener {
   @KafkaListener(topics = COUNTRY_TOPIC, groupId = "never-ack",
       properties = {
+          // at every app restart you see all events in COUNTRY_TOPIC
           "auto.offset.reset=earliest",
+          // + a retention time = infinite since extra-rarely added
           "enable.auto.commit=false",
           "key.deserializer=org.apache.kafka.common.serialization.StringDeserializer",
           "value.deserializer=org.apache.kafka.common.serialization.StringDeserializer"
@@ -26,7 +28,7 @@ public class CountryNeverAckListener {
       containerFactory = "manualAckContainerFactory")
   public void consumeNeverAck(ConsumerRecord<String, String> countryRecord, Acknowledgment ack) {
     log.info("B) Got country: " + countryRecord.value());
-    // never ACK
+    // never commited: ack.acknowledge();
   }
 
   @Configuration

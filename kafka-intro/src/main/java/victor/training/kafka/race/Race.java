@@ -44,6 +44,7 @@ public class Race {
     RaceEntity entity = raceRepo.findById(message.id()).orElseThrow();
     entity.total(entity.total() + 1);
     Thread.sleep(1); // ~ network call; larger => higher race chances
+    raceRepo.save(entity);
   }
 
   @Configuration

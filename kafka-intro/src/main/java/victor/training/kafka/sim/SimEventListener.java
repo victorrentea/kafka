@@ -62,6 +62,9 @@ public class SimEventListener {
 
   @Bean
   public NewTopic simTopic() {
-    return TopicBuilder.name(SIM_TOPIC).partitions(2).build();
+    return TopicBuilder.name(SIM_TOPIC)
+        .partitions(2)
+//        .replicas()
+        .build();
   }
 }

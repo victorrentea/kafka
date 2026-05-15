@@ -17,12 +17,11 @@ import java.util.concurrent.ExecutionException;
 public class KafkaRawMain {
   public static void main(String[] args) throws ExecutionException, InterruptedException {
     var producer = createProducer();
-    var consumer = createConsumer();
-
     System.out.println("Producer created");
     producer.send(new ProducerRecord<>("hello-topic", "key", "value"));
     System.out.println("Sent 1 message");
 
+    var consumer = createConsumer();
     consumer.subscribe(List.of("hello-topic"));
     System.out.println("Start polling for messages");
     long t0 = System.currentTimeMillis();
