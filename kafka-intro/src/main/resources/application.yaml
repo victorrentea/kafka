@@ -2,7 +2,7 @@ spring.application.name: app
 
 logging:
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%20.20t] <%-3X{traceId}> %clr(%-5level %-30.30logger{29}) - %msg%n"
+    console: "%d{HH:mm:ss.SSS} [%20.20t] <%-3X{traceId}> [otel:%X{trace_id}/%X{span_id}] %clr(%-5level %-30.30logger{29}) - %msg%n"
   level:
     org.apache.kafka.clients.producer.ProducerConfig: warn
     org.apache.kafka.clients.consumer: warn
