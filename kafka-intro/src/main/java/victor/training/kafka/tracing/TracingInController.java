@@ -20,7 +20,7 @@ public class TracingInController {
 
   private final KafkaTemplate<String, Event> kafkaTemplate;
 
-  @GetMapping("/start")
+  @GetMapping("/start") // http://localhost:8080/tracing/start
   public String start() {
     log.info("STEP 1 — HTTP IN received: about to publish to Kafka");
     kafkaTemplate.send(TOPIC, new Event.EventOK("trace-me"));

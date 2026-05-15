@@ -67,7 +67,7 @@ decorator:
     p6spy:
       multiline: false
       log-format: "%(executionTime) ms|%(category)|connection %(connectionId)|%(sqlSingleLine)"
-      log-filter.pattern: "^(?!.*from inbox i1_0 where i1_0.status='PENDING').*$" # ignore the poller
+      log-filter.pattern: "^(?!.*from inbox i1_0 where i1_0\\.status in \\('PENDING','ERROR'\\)).*$" # ignore the poller
 
 scheduler-workers:
   core-pool-size: 4

@@ -67,7 +67,7 @@ class DebeziumTest {
 
         assertThat(payload).isNotNull();
         assertThat(payload.path("op").asText()).isEqualTo("c");
-        assertThat(payload.path("before")).isNull();
+        assertThat(payload.path("before").isNull()).isTrue();
         assertThat(payload.at("/after/first_name").asText()).isEqualTo("Joe");
         assertThat(payload.at("/after/email").asText()).isEqualTo(email);
     }

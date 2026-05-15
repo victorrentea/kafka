@@ -23,12 +23,22 @@ public class OutboxService {
 
   // potentially wrapped in caller @Transactional with other changes
   void addToOutbox(String messageToSend) {
+    outboxRepo.save(new Outbox()
+        .messageToSend(messageToSend)
+        .ik(UUID.randomUUID())
+    );
   }
 
-//  @SchedulerLock// alternative pod-race protection = multiple app instances via some shared DB lock
+// ⭐️1 Quartz:
+// ⭐️2 Shedlock: @SchedulerLock// alternative pod-race protection = multiple app instances via some shared DB lock
+// ☢️DIY let's learn solution:
   @Scheduled(fixedRateString = "${outbox.poll.rate.ms:500}") // 🤔 adds up to 500 ms latency to sending the message
-  void sendFromOutbox() {
-
+  void sendFromOutbox() throws InterruptedException {
+    List<Outbox> outboxList = inTransaction.selectPendingAndMarkRunning();
+    for (Outbox outbox : outboxList) {
+      sender.send(outbox.messageToSend(), outbox.ik()); // throws on timeout😱 / 500
+      outboxRepo.delete(outbox);
+    }
   }
 
   @Service
@@ -38,12 +48,18 @@ public class OutboxService {
     private final OutboxRepo outboxRepo;
     @Transactional
     List<Outbox> selectPendingAndMarkRunning() {
-      return null;
+      List<Outbox> outboxList = outboxRepo.findPageOfPendingAndLockThemDuringThisTx();
+      for (Outbox outbox : outboxList) {
+        outbox.status(RUNNING);
+        outbox.runningSince(now());
+        outboxRepo.save(outbox);
+      }
+      return outboxList;
     }
   }
 
   @Scheduled(fixedRate = 60000)
-  void resetToPending() { // watchdog
+  void resetHungTasksBackToPending() { // watchdog
     log.info("Reset messages RUNNING since more than Δt => sets their .status=PENDING > reprocess them");
     var cutoff = now().minus(ofMinutes(5));
     outboxRepo.resetRunningForMoreThan(cutoff);

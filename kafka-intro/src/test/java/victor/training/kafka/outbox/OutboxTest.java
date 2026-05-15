@@ -62,7 +62,7 @@ class OutboxTest extends IntegrationTest {
     doThrow(new RuntimeException("BOOM")).when(senderMock).send(eq("M1"), any(UUID.class));
     outboxService.sendFromOutbox(); // fails to send
     timeExtension.advanceTime(Duration.ofMinutes(6));
-    outboxService.resetToPending();
+    outboxService.resetHungTasksBackToPending();
     reset(senderMock); // external call will succeed next time
     outboxService.sendFromOutbox(); // succeeds
     verify(senderMock).send(eq("M1"), any(UUID.class));
@@ -73,7 +73,11 @@ class OutboxTest extends IntegrationTest {
     for (int i = 0; i < 10; i++) {
       CompletableFuture.runAsync(() -> {
         for (int j = 0; j < 100; j++) {
-          outboxService.sendFromOutbox();
+          try {
+            outboxService.sendFromOutbox();
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
         }
       });
     }
