@@ -22,7 +22,7 @@ public class SetupDebezium {
 
       Thread.sleep(2_000);
 
-      String config = Files.readString(Path.of("debezium.connector.json"));
+      String config = Files.readString(Path.of("debezium.config.json"));
 
       var response = http.send(
           HttpRequest.newBuilder()
