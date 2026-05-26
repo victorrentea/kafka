@@ -23,7 +23,7 @@ public class OutboxService {
 
   // potentially wrapped in caller @Transactional with other changes
   void addToOutbox(String messageToSend) {
-    outboxRepo.save(new Outbox().messageToSend(messageToSend));
+    outboxRepo.save(new Outbox().messageToSend(messageToSend).ik(UUID.randomUUID()));
 //    sender.send(messageToSend, new UUID());
   }
 
