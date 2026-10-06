@@ -14,7 +14,7 @@ mvn clean install -pl kafka-intro
 # Run a module
 mvn spring-boot:run -pl kafka-intro
 
-# Start Kafka infrastructure (Kafka on :9092, Schema Registry on :8081, Kafdrop UI on :9000)
+# Start Kafka infrastructure (Kafka on :9092, Kafdrop UI on :9000)
 docker-compose up -d
 ```
 
@@ -39,15 +39,17 @@ Multi-module Maven project (Java 21, Spring Boot 3.5.6, Spring Kafka):
 
 | Module | Purpose |
 |---|---|
-| `kafka-intro` | Main training module — 18 feature packages covering core Kafka patterns |
+| `kafka-intro` | Main training module — one package per Kafka pattern under `victor.training.kafka` |
 | `kafka-streams` | Kafka Streams topologies (game, words, metrics, notifications, time) |
 | `kafka-avro` | Avro schema registration and serialization with Schema Registry |
 | `kafka-tx` | Transactional message processing patterns |
+| `library` | Exercise: library apps (`checkout`, `member`, `teleport`, `reminder`, `e2e`) calling each other over HTTP, to be converted to Kafka events (TODOs in each `Events.java`) |
+| `kafka-debezium` | Change-data-capture: Debezium Connect streams Postgres tables to Kafka topics (Postgres + Connect in `kafka-debezium/docker-compose.yml`) |
 | `patterns/` | 50+ PlantUML diagrams illustrating each pattern |
 
 ## Architecture (kafka-intro)
 
-Each sub-package under `victor.training.kafka.intro` represents a self-contained pattern:
+Each sub-package under `victor.training.kafka` (module `kafka-intro`) represents a self-contained pattern:
 
 - **inbox / outbox** — Reliable messaging with deduplication and saga coordination
 - **seqno** — Sequence number tracking for ordering guarantees
@@ -61,9 +63,9 @@ Each sub-package under `victor.training.kafka.intro` represents a self-contained
 
 `Event` is the core message type with inner `Serializer`/`Deserializer` classes.
 
-Consumer group ID defaults to `app` (configured in `application.yaml`); tests use a random group ID (`application-test.properties`) to avoid interference between test runs.
+Consumer group ID defaults to `app` (configured in `application.yaml`); `application-test.properties` sets `spring.application.name=app-test` and `auto-offset-reset=earliest` (its random-group-id line is commented out).
 
 ## Key Config
 
-- `kafka-intro/src/main/resources/application.yaml` — Main config (Kafka bootstrap, H2 TCP at :9093, consumer concurrency=2)
-- `kafka-intro/src/test/resources/application-test.properties` — Test overrides (random group ID, P6Spy SQL logging, scheduled jobs disabled)
+- `kafka-intro/src/main/resources/application.yaml` — Main config (Kafka bootstrap, H2 TCP at :9099 started by `StartDB`, consumer concurrency=2)
+- `kafka-intro/src/test/resources/application-test.properties` — Test overrides (P6Spy SQL logging, scheduled jobs disabled, `auto-offset-reset=earliest`)
