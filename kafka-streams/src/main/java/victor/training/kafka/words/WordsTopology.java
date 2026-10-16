@@ -5,10 +5,7 @@ import lombok.With;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StoreQueryParameters;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
@@ -35,25 +32,60 @@ import static org.apache.kafka.common.serialization.Serdes.String;
 @RestController
 @RequiredArgsConstructor
 public class WordsTopology {
-  public static final String WORDS_TOPIC = "words"; // -><word>
-  public static final String WORD_COUNT_TOPIC = "word-count"; // <word>-><occurences>
+  public static final String WORDS_TOPIC = "words"; // <uuid>:<text>
+  public static final String WORD_COUNT_TOPIC = "word-count"; // <word>:<occurences>
   public static final String WORD_COUNT_TABLE = "word-count-table"; // state store name
-  public static final String DICTIONARY_TOPIC = "dictionary"; // <word0>-><word1>
+  public static final String DICTIONARY_TOPIC = "dictionary"; // <word0>:<word1>
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
-    streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        // TODO split messages into words
+    KTable<String, String> dictionaryTable =
+            streamsBuilder.table(DICTIONARY_TOPIC, Consumed.with(String(), String()));
+    // halo:hi, halo:hello
 
-        // TODO lowercase
+    var ks = streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
+            // :hello World, :halo
+            // TODO split messages into words
+            .flatMapValues( text -> Arrays.stream(text.split("\\s+")).map(String::toLowerCase).toList())
+            // :hello, :world, :halo
+            .map((k, v) -> KeyValue.pair(v, v))
+            // hello:hello, world:world, halo:halo
 
-        // TODO (last) normalize via dictionary
+            // requires kafka record and ktable row to have the same key
+            .leftJoin(dictionaryTable,(streamValue, kTableValue)->
+                    kTableValue != null ? kTableValue : streamValue) // in your case: oldRecord.set(moreDataFromRecord).thenoutut enriched record
+            // hello:hello, world:world, halo:hello
+            .map((k, v) -> KeyValue.pair(v, 1L));
+            // hello:1, world:1, hello:1
+        // + more ks.groupByKey()
+        ks.groupByKey()
+            .aggregate( //seed:
+                () -> new Agg(0L, LocalDateTime.now()),
+                // how to fold:
+                (key, value, aggregate) -> new Agg(aggregate.total + value, LocalDateTime.now()),
+                // storage:
+                Materialized.<String, Agg, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
+                    .withKeySerde(String())
+                    .withValueSerde(new JsonSerde<>(Agg.class))
+            )
+            .toStream() // k:v only gets out when changed
+            // hello:Agg{1..}, world:Agg{1..}, hello:Agg{2..}
 
-        // TODO count occurrences
+            .mapValues(agg -> agg.total)
 
-        // TODO 1 .count
-        // TODO 2 .aggregate (generic)
+            // hello:1, world:1, hello:2
 
-;
+
+    // TODO lowercase
+
+    // TODO (last) normalize via dictionary
+
+    // TODO count occurrences
+
+    // TODO 1 .count
+    // TODO 2 .aggregate (generic)
+
+    // hello:1, world:1
+    ;
 
     System.out.println(streamsBuilder.build().describe());
   }
