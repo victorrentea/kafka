@@ -33,15 +33,17 @@ class OrderListener {
   // ☢️ Duplicates:
   // Fix#1: change event semantics to "upsert" + add client-generated UUID => Consumer handles a dup create as noop-update
   // Fix#2: adds idempotencyKey to message; consumers saves it in DB (see PastIdempotencyKey @Entity); if found in DB => ignore message
-  @KafkaListener(topics = ORDER_TOPIC)
   // in yaml: ack_mode = batch (default) // =⇒ max 1 duplicate / restart vs throughput🔽
+  @KafkaListener(topics = ORDER_TOPIC)
   void consume(OrderCreatedEvent event) throws InterruptedException {
     Order order = new Order().contents(event.orderContents());
     log.info("Saving order " + order);
     orderRepo.save(order);
     sleep(50);
   }
-}
+    // You could reprocess the same OrderCreatedEvent multiple times, if:
+    // a) a later message in the same batch (aka poll) failed
+    // b) the app crashed💥 before committing the offset to the broker
 
 interface OrderRepo extends JpaRepository<Order, String> {
 }

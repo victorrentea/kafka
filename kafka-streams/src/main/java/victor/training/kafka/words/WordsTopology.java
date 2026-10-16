@@ -41,52 +41,19 @@ public class WordsTopology {
   public static final String DICTIONARY_TOPIC = "dictionary"; // <word0>-><word1>
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
-    KTable<String, String> dictionaryTable =
-        streamsBuilder.table(DICTIONARY_TOPIC, Consumed.with(String(), String()));
-    // ă->a  stored in the KTable
-
     streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
-        // ?->ă c, ?->A
         // TODO split messages into words
-        .flatMapValues(v -> Arrays.stream(v.split("\\s+")).toList())
-        // ?->ă, ?->c, ?->a
 
         // TODO lowercase
-        .mapValues(v -> v.toLowerCase())
-        // ?->ă, ?->c, ?->a
 
         // TODO (last) normalize via dictionary
-        .selectKey((k, v) -> v)
-        // ă->ă, c->c, a->a
-        // KTable stores only the last value for any received key
-        .leftJoin(/*by key with */ dictionaryTable, (streamValue, dictValue) ->
-            dictValue != null ? dictValue : streamValue)
-        // ă->a, c->c, a->a
 
         // TODO count occurrences
-        .groupBy((k, v) -> v)
+
         // TODO 1 .count
         // TODO 2 .aggregate (generic)
-        .aggregate(() -> new Agg(0L, null),
-            (key, value, agg) -> agg
-                .withTotal(agg.total + 1)
-                .withTimeReceived(LocalDateTime.now()),
-            // a) anonymous KTable
-            // Materialized.with(String(),new JsonSerde<>(Agg.class)))
 
-            // TODO b) via a KTable named WORD_COUNT_TABLE for later access as read store
-            Materialized.<String, Agg, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
-                .withKeySerde(String())
-                .withValueSerde(new JsonSerde<>(Agg.class)))
-        // KTable.toStream emits only on value change for a key
-        .toStream()
-
-        // extract interesting data from aggregate
-        .mapValues(agg -> agg.total)
-        // a->1, c->1, a->2
-
-        .peek((k, v) -> log.info("🟢 Output: {}->{}", k, v))
-        .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
+;
 
     System.out.println(streamsBuilder.build().describe());
   }

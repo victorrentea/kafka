@@ -23,7 +23,9 @@ public class OutboxService {
 
   // potentially wrapped in caller @Transactional with other changes
   void addToOutbox(String messageToSend) {
-    outboxRepo.save(new Outbox().messageToSend(messageToSend).ik(UUID.randomUUID()));
+    outboxRepo.save(new Outbox()
+            .messageToSend(messageToSend)
+            .ik(UUID.randomUUID())); // idempotency key
 //    sender.send(messageToSend, new UUID());
   }
 
