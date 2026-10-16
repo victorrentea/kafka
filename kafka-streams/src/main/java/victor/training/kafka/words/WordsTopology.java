@@ -5,7 +5,10 @@ import lombok.With;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StoreQueryParameters;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
@@ -32,60 +35,58 @@ import static org.apache.kafka.common.serialization.Serdes.String;
 @RestController
 @RequiredArgsConstructor
 public class WordsTopology {
-  public static final String WORDS_TOPIC = "words"; // <uuid>:<text>
-  public static final String WORD_COUNT_TOPIC = "word-count"; // <word>:<occurences>
+  public static final String WORDS_TOPIC = "words"; // -><word>
+  public static final String WORD_COUNT_TOPIC = "word-count"; // <word>-><occurences>
   public static final String WORD_COUNT_TABLE = "word-count-table"; // state store name
-  public static final String DICTIONARY_TOPIC = "dictionary"; // <word0>:<word1>
+  public static final String DICTIONARY_TOPIC = "dictionary"; // <word0>-><word1>
 
   public static void createTopology(StreamsBuilder streamsBuilder) {
     KTable<String, String> dictionaryTable =
             streamsBuilder.table(DICTIONARY_TOPIC, Consumed.with(String(), String()));
-    // halo:hi, halo:hello
+    // ă->a  stored in the KTable
 
-    var ks = streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
-            // :hello World, :halo
+    streamsBuilder.stream(WORDS_TOPIC, Consumed.with(String(), String()))
+            // ?->ă c, ?->A
             // TODO split messages into words
-            .flatMapValues( text -> Arrays.stream(text.split("\\s+")).map(String::toLowerCase).toList())
-            // :hello, :world, :halo
-            .map((k, v) -> KeyValue.pair(v, v))
-            // hello:hello, world:world, halo:halo
+            .flatMapValues(v -> Arrays.stream(v.split("\\s+")).toList())
+            // ?->ă, ?->c, ?->a
 
-            // requires kafka record and ktable row to have the same key
-            .leftJoin(dictionaryTable,(streamValue, kTableValue)->
-                    kTableValue != null ? kTableValue : streamValue) // in your case: oldRecord.set(moreDataFromRecord).thenoutut enriched record
-            // hello:hello, world:world, halo:hello
-            .map((k, v) -> KeyValue.pair(v, 1L));
-            // hello:1, world:1, hello:1
-        // + more ks.groupByKey()
-        ks.groupByKey()
-            .aggregate( //seed:
-                () -> new Agg(0L, LocalDateTime.now()),
-                // how to fold:
-                (key, value, aggregate) -> new Agg(aggregate.total + value, LocalDateTime.now()),
-                // storage:
-                Materialized.<String, Agg, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
-                    .withKeySerde(String())
-                    .withValueSerde(new JsonSerde<>(Agg.class))
-            )
-            .toStream() // k:v only gets out when changed
-            // hello:Agg{1..}, world:Agg{1..}, hello:Agg{2..}
+            // TODO lowercase
+            .mapValues(v -> v.toLowerCase())
+            // ?->ă, ?->c, ?->a
 
+            // TODO (last) normalize via dictionary
+            .selectKey((k, v) -> v)
+            // ă->ă, c->c, a->a
+            // KTable stores only the last value for any received key
+            .leftJoin(/*by key with */ dictionaryTable, (streamValue, dictValue) ->
+                    dictValue != null ? dictValue : streamValue)
+            // ă->a, c->c, a->a
+
+            // TODO count occurrences
+            .groupBy((k, v) -> v)
+            // TODO 1 .count
+            // TODO 2 .aggregate (generic)
+            .aggregate(() -> new Agg(0L, null),
+                    (key, value, agg) -> agg
+                            .withTotal(agg.total + 1)
+                            .withTimeReceived(LocalDateTime.now()),
+                    // a) anonymous KTable
+                    // Materialized.with(String(),new JsonSerde<>(Agg.class)))
+
+                    // TODO b) via a KTable named WORD_COUNT_TABLE for later access as read store
+                    Materialized.<String, Agg, KeyValueStore<Bytes, byte[]>>as(WORD_COUNT_TABLE)
+                            .withKeySerde(String())
+                            .withValueSerde(new JsonSerde<>(Agg.class)))
+            // KTable.toStream emits only on value change for a key
+            .toStream()
+
+            // extract interesting data from aggregate
             .mapValues(agg -> agg.total)
+            // a->1, c->1, a->2
 
-            // hello:1, world:1, hello:2
-
-
-    // TODO lowercase
-
-    // TODO (last) normalize via dictionary
-
-    // TODO count occurrences
-
-    // TODO 1 .count
-    // TODO 2 .aggregate (generic)
-
-    // hello:1, world:1
-    ;
+            .peek((k, v) -> log.info("🟢 Output: {}->{}", k, v))
+            .to(WORD_COUNT_TOPIC, Produced.with(String(), Long()));
 
     System.out.println(streamsBuilder.build().describe());
   }
@@ -111,8 +112,8 @@ public class WordsTopology {
   public Map<String, Long> getWordCounts(@RequestParam(required = false) String word) {
     KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
     ReadOnlyKeyValueStore<String, Agg> kTable = kafkaStreams.store(
-        StoreQueryParameters.fromNameAndType(WORD_COUNT_TABLE,
-            QueryableStoreTypes.keyValueStore())
+            StoreQueryParameters.fromNameAndType(WORD_COUNT_TABLE,
+                    QueryableStoreTypes.keyValueStore())
     );
     if (word != null) {
       Long count = kTable.get(word).total;
@@ -124,7 +125,7 @@ public class WordsTopology {
     } else {
       try (var it = kTable.all()) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.ORDERED), false)
-            .collect(toMap(kv -> kv.key, kv -> kv.value.total));
+                .collect(toMap(kv -> kv.key, kv -> kv.value.total));
       }
     }
   }
